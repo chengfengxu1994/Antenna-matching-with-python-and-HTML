@@ -28,6 +28,9 @@ Thumbs.db
 Murata/sparameter-inductor*/
 Murata/sparameter-mlcc*/
 Murata/z/
+Murata/murata_components.db
+Murata/murata_components.db-shm
+Murata/murata_components.db-wal
 
 # Logs
 output/*.log
