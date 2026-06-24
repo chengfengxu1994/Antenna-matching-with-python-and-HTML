@@ -27,6 +27,7 @@ from engine.multiport_optimizer import JointMultiPortOptimizer, PortMatchConfig,
 from engine.cost_function import (
     get_optimization_mode, OPTIMIZATION_MODES,
 )
+from engine.efficiency_data import load_efficiency_file, parse_efficiency_data, EfficiencyData
 
 app = FastAPI(title="RF Matching Engine", version="2.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"],
@@ -469,6 +470,79 @@ async def sweep_all_ports(start_hz: float = 2.0e9, stop_hz: float = 3.0e9, num_p
     }
 
 
+# ─── Per-port Radiation Efficiency ───
+
+# In-memory storage: port_index → EfficiencyData
+_per_port_efficiency_data: Dict[int, EfficiencyData] = {}
+_global_efficiency_data: Optional[EfficiencyData] = None
+
+
+@app.post("/api/efficiency/load")
+async def load_efficiency(port_index: int = -1, filepath: str = ""):
+    """
+    Load radiation efficiency data for a specific port.
+    port_index=-1 means apply to all ports (global).
+    """
+    if not filepath or not os.path.isfile(filepath):
+        raise HTTPException(400, "File not found: " + filepath)
+    try:
+        eff_data = load_efficiency_file(filepath)
+        if port_index < 0:
+            _global_efficiency_data = eff_data
+            port_label = "all ports (global)"
+        else:
+            _per_port_efficiency_data[port_index] = eff_data
+            port_label = f"port {port_index}"
+        return {
+            "status": "ok",
+            "port_index": port_index,
+            "port_label": port_label,
+            "efficiency": eff_data.to_dict(),
+        }
+    except Exception as e:
+        raise HTTPException(400, f"Failed to load efficiency file: {e}")
+
+
+@app.post("/api/efficiency/inline")
+async def load_efficiency_inline(port_index: int = -1, content: str = "", filename: str = "pasted_data"):
+    """Load efficiency data from pasted text content."""
+    if not content.strip():
+        raise HTTPException(400, "Empty content")
+    try:
+        eff_data = parse_efficiency_data(content, filename=filename)
+        if port_index < 0:
+            _global_efficiency_data = eff_data
+        else:
+            _per_port_efficiency_data[port_index] = eff_data
+        return {"status": "ok", "port_index": port_index, "efficiency": eff_data.to_dict()}
+    except Exception as e:
+        raise HTTPException(400, f"Failed to parse efficiency data: {e}")
+
+
+@app.get("/api/efficiency/status")
+async def efficiency_status():
+    """Check which ports have efficiency data loaded."""
+    result = {
+        "loaded": _global_efficiency_data is not None or len(_per_port_efficiency_data) > 0,
+        "global": _global_efficiency_data.to_dict() if _global_efficiency_data else None,
+        "per_port": {
+            str(k): v.to_dict() for k, v in _per_port_efficiency_data.items()
+        },
+    }
+    return result
+
+
+@app.post("/api/efficiency/clear")
+async def clear_efficiency(port_index: int = -1):
+    """Clear efficiency data. port_index=-1 clears all."""
+    if port_index < 0:
+        _per_port_efficiency_data.clear()
+        _global_efficiency_data = None
+    elif port_index in _per_port_efficiency_data:
+        del _per_port_efficiency_data[port_index]
+    return {"status": "ok"}
+
+
 @app.get("/api/optimization-modes")
 async def list_optimization_modes():
     """Return available optimization modes with their descriptions."""
@@ -506,6 +580,14 @@ async def joint_optimize(request: JointOptimizeRequest):
         ))
         band_list_mhz.append(band)
 
+    # Determine which efficiency data to use
+    eff_data = None
+    per_port_eff = None
+    if _per_port_efficiency_data:
+        per_port_eff = dict(_per_port_efficiency_data)
+    if _global_efficiency_data:
+        eff_data = _global_efficiency_data
+
     opt = JointMultiPortOptimizer(
         dut=state.loaded_snp,
         component_library=lib if not state.use_db else state.component_library,
@@ -514,6 +596,8 @@ async def joint_optimize(request: JointOptimizeRequest):
         timeout_seconds=request.timeout_seconds or 120.0,
         min_avg_balance=0.5,
         optimization_mode=request.optimization_goal or 'efficiency',
+        radiation_efficiency=eff_data,
+        per_port_efficiency=per_port_eff,
     )
 
     # Run joint optimization with multi-point band evaluation

@@ -115,6 +115,7 @@ def evaluate_joint_solution(
     freq_hz: float,
     Z0: float = 50.0,
     radiation_efficiency: Optional[EfficiencyData] = None,
+    per_port_efficiency: Optional[Dict[int, EfficiencyData]] = None,
 ) -> dict:
     """
     Evaluate a joint multi-port matching solution.
@@ -127,7 +128,8 @@ def evaluate_joint_solution(
         port_configs: {port_index: [ComponentChoice, ...]} for each matched port
         freq_hz: Evaluation frequency
         Z0: Reference impedance
-        radiation_efficiency: Optional η_rad data
+        radiation_efficiency: Optional η_rad data (applied to all ports)
+        per_port_efficiency: Optional per-port η_rad data {port_index: EfficiencyData}
     
     Returns:
         Dict with per-port metrics and system-level metrics
@@ -176,11 +178,15 @@ def evaluate_joint_solution(
         # (a better approach would use power-wave amplitudes at each component)
         
         # Total efficiency with radiation efficiency
-        if radiation_efficiency:
+        if per_port_efficiency and i in per_port_efficiency:
+            eta_rad = per_port_efficiency[i].get_efficiency_at(freq_hz)
+        elif radiation_efficiency:
             eta_rad = radiation_efficiency.get_efficiency_at(freq_hz)
-            total_eff = eta_rad * radiated_eff
         else:
-            total_eff = radiated_eff
+            eta_rad = 1.0
+        total_eff = eta_rad * radiated_eff
+        
+        # Antenna loss for power balance (use the same eta_rad)
         
         port_info = {
             's11': complex(sii),
@@ -214,10 +220,14 @@ def evaluate_joint_solution(
         comp_power = total_comp_loss / max(n_matched, 1) if i in port_configs else 0.0
         rad_power = max(0.0, pm.get('radiated_efficiency', 0.0) - comp_power)
         # Antenna radiation efficiency (if available)
-        if radiation_efficiency:
-            eta_rad = radiation_efficiency.get_efficiency_at(freq_hz)
-            ant_loss = rad_power * (1.0 - eta_rad)
-            rad_power = rad_power * eta_rad
+        if per_port_efficiency and i in per_port_efficiency:
+            eta_rad_pb = per_port_efficiency[i].get_efficiency_at(freq_hz)
+            ant_loss = rad_power * (1.0 - eta_rad_pb)
+            rad_power = rad_power * eta_rad_pb
+        elif radiation_efficiency:
+            eta_rad_pb = radiation_efficiency.get_efficiency_at(freq_hz)
+            ant_loss = rad_power * (1.0 - eta_rad_pb)
+            rad_power = rad_power * eta_rad_pb
         else:
             ant_loss = 0.0
         
@@ -264,6 +274,7 @@ class JointMultiPortOptimizer:
         port_configs: List[PortMatchConfig],
         Z0: float = 50.0,
         radiation_efficiency: Optional[EfficiencyData] = None,
+        per_port_efficiency: Optional[Dict[int, EfficiencyData]] = None,
         min_avg_balance: float = 0.5,
         top_candidates_per_port: int = 8,
         timeout_seconds: float = 120.0,
@@ -274,6 +285,7 @@ class JointMultiPortOptimizer:
         self.port_configs = {pc.port_index: pc for pc in port_configs}
         self.Z0 = Z0
         self.radiation_efficiency = radiation_efficiency
+        self.per_port_efficiency = per_port_efficiency or {}
         self.min_avg_balance = min_avg_balance
         self.top_K = top_candidates_per_port
         self.timeout_seconds = timeout_seconds
@@ -393,6 +405,7 @@ class JointMultiPortOptimizer:
                 eval_freq,
                 self.Z0,
                 self.radiation_efficiency,
+                self.per_port_efficiency,
             )
             
             if not result.get('valid', False):
@@ -482,7 +495,7 @@ class JointMultiPortOptimizer:
                 
                 result = evaluate_joint_solution(
                     self.dut, port_comp_choices, freq_hz,
-                    self.Z0, self.radiation_efficiency,
+                    self.Z0, self.radiation_efficiency, self.per_port_efficiency,
                 )
                 
                 if result.get('valid'):
