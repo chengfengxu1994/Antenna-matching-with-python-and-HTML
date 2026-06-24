@@ -159,8 +159,9 @@ export default function App() {
     // Trigger joint frequency sweep for the selected port
     if (loadedSNP && jointResults?.results_per_port?.[portIndex]) {
       try {
-        const pr = jointResults.results_per_port[portIndex];
-        const band = pr.band_mhz || [2400, 2500];
+        // Get band from port configs (fallback to [2400, 2500])
+        const pc = portConfigs.find(p => p.port_index === portIndex);
+        const band = pc?.band_mhz || [2400, 2500];
         const centerHz = ((band[0] + band[1]) / 2) * 1e6;
         const res = await api.jointSweep(portIndex, centerHz * 0.5, centerHz * 1.5, 200);
         setSweepData(res);
@@ -168,7 +169,7 @@ export default function App() {
         console.warn('Joint sweep failed:', e.message);
       }
     }
-  }, [loadedSNP, jointResults]);
+  }, [loadedSNP, jointResults, portConfigs]);
 
   /* Render */
   return (

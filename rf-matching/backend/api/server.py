@@ -662,7 +662,7 @@ async def joint_optimize(request: JointOptimizeRequest):
         "solutions_count": len(joint_solutions),
     }
 
-@app.post("/api/joint-optimize/sweep")
+@app.get("/api/joint-optimize/sweep")
 async def joint_optimize_sweep(
     port_index: int = 0,
     start_hz: float = 1e9,
