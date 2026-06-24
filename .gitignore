@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Large data (Murata ZIPs are vendor-supplied, keep only the DB)
+Murata/sparameter-inductor*/
+Murata/sparameter-mlcc*/
+Murata/z/
+
+# Logs
+output/*.log
+
+# Build
+frontend/dist/
