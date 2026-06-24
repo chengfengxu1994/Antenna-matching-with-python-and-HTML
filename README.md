@@ -2,6 +2,8 @@
 
 Murata LC元件库 + 多频段效率评估 + 多拓扑优化
 
+> A tooling for antenna matching, powered by Python+FastAPI backend and React frontend.
+
 ## 一键启动
 
 ### Windows (双击即可)
@@ -25,7 +27,7 @@ E:\RF matching\
 ├── 启动.bat              ← 双击启动 (生产模式)
 ├── 启动-开发模式.bat     ← 双击启动 (开发模式)
 ├── start.py              ← Python启动脚本
-├── Murata/               ← Murata元件S参数库 (ZIP)
+├── Murata/               ← Murata元件S参数库 (ZIP + SQLite数据库)
 ├── snp/                  ← 天线SNP测试文件
 └── rf-matching/
     ├── backend/
@@ -35,10 +37,16 @@ E:\RF matching\
     │   │   ├── network.py     ← S参数网络运算
     │   │   ├── topology.py    ← 拓扑定义 (L/Pi/T/Ladder)
     │   │   ├── touchstone.py  ← SNP文件解析
-    │   │   └── component_lib.py ← 元件库管理
+    │   │   ├── component_lib.py ← 元件库管理
+    │   │   ├── cost_function.py ← Optenni式统一评分函数
+    │   │   ├── multiport_optimizer.py ← 联合多端口优化器
+    │   │   ├── efficiency_data.py ← 辐射效率数据解析
+    │   │   └── murata_db.py   ← Murata SQLite数据库
     │   └── tests/             ← 测试和基准
     └── frontend/
         ├── src/               ← React源码
+        │   ├── components/    ← UI组件
+        │   └── services/      ← API客户端
         └── dist/              ← 构建产物
 ```
 
@@ -49,6 +57,11 @@ E:\RF matching\
 - **Smith Chart**: 阻抗匹配可视化
 - **手动调谐**: 手动指定元件值查看效果
 - **端口配置**: 支持多端口DUT (open/short/load/component)
+- **联合多端口优化**: 考虑S21耦合的联合匹配
+- **功率平衡分析**: 反射/耦合/元件损耗/辐射占比可视化
+- **Murata元件数据库**: 29K+ 真实元件S参数，支持快速查询
+- **辐射效率集成**: 支持每端口独立η_rad文件加载
+- **多目标优化**: 6种优化模式 (效率/回损/平衡/最差/平均/低成本)
 
 ## 依赖
 - Python 3.8+ (numpy, fastapi, uvicorn, pydantic)
