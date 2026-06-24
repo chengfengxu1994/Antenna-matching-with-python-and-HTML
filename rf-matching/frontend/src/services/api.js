@@ -80,4 +80,27 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(params),
     }),
+
+  /* ─── Efficiency ─── */
+  getOptimizationModes: () => request('/optimization-modes'),
+
+  loadEfficiency: (portIndex, filepath) =>
+    request('/efficiency/load', {
+      method: 'POST',
+      body: JSON.stringify({ port_index: portIndex, filepath }),
+    }),
+
+  loadEfficiencyInline: (portIndex, content) =>
+    request('/efficiency/inline', {
+      method: 'POST',
+      body: JSON.stringify({ port_index: portIndex, content }),
+    }),
+
+  getEfficiencyStatus: () => request('/efficiency/status'),
+
+  clearEfficiency: (portIndex = -1) =>
+    request('/efficiency/clear', {
+      method: 'POST',
+      body: JSON.stringify({ port_index: portIndex }),
+    }),
 };

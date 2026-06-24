@@ -2,8 +2,8 @@
 import { api } from './services/api';
 import DataLoader from './components/DataLoader';
 import PerPortConfig from './components/PerPortConfig';
-import ComponentSeriesSelector from './components/ComponentSeriesSelector';
 import ResultsPanel from './components/ResultsPanel';
+import PowerBalance from './components/PowerBalance';
 import S11Chart from './components/S11Chart';
 import SmithChart from './components/SmithChart';
 import AllPortsChart from './components/AllPortsChart';
@@ -17,6 +17,7 @@ export default function App() {
   const [selectedSeries, setSelectedSeries] = useState([]);
   const [portConfigs, setPortConfigs] = useState([]);
   const [optimizationGoal, setOptimizationGoal] = useState('efficiency');
+  const [optimizationModes, setOptimizationModes] = useState([]);
   const [jointResults, setJointResults] = useState(null);
   const [systemMetrics, setSystemMetrics] = useState(null);
   const [optimizing, setOptimizing] = useState(false);
@@ -33,6 +34,9 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [beamWidth, setBeamWidth] = useState(10);
   const [timeout, setTimeout_] = useState(120);
+
+  /* Efficiency */
+  const [portEfficiency, setPortEfficiency] = useState(null); // {portIndex: data}
 
   useEffect(() => { initBackend(); }, []);
   useEffect(() => {
@@ -51,6 +55,25 @@ export default function App() {
       await api.health(); setBackendOnline(true);
       await api.setDataDirs(dataDirs.snp, dataDirs.murata);
       const r = await api.listSNPFiles(); setSnpFiles(r.files || []);
+      // Fetch optimization modes
+      try {
+        const modesRes = await api.getOptimizationModes();
+        setOptimizationModes(modesRes.modes || []);
+      } catch {}
+      // Fetch efficiency status
+      try {
+        const effRes = await api.getEfficiencyStatus();
+        if (effRes.loaded) {
+          const effMap = {};
+          if (effRes.global) effMap[-1] = effRes.global;
+          if (effRes.per_port) {
+            Object.entries(effRes.per_port).forEach(([k, v]) => {
+              effMap[parseInt(k)] = v;
+            });
+          }
+          setPortEfficiency(effMap);
+        }
+      } catch {}
     } catch { setBackendOnline(false); }
   }
 
@@ -68,6 +91,33 @@ export default function App() {
       setPortConfigs(cfgs);
       setError(null);
     } catch (e) { setError('Load failed: ' + e.message); }
+  }
+
+  async function handleLoadEfficiency(portIndex, filepath) {
+    try {
+      const res = await api.loadEfficiency(portIndex, filepath);
+      const effMap = { ...(portEfficiency || {}) };
+      effMap[portIndex] = res.efficiency;
+      setPortEfficiency(effMap);
+    } catch (e) {
+      setError('Failed to load efficiency: ' + e.message);
+    }
+  }
+
+  async function handleClearEfficiency(portIndex) {
+    try {
+      await api.clearEfficiency(portIndex);
+      const effMap = { ...(portEfficiency || {}) };
+      delete effMap[portIndex];
+      if (portIndex < 0) {
+        // Clear all
+        setPortEfficiency(null);
+      } else {
+        setPortEfficiency(Object.keys(effMap).length > 0 ? effMap : null);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   async function handleOptimize() {
@@ -186,6 +236,10 @@ export default function App() {
               numPorts={loadedSNP?.num_ports || 0}
               portConfigs={portConfigs} setPortConfigs={setPortConfigs}
               optimizationGoal={optimizationGoal} setOptimizationGoal={setOptimizationGoal}
+              optimizationModes={optimizationModes}
+              portEfficiency={portEfficiency}
+              onLoadEfficiency={handleLoadEfficiency}
+              onClearEfficiency={handleClearEfficiency}
               compact
             />
           </div>
@@ -256,7 +310,7 @@ export default function App() {
             </div>
           ) : (
             <>
-              
+              {/* System Summary */}
               {systemMetrics && (
                 <div className="workspace-card">
                   <h3>System Summary</h3>
@@ -280,9 +334,21 @@ export default function App() {
                       </div>
                     </div>
                     <div className="metric-tile">
+                      <div className="metric-label">Min Total η</div>
+                      <div className={`metric-value ${(systemMetrics.min_total_efficiency || 0) > 0.7 ? 'good' : 'warn'}`}>
+                        {((systemMetrics.min_total_efficiency || 0) * 100).toFixed(1)}<span className="metric-unit">%</span>
+                      </div>
+                    </div>
+                    <div className="metric-tile">
                       <div className="metric-label">Max Coupling Loss</div>
                       <div className={`metric-value ${(systemMetrics.max_coupling_loss || 1) < 0.03 ? 'good' : (systemMetrics.max_coupling_loss || 1) < 0.1 ? 'warn' : 'bad'}`}>
                         {((systemMetrics.max_coupling_loss || 0) * 100).toFixed(1)}<span className="metric-unit">%</span>
+                      </div>
+                    </div>
+                    <div className="metric-tile">
+                      <div className="metric-label">Comp. Loss</div>
+                      <div className={`metric-value ${(systemMetrics.component_loss_total || 0) < 0.05 ? 'good' : 'warn'}`}>
+                        {((systemMetrics.component_loss_total || 0) * 100).toFixed(2)}<span className="metric-unit">%</span>
                       </div>
                     </div>
                     <div className="metric-tile">
@@ -297,16 +363,17 @@ export default function App() {
                 </div>
               )}
 
-              
+              {/* Results Table */}
               <div className="workspace-card">
                 <ResultsPanel
                   jointResults={jointResults}
+                  systemMetrics={systemMetrics}
                   onSelectPort={handleSelectPort}
                   selectedPort={selectedPort}
                 />
               </div>
 
-              
+              {/* Charts */}
               <div className="chart-grid">
                 <div className="chart-card">
                   <h4>Port Return Loss Summary</h4>
@@ -330,12 +397,21 @@ export default function App() {
                 </div>
               </div>
 
-              
+              {/* Frequency sweep chart */}
               <div className="workspace-card" style={{padding: '8px 14px'}}>
                 <S11Chart
                   sweepData={sweepData}
                   targetFreqHz={null}
                   bands={null}
+                />
+              </div>
+
+              {/* Power Balance */}
+              <div className="workspace-card">
+                <h3>Power Balance</h3>
+                <PowerBalance
+                  resultsPerPort={jointResults.results_per_port}
+                  powerBalance={null}  // computed from results_per_port
                 />
               </div>
             </>
@@ -345,9 +421,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
-
-
