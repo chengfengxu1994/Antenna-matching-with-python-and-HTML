@@ -1,8 +1,9 @@
 """
-Component library: load and manage Murata S2P component data.
+Component library: load and manage real S2P component data.
 
 Handles:
 - Scanning ZIP files in the Murata directory
+- Scanning extracted Optenni/third-party S2P component directories
 - Extracting component metadata (part number, type, nominal value)
 - Caching parsed S2P data for quick access
 - Fast frequency lookup and interpolation
@@ -36,9 +37,13 @@ class ComponentInfo:
         return self._data
 
     def _load_data(self) -> TouchstoneData:
-        with zipfile.ZipFile(self.zip_path, 'r') as zf:
-            with zf.open(self.s2p_filename) as f:
-                content = f.read().decode('utf-8', errors='replace')
+        if self.zip_path == '__DIR__':
+            with open(self.s2p_filename, 'r', encoding='utf-8', errors='replace') as f:
+                content = f.read()
+        else:
+            with zipfile.ZipFile(self.zip_path, 'r') as zf:
+                with zf.open(self.s2p_filename) as f:
+                    content = f.read().decode('utf-8', errors='replace')
         return parse_touchstone(content, filename=self.s2p_filename)
 
     def get_s_matrix_at_freq(self, freq_hz: float) -> np.ndarray:
@@ -145,6 +150,33 @@ def parse_murata_part(part_number: str) -> Tuple[str, float, str]:
         return ('capacitor', value, unit)
 
 
+def parse_generic_s2p_part(part_number: str, known_type: Optional[str] = None) -> Tuple[str, float, str]:
+    """
+    Parse common S2P library names beyond Murata.
+
+    Examples:
+      04HP2N0 / 0402HP-2N0XJL -> 2.0 nH
+      L0201SEr33              -> 0.33 nH
+      GQM1885C2A1R0BB01       -> 1.0 pF
+    """
+    pn = part_number.upper().strip()
+    comp_type = known_type
+    if comp_type is None:
+        if pn.startswith(('L', '04HP', '03HP', '06HP', '08HP')) or re.search(r'\dN\d|R\d+$', pn):
+            comp_type = 'inductor'
+        else:
+            comp_type = 'capacitor'
+
+    if comp_type == 'inductor':
+        value, unit = _parse_inductor_value(pn)
+        if value <= 0:
+            value, unit = _parse_compact_inductor_value(pn)
+        return ('inductor', value, unit)
+
+    value, unit = _parse_capacitor_value(pn)
+    return ('capacitor', value, unit)
+
+
 def _parse_inductor_value(pn: str) -> Tuple[float, str]:
     """
     Parse inductor value from Murata part number.
@@ -155,6 +187,16 @@ def _parse_inductor_value(pn: str) -> Tuple[float, str]:
     # Look for patterns like: XXN, XNXX, XNX, XXNH, XXUH
     # Common: digits followed by N (nH) or U (uH)
     # The value encoding varies by series
+
+    # Compact decimal notation must be handled before the generic "digits + N"
+    # pattern, otherwise 6N2 would be read as 6 nH instead of 6.2 nH.
+    match = re.search(r'(\d+)N(\d+)', pn)
+    if match:
+        return (float(f"{match.group(1)}.{match.group(2)}"), 'nH')
+
+    match = re.search(r'N(\d+)', pn)
+    if match:
+        return (float(f"0.{match.group(1)}"), 'nH')
 
     # Pattern: digits + 'N' + optional digits (for nH)
     # or digits + 'U' + optional digits (for uH)
@@ -173,11 +215,26 @@ def _parse_inductor_value(pn: str) -> Tuple[float, str]:
 
     # Fallback: try other patterns
     # LQP03TN0N6B02 → 0N6 = 0.6 nH
+    return (0.0, 'nH')
+
+
+def _parse_compact_inductor_value(pn: str) -> Tuple[float, str]:
+    """Parse compact third-party inductor value codes such as 2N0, N47, r33."""
     match = re.search(r'(\d+)N(\d+)', pn)
     if match:
-        whole = int(match.group(1))
-        frac = int(match.group(2))
-        return (float(f"{whole}.{frac}"), 'nH')
+        return (float(f"{match.group(1)}.{match.group(2)}"), 'nH')
+
+    match = re.search(r'N(\d+)', pn)
+    if match:
+        return (float(f"0.{match.group(1)}"), 'nH')
+
+    match = re.search(r'R(\d+)$', pn, flags=re.IGNORECASE)
+    if match:
+        return (float(f"0.{match.group(1)}"), 'nH')
+
+    match = re.search(r'(\d+)R(\d+)', pn, flags=re.IGNORECASE)
+    if match:
+        return (float(f"{match.group(1)}.{match.group(2)}"), 'nH')
 
     return (0.0, 'nH')
 
@@ -278,3 +335,143 @@ def scan_murata_directory(murata_dir: str) -> ComponentLibrary:
                 continue
 
     return library
+
+
+def scan_s2p_directory(root_dir: str) -> ComponentLibrary:
+    """
+    Scan an extracted S2P library directory.
+
+    This is used for Optenni's component library and other vendor folders. It
+    keeps real measured/modelled S-parameters instead of substituting ideal LC
+    parts.
+    """
+    library = ComponentLibrary()
+
+    if not os.path.isdir(root_dir):
+        return library
+
+    for root, dirs, files in os.walk(root_dir):
+        lower_root = root.lower()
+        if 'inductor' in lower_root:
+            known_type = 'inductor'
+        elif 'capacitor' in lower_root:
+            known_type = 'capacitor'
+        else:
+            known_type = None
+
+        for f in files:
+            if not f.lower().endswith('.s2p'):
+                continue
+
+            full_path = os.path.join(root, f)
+            part_number = os.path.splitext(os.path.basename(f))[0]
+            comp_type, nominal_value, nominal_unit = parse_generic_s2p_part(part_number, known_type)
+            if nominal_value <= 0:
+                continue
+
+            library.add_component(ComponentInfo(
+                part_number=part_number,
+                s2p_filename=full_path,
+                zip_path='__DIR__',
+                component_type=comp_type,
+                nominal_value=nominal_value,
+                nominal_unit=nominal_unit,
+            ))
+
+    return library
+
+
+def merge_component_libraries(*libraries: ComponentLibrary) -> ComponentLibrary:
+    """Merge component libraries while preserving one record per part/source."""
+    merged = ComponentLibrary()
+    seen = set()
+    for lib in libraries:
+        if lib is None:
+            continue
+        for comp in lib.all_components:
+            key = (comp.part_number, comp.s2p_filename, comp.zip_path)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.add_component(comp)
+    return merged
+
+
+def filter_component_library(
+    library,
+    inductor_tokens: Optional[List[str]] = None,
+    capacitor_tokens: Optional[List[str]] = None,
+) -> ComponentLibrary:
+    """Keep only components whose part/path/series text matches requested tokens."""
+    filtered = ComponentLibrary()
+    inductor_tokens = [t.upper() for t in (inductor_tokens or [])]
+    capacitor_tokens = [t.upper() for t in (capacitor_tokens or [])]
+
+    def matches(comp, tokens):
+        if not tokens:
+            return True
+        text = " ".join(str(getattr(comp, attr, "")) for attr in (
+            "part_number", "s2p_filename", "zip_path", "series"
+        )).upper()
+        return any(token in text for token in tokens)
+
+    for comp in getattr(library, 'inductors', []) or []:
+        if matches(comp, inductor_tokens):
+            filtered.add_component(comp)
+
+    for comp in getattr(library, 'capacitors', []) or []:
+        if matches(comp, capacitor_tokens):
+            filtered.add_component(comp)
+
+    return filtered
+
+
+class CompositeComponentLibrary:
+    """Read-only view over multiple component library backends."""
+
+    def __init__(self, *libraries):
+        self.libraries = [lib for lib in libraries if lib is not None]
+
+    @property
+    def inductors(self):
+        parts = []
+        for lib in self.libraries:
+            parts.extend(getattr(lib, 'inductors', []) or [])
+        return parts
+
+    @property
+    def capacitors(self):
+        parts = []
+        for lib in self.libraries:
+            parts.extend(getattr(lib, 'capacitors', []) or [])
+        return parts
+
+    @property
+    def all_components(self):
+        return self.inductors + self.capacitors
+
+    def get_unique_inductor_values(self) -> List[float]:
+        return sorted({c.nominal_value for c in self.inductors if c.nominal_value > 0})
+
+    def get_unique_capacitor_values(self) -> List[float]:
+        return sorted({c.nominal_value for c in self.capacitors if c.nominal_value > 0})
+
+    def get_inductors_near(self, target_nh: float, tolerance: float = 0.5) -> List[ComponentInfo]:
+        return [
+            c for c in self.inductors
+            if abs(c.nominal_value - target_nh) / max(target_nh, 1e-9) <= tolerance
+        ]
+
+    def get_capacitors_near(self, target_pf: float, tolerance: float = 0.5) -> List[ComponentInfo]:
+        return [
+            c for c in self.capacitors
+            if abs(c.nominal_value - target_pf) / max(target_pf, 1e-9) <= tolerance
+        ]
+
+    def find_nearest_inductor(self, target_nh: float):
+        parts = self.inductors
+        return min(parts, key=lambda c: abs(c.nominal_value - target_nh)) if parts else None
+
+    def find_nearest_capacitor(self, target_pf: float):
+        parts = self.capacitors
+        return min(parts, key=lambda c: abs(c.nominal_value - target_pf)) if parts else None

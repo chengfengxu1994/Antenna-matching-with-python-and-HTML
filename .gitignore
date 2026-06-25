@@ -25,15 +25,12 @@ Thumbs.db
 .DS_Store
 
 # Large data (Murata ZIPs are vendor-supplied, keep only the DB)
-Murata/sparameter-inductor*/
-Murata/sparameter-mlcc*/
-Murata/z/
-Murata/murata_components.db
-Murata/murata_components.db-shm
-Murata/murata_components.db-wal
+Murata/
+snp/
 
 # Logs
 output/*.log
+*.log
 
 # Build
 frontend/dist/

@@ -20,6 +20,8 @@ Where S' is the full S-matrix AFTER all matching networks are applied.
 """
 
 import numpy as np
+import logging
+import os
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 from enum import Enum
@@ -35,7 +37,7 @@ from .component_lib import ComponentLibrary, ComponentInfo
 from .topology import Topology, TopologyElement, ConnectionType, get_standard_topologies
 from .optimizer import (
     MatchingOptimizer, OptimizerConfig, MatchingSolution,
-    PortState, ComponentChoice, TERMINATION_GAMMA
+    PortState, ComponentChoice, TERMINATION_GAMMA, _solution_rank_key
 )
 from .efficiency_data import EfficiencyData
 from .network import terminate_ports
@@ -43,6 +45,36 @@ from .cost_function import (
     get_optimization_mode, OptimizationMode,
     estimate_total_component_loss, compute_unified_score, ScoreInput,
 )
+
+logger = logging.getLogger("rf_matching.optimizer")
+
+# Ensure the optimizer.log file handler exists for structured logging
+_log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'output')
+os.makedirs(_log_dir, exist_ok=True)
+_log_path = os.path.join(_log_dir, 'optimizer.log')
+if not any(isinstance(h, logging.FileHandler) and h.baseFilename == _log_path
+           for h in logger.handlers):
+    _fh = logging.FileHandler(_log_path, mode='a', encoding='utf-8')
+    _fh.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+    _fh.setLevel(logging.DEBUG)
+    logger.addHandler(_fh)
+
+
+def _component_label(choice: ComponentChoice) -> str:
+    comp = choice.component
+    value = getattr(comp, "nominal_value", None)
+    unit = getattr(comp, "nominal_unit", "")
+    part = getattr(comp, "part_number", "")
+    if value is None:
+        value_text = "?"
+    else:
+        value_text = f"{value:g}{unit}"
+    return f"{choice.connection_type}:{value_text}:{part}"
+
+
+def _solution_label(solution: MatchingSolution) -> str:
+    comps = ", ".join(_component_label(c) for c in solution.component_choices)
+    return f"{solution.topology.name} [{comps}]"
 
 
 @dataclass
@@ -163,6 +195,11 @@ def evaluate_joint_solution(
     coupling_losses = []
     power_balance = {}
     
+    # Compute total component loss estimate BEFORE per-port loop
+    # so we can include it in per-port total_efficiency
+    total_comp_loss = estimate_total_component_loss(all_component_s_params)
+    n_matched = len(port_configs)
+    
     for i in range(n_ports):
         sii = S[i, i]
         mismatch_eff = 1.0 - abs(sii) ** 2
@@ -173,20 +210,11 @@ def evaluate_joint_solution(
         # Radiated power = accepted - coupled
         radiated_eff = max(0.0, mismatch_eff - coupling_loss)
         
-        # Estimate component loss attributable to this port
-        # For now, allocate total component loss evenly among matched ports
-        # (a better approach would use power-wave amplitudes at each component)
+        # Per-port component loss allocation
+        comp_loss_per_port = total_comp_loss / max(n_matched, 1) if i in port_configs else 0.0
         
-        # Total efficiency with radiation efficiency
-        if per_port_efficiency and i in per_port_efficiency:
-            eta_rad = per_port_efficiency[i].get_efficiency_at(freq_hz)
-        elif radiation_efficiency:
-            eta_rad = radiation_efficiency.get_efficiency_at(freq_hz)
-        else:
-            eta_rad = 1.0
-        total_eff = eta_rad * radiated_eff
-        
-        # Antenna loss for power balance (use the same eta_rad)
+        # Total efficiency = radiated - component loss (consistent with power balance)
+        total_eff = max(0.0, radiated_eff - comp_loss_per_port)
         
         port_info = {
             's11': complex(sii),
@@ -207,11 +235,7 @@ def evaluate_joint_solution(
         total_effs.append(total_eff)
         coupling_losses.append(coupling_loss)
     
-    # Compute total component loss estimate
-    total_comp_loss = estimate_total_component_loss(all_component_s_params)
-    
-    # Power balance breakdown per port
-    n_matched = len(port_configs)
+    # Power balance breakdown per port (uses eta_rad for antenna loss)
     for i in range(n_ports):
         pm = port_metrics.get(i, {})
         ref_power = 1.0 - pm.get('mismatch_efficiency', 1.0)  # reflected
@@ -279,6 +303,8 @@ class JointMultiPortOptimizer:
         top_candidates_per_port: int = 8,
         timeout_seconds: float = 120.0,
         optimization_mode: str = 'efficiency',
+        debug: bool = False,
+        debug_top_n: int = 10,
     ):
         self.dut = dut
         self.library = component_library
@@ -290,15 +316,30 @@ class JointMultiPortOptimizer:
         self.top_K = top_candidates_per_port
         self.timeout_seconds = timeout_seconds
         self.optimization_mode = get_optimization_mode(optimization_mode)
+        # Debug support
+        self.debug = debug
+        self.debug_top_n = debug_top_n
+        self._debug_info = {}
     
     def _phase1_independent_candidates(self) -> Dict[int, List[MatchingSolution]]:
         """
         Phase 1: Generate top-K independent matching candidates per port.
-        Uses the existing single-port optimizer.
+        Uses the existing single-port optimizer with topology-bucketed diversity.
         """
         candidates = {}
         
         for port_idx, pc in self.port_configs.items():
+            logger.info(
+                "╔══════════════════════════════════════════════════════════╗")
+            logger.info(
+                "║  PHASE1  port=%d  target=%.3f MHz  max_comp=%d  top_K=%d  ║",
+                port_idx,
+                pc.target_frequency_hz / 1e6,
+                pc.max_components,
+                self.top_K,
+            )
+            logger.info(
+                "╚══════════════════════════════════════════════════════════╝")
             config = OptimizerConfig(
                 target_frequency_hz=pc.target_frequency_hz,
                 max_components=pc.max_components,
@@ -324,17 +365,89 @@ class JointMultiPortOptimizer:
                 topos = [t for t in topos if t.name in pc.topology_names]
             topos = [t for t in topos if t.num_components <= pc.max_components]
             
-            sols = opt.optimize_full(
-                port_states=port_states,
-                topologies=topos,
-                input_port=port_idx,
+            # ── Run optimizer per topology, collect per-topology buckets ──
+            logger.info("PHASE1 port=%d: running %d topologies", port_idx, len(topos))
+            topo_buckets = {}  # topology_name -> [MatchingSolution, ...]
+            for topo in topos:
+                sols = opt.optimize_with_topology(topo, port_states, input_port=port_idx)
+                if sols:
+                    topo_buckets[topo.name] = sols
+                    # Task 2: per-topology top-5 diagnostic
+                    for rank, sol in enumerate(sols[: min(5, len(sols))], start=1):
+                        accepted_eff = 1.0 - sol.s11_magnitude ** 2
+                        logger.debug(
+                            "  DBG port=%d topology=%s #%d RL=%.2fdB |Sii|=%.5f "
+                            "accepted=%.4f comps=%s",
+                            port_idx, topo.name, rank, sol.s11_db, sol.s11_magnitude,
+                            accepted_eff, _solution_label(sol),
+                        )
+                    logger.info(
+                        "  topology=%s: %d solutions, best RL=%.2fdB %s",
+                        topo.name, len(sols),
+                        sols[0].s11_db, _solution_label(sols[0]),
+                    )
+                else:
+                    logger.info("  topology=%s: 0 solutions", topo.name)
+            
+            # ── Diversity-bucketed candidate selection (Task 4) ──
+            # At least M from each topology, then fill remaining from best overall
+            top_M = max(1, self.top_K // max(len(topo_buckets), 1))
+            selected = []
+            seen_sigs = set()  # dedup: (topology, (conn, value) for each comp)
+            
+            def _solution_signature(sol):
+                """Signature for dedup: topology name + (conn_type, value) sorted."""
+                items = tuple(sorted(
+                    (c.connection_type, round(c.component.nominal_value, 2))
+                    for c in sol.component_choices
+                ))
+                return (sol.topology.name, items)
+            
+            # First pass: take top_M from each topology bucket (strict limit)
+            for topo_name in sorted(topo_buckets.keys()):
+                bucket = topo_buckets[topo_name]
+                taken = 0
+                for sol in bucket:
+                    if taken >= top_M:
+                        break
+                    sig = _solution_signature(sol)
+                    if sig not in seen_sigs:
+                        seen_sigs.add(sig)
+                        selected.append(sol)
+                        taken += 1
+                        logger.debug(
+                            "  DIVERSITY port=%d select %s (bucket: %s, taken=%d/%d)",
+                            port_idx, _solution_label(sol), topo_name, taken, top_M,
+                        )
+            
+            # Second pass: fill remaining from best across all topologies
+            if len(selected) < self.top_K:
+                all_sols = []
+                for bucket in topo_buckets.values():
+                    all_sols.extend(bucket)
+                all_sols.sort(key=lambda s: _solution_rank_key(s, self.library))
+                for sol in all_sols:
+                    sig = _solution_signature(sol)
+                    if sig not in seen_sigs and len(selected) < self.top_K:
+                        seen_sigs.add(sig)
+                        selected.append(sol)
+                        logger.debug(
+                            "  DIVERSITY port=%d fill %s",
+                            port_idx, _solution_label(sol),
+                        )
+            
+            # Rank single-port candidates with a mild endpoint-value penalty.
+            selected.sort(key=lambda s: _solution_rank_key(s, self.library))
+            logger.info(
+                "PHASE1 port=%d: %d diverse candidates selected (from %d topology buckets)",
+                port_idx, len(selected), len(topo_buckets),
             )
 
             # Remap component ports from 0 (local reduced-matrix index) to port_idx
             # (original DUT port), so joint evaluation on the full N-port S-matrix
             # embeds components on the correct port.
             remapped = []
-            for sol in sols:
+            for sol in selected:
                 new_choices = []
                 for c in sol.component_choices:
                     new_choices.append(ComponentChoice(
@@ -362,7 +475,23 @@ class JointMultiPortOptimizer:
                     min_total_efficiency=sol.min_total_efficiency,
                 ))
             
-            candidates[port_idx] = remapped[:self.top_K]
+            final_count = min(len(remapped), self.top_K)
+            candidates[port_idx] = remapped[:final_count]
+            
+            # Structured phase1 summary
+            logger.info(
+                "╔══ PHASE1 port=%d final candidates (%d) ══╗",
+                port_idx, final_count,
+            )
+            for rank, sol in enumerate(candidates[port_idx], start=1):
+                accepted_eff = 1.0 - sol.s11_magnitude ** 2
+                logger.info(
+                    "  cand#%02d  RL=%.2fdB  |Sii|=%.5f  accepted=%.4f  %s",
+                    rank, sol.s11_db, sol.s11_magnitude, accepted_eff,
+                    _solution_label(sol),
+                )
+            logger.info(
+                "╚═══════════════════════════════════════════════╝")
         
         return candidates
     
@@ -371,106 +500,274 @@ class JointMultiPortOptimizer:
         candidates: Dict[int, List[MatchingSolution]],
     ) -> List[JointSolution]:
         """
-        Phase 2: Jointly evaluate all combinations of per-port candidates.
-        
-        For each combination (c1, c2, ..., cN) where ci is a candidate for port i:
-        - Apply ALL matching networks to the full N-port S-matrix
-        - Compute system efficiency for each port
+        Phase 2: jointly evaluate per-port candidates.
+
+        Full Cartesian evaluation is used while the product is practical. For
+        very large products, use a deterministic beam seeded by independent
+        match quality, then run coordinate refinement with the same full
+        multi-port S-matrix evaluator.
         """
         port_indices = sorted(candidates.keys())
         candidate_lists = [candidates[pi] for pi in port_indices]
-        
-        joint_solutions = []
-        count = 0
-        max_combos = 5000  # Safety limit
-        
-        for combo in itertools.product(*candidate_lists):
-            if count >= max_combos:
-                break
-            count += 1
-            
-            # Build port_configs: {port_index: [ComponentChoice, ...]}
-            port_comp_choices = {}
-            port_solutions = {}
-            for pi, sol in zip(port_indices, combo):
-                port_comp_choices[pi] = sol.component_choices
-                port_solutions[pi] = sol
-            
-            # Evaluate at the primary frequency (use first port's target)
-            eval_freq = self.port_configs[port_indices[0]].target_frequency_hz
-            
-            result = evaluate_joint_solution(
-                self.dut,
-                port_comp_choices,
-                eval_freq,
-                self.Z0,
-                self.radiation_efficiency,
-                self.per_port_efficiency,
+        total_combos = int(np.prod([len(c) for c in candidate_lists])) if candidate_lists else 0
+        full_limit = max(1, min(200000, self.top_K ** max(2, len(port_indices)) * 64))
+        logger.info(
+            "PHASE2 ports=%s counts=%s total_combos=%d full_limit=%d",
+            port_indices,
+            [len(c) for c in candidate_lists],
+            total_combos,
+            full_limit,
+        )
+
+        evaluated = 0
+        joint_solutions: List[JointSolution] = []
+
+        if total_combos <= full_limit:
+            for combo in itertools.product(*candidate_lists):
+                evaluated += 1
+                js = self._evaluate_joint_combo(port_indices, combo)
+                if js is not None:
+                    joint_solutions.append(js)
+            search_mode = "full"
+        else:
+            search_mode = "beam"
+            joint_solutions, evaluated = self._phase2_beam_evaluation(
+                port_indices,
+                candidate_lists,
+                full_limit,
             )
-            
-            if not result.get('valid', False):
-                continue
-            
-            # Compute unified score using cost function
-            use_total = self.radiation_efficiency is not None
-            n_ports = self.dut.num_ports
-            port_metrics_dict = result['port_metrics']
-            
-            # Gather per-port efficiency values
-            avg_port_eff = []
-            min_port_eff = []
-            for i in range(n_ports):
-                pm = port_metrics_dict.get(i, {})
-                eff = pm.get('total_efficiency', pm.get('mismatch_efficiency', 0))
-                avg_port_eff.append(eff)
-                min_port_eff.append(eff)
-            
-            all_effs = [pm.get('total_efficiency', pm.get('mismatch_efficiency', 0))
-                        for pm in port_metrics_dict.values()]
-            
-            # Collect component S-params for loss estimation
-            comp_s_params = []
-            for pi, sol in zip(port_indices, combo):
-                for c in sol.component_choices:
-                    try:
-                        cs = c.component.get_s_matrix_at_freq(eval_freq)
-                        comp_s_params.append((cs, c.connection_type))
-                    except Exception:
-                        pass
-            
-            comp_loss = estimate_total_component_loss(comp_s_params)
-            
-            score_input = ScoreInput(
-                avg_port_efficiency=np.array(avg_port_eff),
-                min_port_efficiency=np.array(min_port_eff),
-                avg_band_efficiency=float(np.mean(all_effs)) if all_effs else 0.0,
-                min_band_efficiency=float(np.min(all_effs)) if all_effs else 0.0,
-                max_coupling_loss=result['max_coupling_loss'],
-                component_loss=comp_loss,
-                component_count=sum(len(sol.component_choices) for sol in combo),
-            )
-            
-            balanced = compute_unified_score(score_input, self.optimization_mode)
-            
-            js = JointSolution(
-                port_solutions=port_solutions,
-                system_s_matrix=result.get('s_matrix'),
-                port_metrics=result['port_metrics'],
-                min_system_efficiency=result['min_mismatch_efficiency'],
-                avg_system_efficiency=result['avg_mismatch_efficiency'],
-                min_total_efficiency=result['min_total_efficiency'],
-                avg_total_efficiency=result['avg_total_efficiency'],
-                max_coupling_loss=result['max_coupling_loss'],
-                balanced_score=balanced,
-                component_loss_total=result.get('component_loss_total', 0.0),
-                power_balance=result.get('power_balance', {}),
-            )
-            joint_solutions.append(js)
-        
-        # Sort by balanced_score descending
+
+        refined, refine_evals = self._refine_joint_solutions(
+            port_indices,
+            candidate_lists,
+            joint_solutions[: max(4, min(12, self.top_K))],
+        )
+        evaluated += refine_evals
+        joint_solutions.extend(refined)
+        joint_solutions = self._dedup_joint_solutions(joint_solutions)
         joint_solutions.sort(key=lambda s: s.balanced_score, reverse=True)
+        self._log_phase2_results(port_indices, joint_solutions, evaluated, search_mode)
         return joint_solutions
-    
+
+    def _evaluate_joint_combo(
+        self,
+        port_indices: List[int],
+        combo: Tuple[MatchingSolution, ...],
+    ) -> Optional[JointSolution]:
+        """Evaluate one concrete multi-port combination with the full S-matrix."""
+        port_comp_choices = {}
+        port_solutions = {}
+        for pi, sol in zip(port_indices, combo):
+            port_comp_choices[pi] = sol.component_choices
+            port_solutions[pi] = sol
+
+        eval_freq = self.port_configs[port_indices[0]].target_frequency_hz
+        result = evaluate_joint_solution(
+            self.dut,
+            port_comp_choices,
+            eval_freq,
+            self.Z0,
+            self.radiation_efficiency,
+            self.per_port_efficiency,
+        )
+        if not result.get('valid', False):
+            return None
+
+        n_ports = self.dut.num_ports
+        port_metrics_dict = result['port_metrics']
+        avg_port_eff = []
+        min_port_eff = []
+        for i in range(n_ports):
+            pm = port_metrics_dict.get(i, {})
+            eff = pm.get('total_efficiency', pm.get('mismatch_efficiency', 0))
+            avg_port_eff.append(eff)
+            min_port_eff.append(eff)
+
+        all_effs = [
+            pm.get('total_efficiency', pm.get('mismatch_efficiency', 0))
+            for pm in port_metrics_dict.values()
+        ]
+
+        comp_s_params = []
+        for sol in combo:
+            for c in sol.component_choices:
+                try:
+                    cs = c.component.get_s_matrix_at_freq(eval_freq)
+                    comp_s_params.append((cs, c.connection_type))
+                except Exception:
+                    pass
+        comp_loss = estimate_total_component_loss(comp_s_params)
+
+        score_input = ScoreInput(
+            avg_port_efficiency=np.array(avg_port_eff),
+            min_port_efficiency=np.array(min_port_eff),
+            avg_band_efficiency=float(np.mean(all_effs)) if all_effs else 0.0,
+            min_band_efficiency=float(np.min(all_effs)) if all_effs else 0.0,
+            max_coupling_loss=result['max_coupling_loss'],
+            component_loss=comp_loss,
+            component_count=sum(len(sol.component_choices) for sol in combo),
+        )
+
+        return JointSolution(
+            port_solutions=port_solutions,
+            system_s_matrix=result.get('s_matrix'),
+            port_metrics=result['port_metrics'],
+            min_system_efficiency=result['min_mismatch_efficiency'],
+            avg_system_efficiency=result['avg_mismatch_efficiency'],
+            min_total_efficiency=result['min_total_efficiency'],
+            avg_total_efficiency=result['avg_total_efficiency'],
+            max_coupling_loss=result['max_coupling_loss'],
+            balanced_score=compute_unified_score(score_input, self.optimization_mode),
+            component_loss_total=result.get('component_loss_total', 0.0),
+            power_balance=result.get('power_balance', {}),
+        )
+
+    def _phase2_beam_evaluation(
+        self,
+        port_indices: List[int],
+        candidate_lists: List[List[MatchingSolution]],
+        max_evaluations: int,
+    ) -> Tuple[List[JointSolution], int]:
+        """
+        Guided joint search for very large products.
+
+        Partial combinations are retained by independent per-port quality, then
+        complete candidates are ranked by the real joint S-matrix evaluation.
+        """
+        beam_width = max(32, self.top_K * 12)
+        beam: List[Tuple[MatchingSolution, ...]] = [tuple()]
+
+        for depth, cand_list in enumerate(candidate_lists):
+            expanded = [partial + (cand,) for partial in beam for cand in cand_list]
+            if depth < len(candidate_lists) - 1 and len(expanded) > beam_width:
+                expanded.sort(key=self._independent_combo_key)
+                expanded = expanded[:beam_width]
+            beam = expanded
+
+        complete = beam
+        if len(complete) > max_evaluations:
+            complete.sort(key=self._independent_combo_key)
+            complete = complete[:max_evaluations]
+
+        joint_solutions = []
+        evaluated = 0
+        for combo in complete:
+            evaluated += 1
+            js = self._evaluate_joint_combo(port_indices, combo)
+            if js is not None:
+                joint_solutions.append(js)
+        return joint_solutions, evaluated
+
+    def _independent_combo_key(self, combo: Tuple[MatchingSolution, ...]) -> Tuple[float, int]:
+        return (
+            sum(_solution_rank_key(sol, self.library) for sol in combo),
+            sum(len(sol.component_choices) for sol in combo),
+        )
+
+    def _refine_joint_solutions(
+        self,
+        port_indices: List[int],
+        candidate_lists: List[List[MatchingSolution]],
+        seeds: List[JointSolution],
+        max_passes: int = 3,
+    ) -> Tuple[List[JointSolution], int]:
+        """Coordinate refinement: replace one port at a time and keep improvements."""
+        refined: List[JointSolution] = []
+        evaluated = 0
+
+        for seed in seeds:
+            combo = tuple(seed.port_solutions[pi] for pi in port_indices)
+            current = seed
+            for _ in range(max_passes):
+                changed = False
+                for pos, cand_list in enumerate(candidate_lists):
+                    best = current
+                    best_combo = combo
+                    for cand in cand_list:
+                        if cand is combo[pos]:
+                            continue
+                        trial = list(combo)
+                        trial[pos] = cand
+                        evaluated += 1
+                        js = self._evaluate_joint_combo(port_indices, tuple(trial))
+                        if js is not None and js.balanced_score > best.balanced_score + 1e-12:
+                            best = js
+                            best_combo = tuple(trial)
+                    if best is not current:
+                        current = best
+                        combo = best_combo
+                        changed = True
+                if not changed:
+                    break
+            refined.append(current)
+
+        return refined, evaluated
+
+    def _dedup_joint_solutions(self, solutions: List[JointSolution]) -> List[JointSolution]:
+        seen = set()
+        unique = []
+        for sol in sorted(solutions, key=lambda s: s.balanced_score, reverse=True):
+            sig = tuple(
+                (
+                    pi,
+                    tuple(
+                        (
+                            c.position,
+                            c.connection_type,
+                            c.component.part_number,
+                            getattr(c.component, "s2p_filename", ""),
+                            getattr(c.component, "zip_path", ""),
+                        )
+                        for c in sol.port_solutions[pi].component_choices
+                    ),
+                )
+                for pi in sorted(sol.port_solutions)
+            )
+            if sig in seen:
+                continue
+            seen.add(sig)
+            unique.append(sol)
+        return unique
+
+    def _log_phase2_results(
+        self,
+        port_indices: List[int],
+        joint_solutions: List[JointSolution],
+        evaluated: int,
+        search_mode: str,
+    ) -> None:
+        logger.info(
+            "PHASE2 mode=%s evaluated=%d valid=%d top=%d",
+            search_mode,
+            evaluated,
+            len(joint_solutions),
+            min(10, len(joint_solutions)),
+        )
+        for rank, sol in enumerate(joint_solutions[: min(10, len(joint_solutions))], start=1):
+            comp_summary = []
+            for pi in port_indices:
+                port_sol = sol.port_solutions.get(pi)
+                if port_sol:
+                    comp_summary.append(f"P{pi + 1}:{_solution_label(port_sol)}")
+            enabled_eff = {
+                pi: sol.port_metrics.get(pi, {}).get(
+                    "total_efficiency",
+                    sol.port_metrics.get(pi, {}).get("mismatch_efficiency", 0.0),
+                )
+                for pi in port_indices
+            }
+            logger.info(
+                "  #%02d score=%.5f avg_eff=%.5f min_eff=%.5f coupling=%.5f comp_loss=%.5f eff=%s %s",
+                rank,
+                sol.balanced_score,
+                sol.avg_total_efficiency,
+                sol.min_total_efficiency,
+                sol.max_coupling_loss,
+                sol.component_loss_total,
+                {k: round(v, 5) for k, v in enabled_eff.items()},
+                " | ".join(comp_summary),
+            )
+
     def _evaluate_at_band_frequencies(
         self,
         joint_sol: JointSolution,
@@ -558,6 +855,7 @@ class JointMultiPortOptimizer:
             List of JointSolution sorted by balanced_score (best first)
         """
         start_time = time.time()
+        self._debug_info = {}  # Reset debug info
         
         # Phase 1: Independent candidates
         if progress_callback:
@@ -569,11 +867,64 @@ class JointMultiPortOptimizer:
         if progress_callback:
             progress_callback(0.4, f"Phase 1 done: {total_candidates} candidates across {len(candidates)} ports")
         
+        # Collect phase1 debug info
+        if self.debug:
+            self._debug_info['phase1_candidates'] = {
+                str(pi): [
+                    {
+                        'topology': sol.topology.name,
+                        'rl_db': round(sol.s11_db, 2),
+                        's11_mag': round(sol.s11_magnitude, 5),
+                        'accepted_eff': round(1.0 - sol.s11_magnitude ** 2, 4),
+                        'components': [
+                            {
+                                'connection_type': c.connection_type,
+                                'value': f"{c.component.nominal_value}{c.component.nominal_unit}",
+                                'part_number': c.component.part_number,
+                            }
+                            for c in sol.component_choices
+                        ],
+                    }
+                    for sol in candidates[pi][:self.debug_top_n]
+                ]
+                for pi in candidates
+            }
+        
         # Phase 2: Joint evaluation
         if progress_callback:
             progress_callback(0.4, "Phase 2: Joint evaluation of all combinations...")
         
         joint_solutions = self._phase2_joint_evaluation(candidates)
+        
+        # Collect joint phase2 debug info
+        if self.debug:
+            self._debug_info['joint_top_candidates'] = [
+                {
+                    'score': round(sol.balanced_score, 5),
+                    'avg_total_eff': round(sol.avg_total_efficiency, 5),
+                    'min_total_eff': round(sol.min_total_efficiency, 5),
+                    'max_coupling': round(sol.max_coupling_loss, 5),
+                    'comp_loss': round(sol.component_loss_total, 5),
+                    'ports': {
+                        str(pi): {
+                            'topology': sol.port_solutions[pi].topology.name,
+                            'rl_db': round(sol.port_metrics.get(pi, {}).get('s11_db', 0), 2),
+                            'total_eff': round(sol.port_metrics.get(pi, {}).get('total_efficiency', 0), 5),
+                            'coupling': round(sol.port_metrics.get(pi, {}).get('coupling_loss', 0), 5),
+                            'components': [
+                                {
+                                    'connection_type': c.connection_type,
+                                    'value': f"{c.component.nominal_value}{c.component.nominal_unit}",
+                                    'part_number': c.component.part_number,
+                                }
+                                for c in sol.port_solutions[pi].component_choices
+                            ],
+                        }
+                        for pi in sol.port_solutions
+                    },
+                }
+                for sol in joint_solutions[:min(self.debug_top_n, len(joint_solutions))]
+            ]
         
         if progress_callback:
             progress_callback(0.7, f"Phase 2 done: {len(joint_solutions)} joint solutions evaluated")
@@ -588,6 +939,36 @@ class JointMultiPortOptimizer:
             
             # Re-sort after band evaluation
             joint_solutions.sort(key=lambda s: s.balanced_score, reverse=True)
+        
+        # Collect final ranking debug info
+        if self.debug:
+            self._debug_info['final_ranking'] = [
+                {
+                    'score': round(sol.balanced_score, 5),
+                    'avg_total_eff': round(sol.avg_total_efficiency, 5),
+                    'min_total_eff': round(sol.min_total_efficiency, 5),
+                    'max_coupling': round(sol.max_coupling_loss, 5),
+                    'comp_loss': round(sol.component_loss_total, 5),
+                    'ports': {
+                        str(pi): {
+                            'topology': sol.port_solutions[pi].topology.name,
+                            'rl_db': round(sol.port_metrics.get(pi, {}).get('s11_db', 0), 2),
+                            'total_eff': round(sol.port_metrics.get(pi, {}).get('total_efficiency', 0), 5),
+                            'coupling': round(sol.port_metrics.get(pi, {}).get('coupling_loss', 0), 5),
+                            'components': [
+                                {
+                                    'connection_type': c.connection_type,
+                                    'value': f"{c.component.nominal_value}{c.component.nominal_unit}",
+                                    'part_number': c.component.part_number,
+                                }
+                                for c in sol.port_solutions[pi].component_choices
+                            ],
+                        }
+                        for pi in sol.port_solutions
+                    },
+                }
+                for sol in joint_solutions[:min(self.debug_top_n, len(joint_solutions))]
+            ]
         
         elapsed = time.time() - start_time
         if progress_callback:

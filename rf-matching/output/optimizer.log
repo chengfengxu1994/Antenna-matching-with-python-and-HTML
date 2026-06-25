@@ -1,0 +1,572 @@
+2026-06-25 08:49:52,386 [rf_matching.optimizer] INFO: ╔══════════════════════════════════════════════════════════╗
+2026-06-25 08:49:52,386 [rf_matching.optimizer] INFO: ║  PHASE1  port=0  target=2450.000 MHz  max_comp=2  top_K=3  ║
+2026-06-25 08:49:52,386 [rf_matching.optimizer] INFO: ╚══════════════════════════════════════════════════════════╝
+2026-06-25 08:49:52,393 [rf_matching.optimizer] INFO: PHASE1 port=0: running 16 topologies
+2026-06-25 08:49:52,393 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-L, Shunt-C), n_comp=2
+2026-06-25 08:49:52,394 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:52,394 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:52,394 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:53,306 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.2008, evaluated=2695
+2026-06-25 08:49:53,306 [rf_matching.optimizer] INFO:   Best: RL=13.9dB L-Network (Series-L, Shunt-C) [1.0nH, 1.0pF]
+2026-06-25 08:49:53,306 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-L, Shunt-C) #1 RL=13.95dB |Sii|=0.20077 accepted=0.9597 comps=L-Network (Series-L, Shunt-C) [series:1nH:04HP1N0, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:53,306 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-L, Shunt-C) #2 RL=12.53dB |Sii|=0.23641 accepted=0.9441 comps=L-Network (Series-L, Shunt-C) [series:1nH:04HP1N0, shunt:1.1pF:GQM1875C2E1R1BB12]
+2026-06-25 08:49:53,306 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-L, Shunt-C) #3 RL=11.09dB |Sii|=0.27897 accepted=0.9222 comps=L-Network (Series-L, Shunt-C) [series:1nH:04HP1N0, shunt:1.2pF:GQM1875C2E1R2BB12]
+2026-06-25 08:49:53,306 [rf_matching.optimizer] INFO:   topology=L-Network (Series-L, Shunt-C): 3 solutions, best RL=13.95dB L-Network (Series-L, Shunt-C) [series:1nH:04HP1N0, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:53,306 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-C, Shunt-L), n_comp=2
+2026-06-25 08:49:53,310 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:53,310 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:53,310 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:53,586 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0127, evaluated=2695
+2026-06-25 08:49:53,586 [rf_matching.optimizer] INFO:   Best: RL=37.9dB L-Network (Series-C, Shunt-L) [1.6pF, 6.8nH]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-C, Shunt-L) #1 RL=37.94dB |Sii|=0.01267 accepted=0.9998 comps=L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-C, Shunt-L) #2 RL=34.33dB |Sii|=0.01920 accepted=0.9996 comps=L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.2nH:04HP6N2]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Series-C, Shunt-L) #3 RL=31.23dB |Sii|=0.02743 accepted=0.9992 comps=L-Network (Series-C, Shunt-L) [series:1.8pF:GQM1875C2E1R8BB12, shunt:8.2nH:04HP8N2]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] INFO:   topology=L-Network (Series-C, Shunt-L): 3 solutions, best RL=37.94dB L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-L, Series-C), n_comp=2
+2026-06-25 08:49:53,589 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:53,589 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0831, evaluated=2695
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   Best: RL=20.5dB L-Network (Shunt-L, Series-C) [68.0nH, 3.0pF]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-L, Series-C) #1 RL=20.53dB |Sii|=0.09404 accepted=0.9912 comps=L-Network (Shunt-L, Series-C) [shunt:68nH:04HPH68N, series:3pF:GQM1875C2E3R0BB12]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-L, Series-C) #2 RL=20.42dB |Sii|=0.09530 accepted=0.9909 comps=L-Network (Shunt-L, Series-C) [shunt:68nH:04HPH68N, series:3.3pF:GQM1875C2E3R3BB12]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-L, Series-C) #3 RL=20.37dB |Sii|=0.09587 accepted=0.9908 comps=L-Network (Shunt-L, Series-C) [shunt:56nH:04HPH56N, series:3pF:GQM1875C2E3R0BB12]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-L, Series-C): 3 solutions, best RL=20.53dB L-Network (Shunt-L, Series-C) [shunt:68nH:04HPH68N, series:3pF:GQM1875C2E3R0BB12]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-C, Series-L), n_comp=2
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:53,867 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.1092, evaluated=2695
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   Best: RL=19.2dB L-Network (Shunt-C, Series-L) [1.0pF, 1.0nH]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-C, Series-L) #1 RL=19.23dB |Sii|=0.10922 accepted=0.9881 comps=L-Network (Shunt-C, Series-L) [shunt:1pF:GQM1875C2E1R0BB12, series:1nH:04HP1N0]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-C, Series-L) #2 RL=16.83dB |Sii|=0.14411 accepted=0.9792 comps=L-Network (Shunt-C, Series-L) [shunt:1.1pF:GQM1875C2E1R1BB12, series:1nH:04HP1N0]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=L-Network (Shunt-C, Series-L) #3 RL=14.56dB |Sii|=0.18715 accepted=0.9650 comps=L-Network (Shunt-C, Series-L) [shunt:1pF:GQM1875C2E1R0BB12, series:2nH:04HP2N0]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-C, Series-L): 3 solutions, best RL=19.23dB L-Network (Shunt-C, Series-L) [shunt:1pF:GQM1875C2E1R0BB12, series:1nH:04HP1N0]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-L), n_comp=2
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,143 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:54,335 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.4583, evaluated=2401
+2026-06-25 08:49:54,335 [rf_matching.optimizer] INFO:   Best: RL=6.8dB 2-Element (Series-L, Series-L) [1.0nH, 1.0nH]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-L) #1 RL=6.78dB |Sii|=0.45826 accepted=0.7900 comps=2-Element (Series-L, Series-L) [series:1nH:04HP1N0, series:1nH:04HP1N0]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-L) #2 RL=4.94dB |Sii|=0.56627 accepted=0.6793 comps=2-Element (Series-L, Series-L) [series:2nH:04HP2N0, series:1nH:04HP1N0]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-L) #3 RL=4.94dB |Sii|=0.56635 accepted=0.6792 comps=2-Element (Series-L, Series-L) [series:1nH:04HP1N0, series:2nH:04HP2N0]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-L): 3 solutions, best RL=6.78dB 2-Element (Series-L, Series-L) [series:1nH:04HP1N0, series:1nH:04HP1N0]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Shunt-L), n_comp=2
+2026-06-25 08:49:54,337 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,337 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:54,580 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.3252, evaluated=2401
+2026-06-25 08:49:54,580 [rf_matching.optimizer] INFO:   Best: RL=9.8dB 2-Element (Series-L, Shunt-L) [1.0nH, 0.2nH]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Shunt-L) #1 RL=9.75dB |Sii|=0.32531 accepted=0.8942 comps=2-Element (Series-L, Shunt-L) [series:1nH:04HP1N0, shunt:0.22nH:04HPHR22]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Shunt-L) #2 RL=9.76dB |Sii|=0.32522 accepted=0.8942 comps=2-Element (Series-L, Shunt-L) [series:1nH:04HP1N0, shunt:0.18nH:04HPHR18]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Shunt-L) #3 RL=9.36dB |Sii|=0.34051 accepted=0.8841 comps=2-Element (Series-L, Shunt-L) [series:1nH:04HP1N0, shunt:68nH:04HPH68N]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Shunt-L): 3 solutions, best RL=9.75dB 2-Element (Series-L, Shunt-L) [series:1nH:04HP1N0, shunt:0.22nH:04HPHR22]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Series-L), n_comp=2
+2026-06-25 08:49:54,587 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,587 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.3258, evaluated=2401
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   Best: RL=9.4dB 2-Element (Shunt-L, Series-L) [68.0nH, 1.0nH]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Series-L) #1 RL=9.36dB |Sii|=0.34022 accepted=0.8842 comps=2-Element (Shunt-L, Series-L) [shunt:68nH:04HPH68N, series:1nH:04HP1N0]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Series-L) #2 RL=9.74dB |Sii|=0.32578 accepted=0.8939 comps=2-Element (Shunt-L, Series-L) [shunt:0.22nH:04HPHR22, series:1nH:04HP1N0]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Series-L) #3 RL=9.74dB |Sii|=0.32585 accepted=0.8938 comps=2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:1nH:04HP1N0]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Series-L): 3 solutions, best RL=9.36dB 2-Element (Shunt-L, Series-L) [shunt:68nH:04HPH68N, series:1nH:04HP1N0]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-L), n_comp=2
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:54,817 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:55,087 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.1773, evaluated=2401
+2026-06-25 08:49:55,087 [rf_matching.optimizer] INFO:   Best: RL=15.0dB 2-Element (Shunt-L, Shunt-L) [0.2nH, 0.2nH]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-L) #1 RL=15.03dB |Sii|=0.17730 accepted=0.9686 comps=2-Element (Shunt-L, Shunt-L) [shunt:0.22nH:04HPHR22, shunt:0.22nH:04HPHR22]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-L) #2 RL=15.02dB |Sii|=0.17739 accepted=0.9685 comps=2-Element (Shunt-L, Shunt-L) [shunt:0.22nH:04HPHR22, shunt:0.18nH:04HPHR18]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-L) #3 RL=15.02dB |Sii|=0.17739 accepted=0.9685 comps=2-Element (Shunt-L, Shunt-L) [shunt:0.18nH:04HPHR18, shunt:0.22nH:04HPHR22]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-L): 3 solutions, best RL=15.03dB 2-Element (Shunt-L, Shunt-L) [shunt:0.22nH:04HPHR22, shunt:0.22nH:04HPHR22]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-C), n_comp=2
+2026-06-25 08:49:55,094 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:55,094 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:55,276 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0805, evaluated=2695
+2026-06-25 08:49:55,276 [rf_matching.optimizer] INFO:   Best: RL=21.9dB 2-Element (Series-L, Series-C) [2.7nH, 1.0pF]
+2026-06-25 08:49:55,276 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-C) #1 RL=21.88dB |Sii|=0.08054 accepted=0.9935 comps=2-Element (Series-L, Series-C) [series:2.7nH:04HP2N7, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:55,276 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-C) #2 RL=21.87dB |Sii|=0.08066 accepted=0.9935 comps=2-Element (Series-L, Series-C) [series:2.4nH:04HP2N4, series:1.1pF:GQM1875C2E1R1BB12]
+2026-06-25 08:49:55,276 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-L, Series-C) #3 RL=21.60dB |Sii|=0.08320 accepted=0.9931 comps=2-Element (Series-L, Series-C) [series:2.2nH:04HP2N2, series:1.2pF:GQM1875C2E1R2BB12]
+2026-06-25 08:49:55,276 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-C): 3 solutions, best RL=21.88dB 2-Element (Series-L, Series-C) [series:2.7nH:04HP2N7, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:55,276 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-C), n_comp=2
+2026-06-25 08:49:55,282 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:55,282 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:55,282 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:55,588 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0274, evaluated=2695
+2026-06-25 08:49:55,594 [rf_matching.optimizer] INFO:   Best: RL=31.2dB 2-Element (Shunt-L, Shunt-C) [6.8nH, 1.0pF]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-C) #1 RL=31.24dB |Sii|=0.02742 accepted=0.9992 comps=2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-C) #2 RL=30.85dB |Sii|=0.02869 accepted=0.9992 comps=2-Element (Shunt-L, Shunt-C) [shunt:5.6nH:04HP5N6, shunt:1.1pF:GQM1875C2E1R1BB12]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-L, Shunt-C) #3 RL=30.68dB |Sii|=0.02924 accepted=0.9991 comps=2-Element (Shunt-L, Shunt-C) [shunt:4.3nH:04HP4N3, shunt:1.3pF:GQM1875C2E1R3BB12]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-C): 3 solutions, best RL=31.24dB 2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-L), n_comp=2
+2026-06-25 08:49:55,595 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:55,595 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:55,776 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0808, evaluated=2695
+2026-06-25 08:49:55,776 [rf_matching.optimizer] INFO:   Best: RL=21.8dB 2-Element (Series-C, Series-L) [1.0pF, 2.7nH]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-L) #1 RL=21.85dB |Sii|=0.08085 accepted=0.9935 comps=2-Element (Series-C, Series-L) [series:1pF:GQM1875C2E1R0BB12, series:2.7nH:04HP2N7]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-L) #2 RL=21.82dB |Sii|=0.08111 accepted=0.9934 comps=2-Element (Series-C, Series-L) [series:1.1pF:GQM1875C2E1R1BB12, series:2.4nH:04HP2N4]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-L) #3 RL=21.59dB |Sii|=0.08328 accepted=0.9931 comps=2-Element (Series-C, Series-L) [series:1.2pF:GQM1875C2E1R2BB12, series:2.2nH:04HP2N2]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-L): 3 solutions, best RL=21.85dB 2-Element (Series-C, Series-L) [series:1pF:GQM1875C2E1R0BB12, series:2.7nH:04HP2N7]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-L), n_comp=2
+2026-06-25 08:49:55,778 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:55,778 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:56,110 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.0274, evaluated=2695
+2026-06-25 08:49:56,110 [rf_matching.optimizer] INFO:   Best: RL=31.2dB 2-Element (Shunt-C, Shunt-L) [1.0pF, 6.8nH]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-L) #1 RL=31.24dB |Sii|=0.02742 accepted=0.9992 comps=2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-L) #2 RL=30.85dB |Sii|=0.02869 accepted=0.9992 comps=2-Element (Shunt-C, Shunt-L) [shunt:1.1pF:GQM1875C2E1R1BB12, shunt:5.6nH:04HP5N6]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-L) #3 RL=30.68dB |Sii|=0.02924 accepted=0.9991 comps=2-Element (Shunt-C, Shunt-L) [shunt:1.3pF:GQM1875C2E1R3BB12, shunt:4.3nH:04HP4N3]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-L): 3 solutions, best RL=31.24dB 2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-C), n_comp=2
+2026-06-25 08:49:56,112 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,112 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,113 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:49:56,310 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.0781, evaluated=3025
+2026-06-25 08:49:56,310 [rf_matching.optimizer] INFO:   Best: RL=22.1dB 2-Element (Series-C, Series-C) [56.0pF, 2.7pF]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-C) #1 RL=22.15dB |Sii|=0.07808 accepted=0.9939 comps=2-Element (Series-C, Series-C) [series:56pF:GQM1875C2E560GB12, series:2.7pF:GQM1875C2E2R7BB12]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-C) #2 RL=22.15dB |Sii|=0.07808 accepted=0.9939 comps=2-Element (Series-C, Series-C) [series:2.7pF:GQM1875C2E2R7BB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Series-C) #3 RL=22.03dB |Sii|=0.07914 accepted=0.9937 comps=2-Element (Series-C, Series-C) [series:47pF:GQM1875C2E470GB12, series:2.4pF:GQM1875C2E2R4BB12]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-C): 3 solutions, best RL=22.15dB 2-Element (Series-C, Series-C) [series:56pF:GQM1875C2E560GB12, series:2.7pF:GQM1875C2E2R7BB12]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Shunt-C), n_comp=2
+2026-06-25 08:49:56,317 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,317 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.1829, evaluated=3025
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   Best: RL=14.8dB 2-Element (Series-C, Shunt-C) [75.0pF, 1.0pF]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Shunt-C) #1 RL=14.76dB |Sii|=0.18287 accepted=0.9666 comps=2-Element (Series-C, Shunt-C) [series:75pF:GQM1882C1H750GB01, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Shunt-C) #2 RL=14.74dB |Sii|=0.18332 accepted=0.9664 comps=2-Element (Series-C, Shunt-C) [series:62pF:GQM1882C1H620GB01, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Series-C, Shunt-C) #3 RL=14.73dB |Sii|=0.18341 accepted=0.9664 comps=2-Element (Series-C, Shunt-C) [series:51pF:GQM1882C1H510GB01, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Shunt-C): 3 solutions, best RL=14.76dB 2-Element (Series-C, Shunt-C) [series:75pF:GQM1882C1H750GB01, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Series-C), n_comp=2
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,609 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:49:56,906 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.1426, evaluated=3025
+2026-06-25 08:49:56,906 [rf_matching.optimizer] INFO:   Best: RL=16.9dB 2-Element (Shunt-C, Series-C) [1.0pF, 56.0pF]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Series-C) #1 RL=16.92dB |Sii|=0.14260 accepted=0.9797 comps=2-Element (Shunt-C, Series-C) [shunt:1pF:GQM1875C2E1R0BB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Series-C) #2 RL=16.32dB |Sii|=0.15276 accepted=0.9767 comps=2-Element (Shunt-C, Series-C) [shunt:1pF:GQM1875C2E1R0BB12, series:47pF:GQM1875C2E470GB12]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Series-C) #3 RL=16.19dB |Sii|=0.15510 accepted=0.9759 comps=2-Element (Shunt-C, Series-C) [shunt:1.1pF:GQM1875C2E1R1BB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Series-C): 3 solutions, best RL=16.92dB 2-Element (Shunt-C, Series-C) [shunt:1pF:GQM1875C2E1R0BB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-C), n_comp=2
+2026-06-25 08:49:56,910 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,910 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:56,911 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:49:57,290 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.1407, evaluated=3025
+2026-06-25 08:49:57,290 [rf_matching.optimizer] INFO:   Best: RL=17.0dB 2-Element (Shunt-C, Shunt-C) [75.0pF, 5.6pF]
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-C) #1 RL=17.04dB |Sii|=0.14068 accepted=0.9802 comps=2-Element (Shunt-C, Shunt-C) [shunt:75pF:GQM1882C1H750GB01, shunt:5.6pF:GQM1875C2E5R6CB12]
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-C) #2 RL=17.04dB |Sii|=0.14068 accepted=0.9802 comps=2-Element (Shunt-C, Shunt-C) [shunt:5.6pF:GQM1875C2E5R6CB12, shunt:75pF:GQM1882C1H750GB01]
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DBG port=0 topology=2-Element (Shunt-C, Shunt-C) #3 RL=15.72dB |Sii|=0.16367 accepted=0.9732 comps=2-Element (Shunt-C, Shunt-C) [shunt:5.6pF:GQM1875C2E5R6CB12, shunt:51pF:GQM1882C1H510GB01]
+2026-06-25 08:49:57,292 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-C): 3 solutions, best RL=17.04dB 2-Element (Shunt-C, Shunt-C) [shunt:75pF:GQM1882C1H750GB01, shunt:5.6pF:GQM1875C2E5R6CB12]
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-C, Series-C) [series:56pF:GQM1875C2E560GB12, series:2.7pF:GQM1875C2E2R7BB12] (bucket: 2-Element (Series-C, Series-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-C, Series-L) [series:1pF:GQM1875C2E1R0BB12, series:2.7nH:04HP2N7] (bucket: 2-Element (Series-C, Series-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-C, Shunt-C) [series:75pF:GQM1882C1H750GB01, shunt:1pF:GQM1875C2E1R0BB12] (bucket: 2-Element (Series-C, Shunt-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-L, Series-C) [series:2.7nH:04HP2N7, series:1pF:GQM1875C2E1R0BB12] (bucket: 2-Element (Series-L, Series-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-L, Series-L) [series:1nH:04HP1N0, series:1nH:04HP1N0] (bucket: 2-Element (Series-L, Series-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Series-L, Shunt-L) [series:1nH:04HP1N0, shunt:0.22nH:04HPHR22] (bucket: 2-Element (Series-L, Shunt-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-C, Series-C) [shunt:1pF:GQM1875C2E1R0BB12, series:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Shunt-C, Series-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-C, Shunt-C) [shunt:75pF:GQM1882C1H750GB01, shunt:5.6pF:GQM1875C2E5R6CB12] (bucket: 2-Element (Shunt-C, Shunt-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] (bucket: 2-Element (Shunt-C, Shunt-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-L, Series-L) [shunt:68nH:04HPH68N, series:1nH:04HP1N0] (bucket: 2-Element (Shunt-L, Series-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12] (bucket: 2-Element (Shunt-L, Shunt-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select 2-Element (Shunt-L, Shunt-L) [shunt:0.22nH:04HPHR22, shunt:0.22nH:04HPHR22] (bucket: 2-Element (Shunt-L, Shunt-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8] (bucket: L-Network (Series-C, Shunt-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select L-Network (Series-L, Shunt-C) [series:1nH:04HP1N0, shunt:1pF:GQM1875C2E1R0BB12] (bucket: L-Network (Series-L, Shunt-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select L-Network (Shunt-C, Series-L) [shunt:1pF:GQM1875C2E1R0BB12, series:1nH:04HP1N0] (bucket: L-Network (Shunt-C, Series-L), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] DEBUG:   DIVERSITY port=0 select L-Network (Shunt-L, Series-C) [shunt:68nH:04HPH68N, series:3pF:GQM1875C2E3R0BB12] (bucket: L-Network (Shunt-L, Series-C), taken=1/1)
+2026-06-25 08:49:57,292 [rf_matching.optimizer] INFO: PHASE1 port=0: 16 diverse candidates selected (from 16 topology buckets)
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO: ╔══ PHASE1 port=0 final candidates (3) ══╗
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO:   cand#01  RL=37.94dB  |Sii|=0.01267  accepted=0.9998  L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO:   cand#02  RL=31.24dB  |Sii|=0.02742  accepted=0.9992  2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8]
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO:   cand#03  RL=31.24dB  |Sii|=0.02742  accepted=0.9992  2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO: ╚═══════════════════════════════════════════════╝
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO: ╔══════════════════════════════════════════════════════════╗
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO: ║  PHASE1  port=1  target=2450.000 MHz  max_comp=2  top_K=3  ║
+2026-06-25 08:49:57,294 [rf_matching.optimizer] INFO: ╚══════════════════════════════════════════════════════════╝
+2026-06-25 08:49:57,296 [rf_matching.optimizer] INFO: PHASE1 port=1: running 16 topologies
+2026-06-25 08:49:57,296 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-L, Shunt-C), n_comp=2
+2026-06-25 08:49:57,296 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:57,296 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:57,296 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:57,600 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5063, evaluated=2695
+2026-06-25 08:49:57,600 [rf_matching.optimizer] INFO:   Best: RL=5.9dB L-Network (Series-L, Shunt-C) [68.0nH, 56.0pF]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-L, Shunt-C) #1 RL=5.87dB |Sii|=0.50876 accepted=0.7412 comps=L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-L, Shunt-C) #2 RL=5.86dB |Sii|=0.50956 accepted=0.7404 comps=L-Network (Series-L, Shunt-C) [series:56nH:04HPH56N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-L, Shunt-C) #3 RL=5.83dB |Sii|=0.51122 accepted=0.7387 comps=L-Network (Series-L, Shunt-C) [series:51nH:04HP51N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] INFO:   topology=L-Network (Series-L, Shunt-C): 3 solutions, best RL=5.87dB L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-C, Shunt-L), n_comp=2
+2026-06-25 08:49:57,601 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:57,601 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:57,870 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.8698, evaluated=2695
+2026-06-25 08:49:57,871 [rf_matching.optimizer] INFO:   Best: RL=1.2dB L-Network (Series-C, Shunt-L) [75.0pF, 24.0nH]
+2026-06-25 08:49:57,874 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-C, Shunt-L) #1 RL=1.21dB |Sii|=0.86982 accepted=0.2434 comps=L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:24nH:04HP24N]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-C, Shunt-L) #2 RL=1.21dB |Sii|=0.86983 accepted=0.2434 comps=L-Network (Series-C, Shunt-L) [series:47pF:GQM1875C2E470GB12, shunt:24nH:04HP24N]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Series-C, Shunt-L) #3 RL=1.21dB |Sii|=0.86984 accepted=0.2434 comps=L-Network (Series-C, Shunt-L) [series:51pF:GQM1882C1H510GB01, shunt:24nH:04HP24N]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] INFO:   topology=L-Network (Series-C, Shunt-L): 3 solutions, best RL=1.21dB L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:24nH:04HP24N]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-L, Series-C), n_comp=2
+2026-06-25 08:49:57,875 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:57,875 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:58,157 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5481, evaluated=2695
+2026-06-25 08:49:58,157 [rf_matching.optimizer] INFO:   Best: RL=5.2dB L-Network (Shunt-L, Series-C) [1.0nH, 56.0pF]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-L, Series-C) #1 RL=5.22dB |Sii|=0.54809 accepted=0.6996 comps=L-Network (Shunt-L, Series-C) [shunt:1nH:04HP1N0, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-L, Series-C) #2 RL=4.13dB |Sii|=0.62129 accepted=0.6140 comps=L-Network (Shunt-L, Series-C) [shunt:2nH:04HP2N0, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-L, Series-C) #3 RL=3.94dB |Sii|=0.63503 accepted=0.5967 comps=L-Network (Shunt-L, Series-C) [shunt:2.2nH:04HP2N2, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-L, Series-C): 3 solutions, best RL=5.22dB L-Network (Shunt-L, Series-C) [shunt:1nH:04HP1N0, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-C, Series-L), n_comp=2
+2026-06-25 08:49:58,160 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,160 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:58,414 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5578, evaluated=2695
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO:   Best: RL=5.1dB L-Network (Shunt-C, Series-L) [56.0pF, 1.0nH]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-C, Series-L) #1 RL=5.07dB |Sii|=0.55782 accepted=0.6888 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-C, Series-L) #2 RL=3.84dB |Sii|=0.64300 accepted=0.5866 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:2nH:04HP2N0]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=L-Network (Shunt-C, Series-L) #3 RL=3.62dB |Sii|=0.65945 accepted=0.5651 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:2.2nH:04HP2N2]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-C, Series-L): 3 solutions, best RL=5.07dB L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-L), n_comp=2
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,421 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.8390, evaluated=2401
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   Best: RL=1.5dB 2-Element (Series-L, Series-L) [8.7nH, 9.5nH]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-L) #1 RL=1.52dB |Sii|=0.83900 accepted=0.2961 comps=2-Element (Series-L, Series-L) [series:8.7nH:04HP8N7, series:9.5nH:04HP9N5]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-L) #2 RL=1.52dB |Sii|=0.83988 accepted=0.2946 comps=2-Element (Series-L, Series-L) [series:9.5nH:04HP9N5, series:9.5nH:04HP9N5]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-L) #3 RL=1.52dB |Sii|=0.83965 accepted=0.2950 comps=2-Element (Series-L, Series-L) [series:8.7nH:04HP8N7, series:10nH:04HP10N]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-L): 3 solutions, best RL=1.52dB 2-Element (Series-L, Series-L) [series:8.7nH:04HP8N7, series:9.5nH:04HP9N5]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Shunt-L), n_comp=2
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,594 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:58,844 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.8384, evaluated=2401
+2026-06-25 08:49:58,844 [rf_matching.optimizer] INFO:   Best: RL=1.5dB 2-Element (Series-L, Shunt-L) [16.0nH, 47.0nH]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Shunt-L) #1 RL=1.53dB |Sii|=0.83835 accepted=0.2972 comps=2-Element (Series-L, Shunt-L) [series:16nH:04HP16N, shunt:47nH:04HP47N]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Shunt-L) #2 RL=1.53dB |Sii|=0.83842 accepted=0.2970 comps=2-Element (Series-L, Shunt-L) [series:16nH:04HP16N, shunt:56nH:04HPH56N]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Shunt-L) #3 RL=1.53dB |Sii|=0.83843 accepted=0.2970 comps=2-Element (Series-L, Shunt-L) [series:16nH:04HP16N, shunt:51nH:04HP51N]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Shunt-L): 3 solutions, best RL=1.53dB 2-Element (Series-L, Shunt-L) [series:16nH:04HP16N, shunt:47nH:04HP47N]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Series-L), n_comp=2
+2026-06-25 08:49:58,847 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:58,847 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:59,115 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.8120, evaluated=2401
+2026-06-25 08:49:59,115 [rf_matching.optimizer] INFO:   Best: RL=1.8dB 2-Element (Shunt-L, Series-L) [0.2nH, 19.0nH]
+2026-06-25 08:49:59,115 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Series-L) #1 RL=1.81dB |Sii|=0.81198 accepted=0.3407 comps=2-Element (Shunt-L, Series-L) [shunt:0.22nH:04HPHR22, series:19nH:04HP19N]
+2026-06-25 08:49:59,115 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Series-L) #2 RL=1.81dB |Sii|=0.81212 accepted=0.3405 comps=2-Element (Shunt-L, Series-L) [shunt:0.22nH:04HPHR22, series:18nH:04HP18N]
+2026-06-25 08:49:59,115 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Series-L) #3 RL=1.81dB |Sii|=0.81217 accepted=0.3404 comps=2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:19nH:04HP19N]
+2026-06-25 08:49:59,115 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Series-L): 3 solutions, best RL=1.81dB 2-Element (Shunt-L, Series-L) [shunt:0.22nH:04HPHR22, series:19nH:04HP19N]
+2026-06-25 08:49:59,122 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-L), n_comp=2
+2026-06-25 08:49:59,122 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:59,122 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:59,122 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.8691, evaluated=2401
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   Best: RL=1.2dB 2-Element (Shunt-L, Shunt-L) [24.0nH, 56.0nH]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-L) #1 RL=1.21dB |Sii|=0.86958 accepted=0.2438 comps=2-Element (Shunt-L, Shunt-L) [shunt:24nH:04HP24N, shunt:56nH:04HPH56N]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-L) #2 RL=1.21dB |Sii|=0.86958 accepted=0.2438 comps=2-Element (Shunt-L, Shunt-L) [shunt:56nH:04HPH56N, shunt:24nH:04HP24N]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-L) #3 RL=1.21dB |Sii|=0.86971 accepted=0.2436 comps=2-Element (Shunt-L, Shunt-L) [shunt:47nH:04HP47N, shunt:47nH:04HP47N]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-L): 3 solutions, best RL=1.21dB 2-Element (Shunt-L, Shunt-L) [shunt:24nH:04HP24N, shunt:56nH:04HPH56N]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-C), n_comp=2
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:59,449 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:49:59,657 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.8401, evaluated=2695
+2026-06-25 08:49:59,657 [rf_matching.optimizer] INFO:   Best: RL=1.5dB 2-Element (Series-L, Series-C) [16.0nH, 62.0pF]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-C) #1 RL=1.51dB |Sii|=0.84011 accepted=0.2942 comps=2-Element (Series-L, Series-C) [series:16nH:04HP16N, series:62pF:GQM1882C1H620GB01]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-C) #2 RL=1.51dB |Sii|=0.84012 accepted=0.2942 comps=2-Element (Series-L, Series-C) [series:16nH:04HP16N, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-L, Series-C) #3 RL=1.51dB |Sii|=0.84012 accepted=0.2942 comps=2-Element (Series-L, Series-C) [series:16nH:04HP16N, series:51pF:GQM1882C1H510GB01]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-C): 3 solutions, best RL=1.51dB 2-Element (Series-L, Series-C) [series:16nH:04HP16N, series:62pF:GQM1882C1H620GB01]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-C), n_comp=2
+2026-06-25 08:49:59,660 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:49:59,660 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:00,013 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5117, evaluated=2695
+2026-06-25 08:50:00,013 [rf_matching.optimizer] INFO:   Best: RL=5.8dB 2-Element (Shunt-L, Shunt-C) [68.0nH, 56.0pF]
+2026-06-25 08:50:00,020 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-C) #1 RL=5.79dB |Sii|=0.51355 accepted=0.7363 comps=2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-C) #2 RL=5.78dB |Sii|=0.51389 accepted=0.7359 comps=2-Element (Shunt-L, Shunt-C) [shunt:56nH:04HPH56N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-L, Shunt-C) #3 RL=5.77dB |Sii|=0.51449 accepted=0.7353 comps=2-Element (Shunt-L, Shunt-C) [shunt:51nH:04HP51N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-C): 3 solutions, best RL=5.79dB 2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-L), n_comp=2
+2026-06-25 08:50:00,021 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:00,021 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:00,227 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.8401, evaluated=2695
+2026-06-25 08:50:00,227 [rf_matching.optimizer] INFO:   Best: RL=1.5dB 2-Element (Series-C, Series-L) [62.0pF, 16.0nH]
+2026-06-25 08:50:00,231 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-L) #1 RL=1.51dB |Sii|=0.84012 accepted=0.2942 comps=2-Element (Series-C, Series-L) [series:62pF:GQM1882C1H620GB01, series:16nH:04HP16N]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-L) #2 RL=1.51dB |Sii|=0.84012 accepted=0.2942 comps=2-Element (Series-C, Series-L) [series:75pF:GQM1882C1H750GB01, series:16nH:04HP16N]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-L) #3 RL=1.51dB |Sii|=0.84012 accepted=0.2942 comps=2-Element (Series-C, Series-L) [series:51pF:GQM1882C1H510GB01, series:16nH:04HP16N]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-L): 3 solutions, best RL=1.51dB 2-Element (Series-C, Series-L) [series:62pF:GQM1882C1H620GB01, series:16nH:04HP16N]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-L), n_comp=2
+2026-06-25 08:50:00,233 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:00,233 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:00,561 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5117, evaluated=2695
+2026-06-25 08:50:00,561 [rf_matching.optimizer] INFO:   Best: RL=5.8dB 2-Element (Shunt-C, Shunt-L) [56.0pF, 68.0nH]
+2026-06-25 08:50:00,561 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-L) #1 RL=5.79dB |Sii|=0.51355 accepted=0.7363 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N]
+2026-06-25 08:50:00,561 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-L) #2 RL=5.78dB |Sii|=0.51389 accepted=0.7359 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:56nH:04HPH56N]
+2026-06-25 08:50:00,561 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-L) #3 RL=5.77dB |Sii|=0.51449 accepted=0.7353 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:51nH:04HP51N]
+2026-06-25 08:50:00,561 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-L): 3 solutions, best RL=5.79dB 2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N]
+2026-06-25 08:50:00,567 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-C), n_comp=2
+2026-06-25 08:50:00,567 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,567 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,567 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:00,761 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.8716, evaluated=3025
+2026-06-25 08:50:00,761 [rf_matching.optimizer] INFO:   Best: RL=1.2dB 2-Element (Series-C, Series-C) [75.0pF, 75.0pF]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-C) #1 RL=1.19dB |Sii|=0.87158 accepted=0.2404 comps=2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-C) #2 RL=1.19dB |Sii|=0.87159 accepted=0.2403 comps=2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:47pF:GQM1875C2E470GB12]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Series-C) #3 RL=1.19dB |Sii|=0.87159 accepted=0.2403 comps=2-Element (Series-C, Series-C) [series:47pF:GQM1875C2E470GB12, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-C): 3 solutions, best RL=1.19dB 2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Shunt-C), n_comp=2
+2026-06-25 08:50:00,768 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:00,768 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.5116, evaluated=3025
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   Best: RL=5.8dB 2-Element (Series-C, Shunt-C) [56.0pF, 56.0pF]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Shunt-C) #1 RL=5.81dB |Sii|=0.51239 accepted=0.7375 comps=2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Shunt-C) #2 RL=5.81dB |Sii|=0.51240 accepted=0.7374 comps=2-Element (Series-C, Shunt-C) [series:16pF:GQM1875C2E160GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Series-C, Shunt-C) #3 RL=5.81dB |Sii|=0.51241 accepted=0.7374 comps=2-Element (Series-C, Shunt-C) [series:18pF:GQM1875C2E180GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Shunt-C): 3 solutions, best RL=5.81dB 2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Series-C), n_comp=2
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:01,046 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:01,357 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.2239, evaluated=3025
+2026-06-25 08:50:01,357 [rf_matching.optimizer] INFO:   Best: RL=13.0dB 2-Element (Shunt-C, Series-C) [56.0pF, 56.0pF]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Series-C) #1 RL=13.00dB |Sii|=0.22390 accepted=0.9499 comps=2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Series-C) #2 RL=6.02dB |Sii|=0.50032 accepted=0.7497 comps=2-Element (Shunt-C, Series-C) [shunt:68pF:GQM1875C2E680GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Series-C) #3 RL=5.95dB |Sii|=0.50404 accepted=0.7459 comps=2-Element (Shunt-C, Series-C) [shunt:11pF:GQM1875C2E110GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Series-C): 3 solutions, best RL=13.00dB 2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-C), n_comp=2
+2026-06-25 08:50:01,360 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:01,360 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:01,361 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:01,727 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.1637, evaluated=3025
+2026-06-25 08:50:01,727 [rf_matching.optimizer] INFO:   Best: RL=15.7dB 2-Element (Shunt-C, Shunt-C) [7.5pF, 27.0pF]
+2026-06-25 08:50:01,727 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-C) #1 RL=15.72dB |Sii|=0.16368 accepted=0.9732 comps=2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12]
+2026-06-25 08:50:01,727 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-C) #2 RL=15.72dB |Sii|=0.16368 accepted=0.9732 comps=2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DBG port=1 topology=2-Element (Shunt-C, Shunt-C) #3 RL=15.45dB |Sii|=0.16881 accepted=0.9715 comps=2-Element (Shunt-C, Shunt-C) [shunt:47pF:GQM1875C2E470GB12, shunt:5.1pF:GQM1875C2E5R1CB12]
+2026-06-25 08:50:01,730 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-C): 3 solutions, best RL=15.72dB 2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12]
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01] (bucket: 2-Element (Series-C, Series-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-C, Series-L) [series:62pF:GQM1882C1H620GB01, series:16nH:04HP16N] (bucket: 2-Element (Series-C, Series-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Series-C, Shunt-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-L, Series-C) [series:16nH:04HP16N, series:62pF:GQM1882C1H620GB01] (bucket: 2-Element (Series-L, Series-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-L, Series-L) [series:8.7nH:04HP8N7, series:9.5nH:04HP9N5] (bucket: 2-Element (Series-L, Series-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Series-L, Shunt-L) [series:16nH:04HP16N, shunt:47nH:04HP47N] (bucket: 2-Element (Series-L, Shunt-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Shunt-C, Series-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] (bucket: 2-Element (Shunt-C, Shunt-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N] (bucket: 2-Element (Shunt-C, Shunt-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-L, Series-L) [shunt:0.22nH:04HPHR22, series:19nH:04HP19N] (bucket: 2-Element (Shunt-L, Series-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Shunt-L, Shunt-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select 2-Element (Shunt-L, Shunt-L) [shunt:24nH:04HP24N, shunt:56nH:04HPH56N] (bucket: 2-Element (Shunt-L, Shunt-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:24nH:04HP24N] (bucket: L-Network (Series-C, Shunt-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] (bucket: L-Network (Series-L, Shunt-C), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0] (bucket: L-Network (Shunt-C, Series-L), taken=1/1)
+2026-06-25 08:50:01,730 [rf_matching.optimizer] DEBUG:   DIVERSITY port=1 select L-Network (Shunt-L, Series-C) [shunt:1nH:04HP1N0, series:56pF:GQM1875C2E560GB12] (bucket: L-Network (Shunt-L, Series-C), taken=1/1)
+2026-06-25 08:50:01,731 [rf_matching.optimizer] INFO: PHASE1 port=1: 16 diverse candidates selected (from 16 topology buckets)
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO: ╔══ PHASE1 port=1 final candidates (3) ══╗
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO:   cand#01  RL=15.72dB  |Sii|=0.16368  accepted=0.9732  2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12]
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO:   cand#02  RL=13.00dB  |Sii|=0.22390  accepted=0.9499  2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO:   cand#03  RL=5.87dB  |Sii|=0.50876  accepted=0.7412  L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO: ╚═══════════════════════════════════════════════╝
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO: ╔══════════════════════════════════════════════════════════╗
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO: ║  PHASE1  port=2  target=2450.000 MHz  max_comp=2  top_K=3  ║
+2026-06-25 08:50:01,732 [rf_matching.optimizer] INFO: ╚══════════════════════════════════════════════════════════╝
+2026-06-25 08:50:01,735 [rf_matching.optimizer] INFO: PHASE1 port=2: running 16 topologies
+2026-06-25 08:50:01,736 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-L, Shunt-C), n_comp=2
+2026-06-25 08:50:01,736 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:01,736 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:01,736 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:02,046 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5062, evaluated=2695
+2026-06-25 08:50:02,046 [rf_matching.optimizer] INFO:   Best: RL=5.9dB L-Network (Series-L, Shunt-C) [68.0nH, 56.0pF]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-L, Shunt-C) #1 RL=5.88dB |Sii|=0.50836 accepted=0.7416 comps=L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-L, Shunt-C) #2 RL=5.87dB |Sii|=0.50891 accepted=0.7410 comps=L-Network (Series-L, Shunt-C) [series:56nH:04HPH56N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-L, Shunt-C) #3 RL=5.85dB |Sii|=0.51002 accepted=0.7399 comps=L-Network (Series-L, Shunt-C) [series:51nH:04HP51N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] INFO:   topology=L-Network (Series-L, Shunt-C): 3 solutions, best RL=5.88dB L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Series-C, Shunt-L), n_comp=2
+2026-06-25 08:50:02,051 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:02,051 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.7745, evaluated=2695
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   Best: RL=2.2dB L-Network (Series-C, Shunt-L) [75.0pF, 47.0nH]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-C, Shunt-L) #1 RL=2.22dB |Sii|=0.77453 accepted=0.4001 comps=L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:47nH:04HP47N]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-C, Shunt-L) #2 RL=2.22dB |Sii|=0.77453 accepted=0.4001 comps=L-Network (Series-C, Shunt-L) [series:62pF:GQM1882C1H620GB01, shunt:47nH:04HP47N]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Series-C, Shunt-L) #3 RL=2.22dB |Sii|=0.77454 accepted=0.4001 comps=L-Network (Series-C, Shunt-L) [series:51pF:GQM1882C1H510GB01, shunt:47nH:04HP47N]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   topology=L-Network (Series-C, Shunt-L): 3 solutions, best RL=2.22dB L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:47nH:04HP47N]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-L, Series-C), n_comp=2
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:02,303 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:02,624 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5203, evaluated=2695
+2026-06-25 08:50:02,629 [rf_matching.optimizer] INFO:   Best: RL=5.7dB L-Network (Shunt-L, Series-C) [6.2nH, 1.0pF]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-L, Series-C) #1 RL=5.67dB |Sii|=0.52034 accepted=0.7292 comps=L-Network (Shunt-L, Series-C) [shunt:6.2nH:04HP6N2, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-L, Series-C) #2 RL=5.59dB |Sii|=0.52520 accepted=0.7242 comps=L-Network (Shunt-L, Series-C) [shunt:5.6nH:04HP5N6, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-L, Series-C) #3 RL=5.49dB |Sii|=0.53126 accepted=0.7178 comps=L-Network (Shunt-L, Series-C) [shunt:6.8nH:04HP6N8, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-L, Series-C): 3 solutions, best RL=5.67dB L-Network (Shunt-L, Series-C) [shunt:6.2nH:04HP6N2, series:1pF:GQM1875C2E1R0BB12]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] INFO: Exhaustive search: topology=L-Network (Shunt-C, Series-L), n_comp=2
+2026-06-25 08:50:02,631 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:02,631 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:02,957 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5650, evaluated=2695
+2026-06-25 08:50:02,957 [rf_matching.optimizer] INFO:   Best: RL=5.0dB L-Network (Shunt-C, Series-L) [56.0pF, 1.0nH]
+2026-06-25 08:50:02,960 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-C, Series-L) #1 RL=4.96dB |Sii|=0.56498 accepted=0.6808 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0]
+2026-06-25 08:50:02,960 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-C, Series-L) #2 RL=3.76dB |Sii|=0.64893 accepted=0.5789 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:2nH:04HP2N0]
+2026-06-25 08:50:02,962 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=L-Network (Shunt-C, Series-L) #3 RL=3.54dB |Sii|=0.66515 accepted=0.5576 comps=L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:2.2nH:04HP2N2]
+2026-06-25 08:50:02,962 [rf_matching.optimizer] INFO:   topology=L-Network (Shunt-C, Series-L): 3 solutions, best RL=4.96dB L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0]
+2026-06-25 08:50:02,962 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-L), n_comp=2
+2026-06-25 08:50:02,962 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:02,962 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:02,962 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:50:03,169 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.7757, evaluated=2401
+2026-06-25 08:50:03,169 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Series-L, Series-L) [2.4nH, 2.2nH]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-L) #1 RL=2.18dB |Sii|=0.77847 accepted=0.3940 comps=2-Element (Series-L, Series-L) [series:2.4nH:04HP2N4, series:2.2nH:04HP2N2]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-L) #2 RL=2.17dB |Sii|=0.77908 accepted=0.3930 comps=2-Element (Series-L, Series-L) [series:2.7nH:04HP2N7, series:2.2nH:04HP2N2]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-L) #3 RL=2.16dB |Sii|=0.77949 accepted=0.3924 comps=2-Element (Series-L, Series-L) [series:2.4nH:04HP2N4, series:2.7nH:04HP2N7]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-L): 3 solutions, best RL=2.18dB 2-Element (Series-L, Series-L) [series:2.4nH:04HP2N4, series:2.2nH:04HP2N2]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Shunt-L), n_comp=2
+2026-06-25 08:50:03,172 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,172 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:50:03,419 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.7742, evaluated=2401
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Series-L, Shunt-L) [4.7nH, 56.0nH]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Shunt-L) #1 RL=2.19dB |Sii|=0.77691 accepted=0.3964 comps=2-Element (Series-L, Shunt-L) [series:4.7nH:04HP4N7, shunt:56nH:04HPH56N]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Shunt-L) #2 RL=2.19dB |Sii|=0.77703 accepted=0.3962 comps=2-Element (Series-L, Shunt-L) [series:4.7nH:04HP4N7, shunt:51nH:04HP51N]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Shunt-L) #3 RL=2.20dB |Sii|=0.77643 accepted=0.3972 comps=2-Element (Series-L, Shunt-L) [series:4.3nH:04HP4N3, shunt:56nH:04HPH56N]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Shunt-L): 3 solutions, best RL=2.19dB 2-Element (Series-L, Shunt-L) [series:4.7nH:04HP4N7, shunt:56nH:04HPH56N]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Series-L), n_comp=2
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,421 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:50:03,693 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.7687, evaluated=2401
+2026-06-25 08:50:03,693 [rf_matching.optimizer] INFO:   Best: RL=2.3dB 2-Element (Shunt-L, Series-L) [0.2nH, 5.6nH]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Series-L) #1 RL=2.27dB |Sii|=0.76963 accepted=0.4077 comps=2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:5.6nH:04HP5N6]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Series-L) #2 RL=2.26dB |Sii|=0.77056 accepted=0.4062 comps=2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:6.2nH:04HP6N2]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Series-L) #3 RL=2.28dB |Sii|=0.76872 accepted=0.4091 comps=2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:4.7nH:04HP4N7]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Series-L): 3 solutions, best RL=2.27dB 2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:5.6nH:04HP5N6]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-L), n_comp=2
+2026-06-25 08:50:03,695 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:03,695 [rf_matching.optimizer] INFO:   Total combinations: 2401
+2026-06-25 08:50:04,034 [rf_matching.optimizer] INFO:   Exhaustive done: 2401 sols, best=0.7732, evaluated=2401
+2026-06-25 08:50:04,034 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Shunt-L, Shunt-L) [56.0nH, 56.0nH]
+2026-06-25 08:50:04,036 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-L) #1 RL=2.23dB |Sii|=0.77352 accepted=0.4017 comps=2-Element (Shunt-L, Shunt-L) [shunt:56nH:04HPH56N, shunt:56nH:04HPH56N]
+2026-06-25 08:50:04,036 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-L) #2 RL=2.23dB |Sii|=0.77366 accepted=0.4015 comps=2-Element (Shunt-L, Shunt-L) [shunt:56nH:04HPH56N, shunt:51nH:04HP51N]
+2026-06-25 08:50:04,036 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-L) #3 RL=2.23dB |Sii|=0.77366 accepted=0.4015 comps=2-Element (Shunt-L, Shunt-L) [shunt:51nH:04HP51N, shunt:56nH:04HPH56N]
+2026-06-25 08:50:04,037 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-L): 3 solutions, best RL=2.23dB 2-Element (Shunt-L, Shunt-L) [shunt:56nH:04HPH56N, shunt:56nH:04HPH56N]
+2026-06-25 08:50:04,037 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-L, Series-C), n_comp=2
+2026-06-25 08:50:04,037 [rf_matching.optimizer] INFO:   Position 0 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:04,037 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:04,037 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:04,259 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.7754, evaluated=2695
+2026-06-25 08:50:04,259 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Series-L, Series-C) [4.7nH, 16.0pF]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-C) #1 RL=2.17dB |Sii|=0.77854 accepted=0.3939 comps=2-Element (Series-L, Series-C) [series:4.7nH:04HP4N7, series:16pF:GQM1875C2E160GB12]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-C) #2 RL=2.17dB |Sii|=0.77849 accepted=0.3939 comps=2-Element (Series-L, Series-C) [series:4.7nH:04HP4N7, series:15pF:GQM1875C2E150GB12]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-L, Series-C) #3 RL=2.17dB |Sii|=0.77861 accepted=0.3938 comps=2-Element (Series-L, Series-C) [series:4.7nH:04HP4N7, series:18pF:GQM1875C2E180GB12]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] INFO:   topology=2-Element (Series-L, Series-C): 3 solutions, best RL=2.17dB 2-Element (Series-L, Series-C) [series:4.7nH:04HP4N7, series:16pF:GQM1875C2E160GB12]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-L, Shunt-C), n_comp=2
+2026-06-25 08:50:04,261 [rf_matching.optimizer] INFO:   Position 0 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:04,261 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:04,699 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5196, evaluated=2695
+2026-06-25 08:50:04,699 [rf_matching.optimizer] INFO:   Best: RL=5.7dB 2-Element (Shunt-L, Shunt-C) [68.0nH, 56.0pF]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-C) #1 RL=5.66dB |Sii|=0.52142 accepted=0.7281 comps=2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-C) #2 RL=5.65dB |Sii|=0.52175 accepted=0.7278 comps=2-Element (Shunt-L, Shunt-C) [shunt:56nH:04HPH56N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-L, Shunt-C) #3 RL=5.64dB |Sii|=0.52234 accepted=0.7272 comps=2-Element (Shunt-L, Shunt-C) [shunt:51nH:04HP51N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-L, Shunt-C): 3 solutions, best RL=5.66dB 2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-L), n_comp=2
+2026-06-25 08:50:04,706 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] INFO:   Position 1 (series, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:04,706 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.7754, evaluated=2695
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Series-C, Series-L) [16.0pF, 4.7nH]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-L) #1 RL=2.17dB |Sii|=0.77854 accepted=0.3939 comps=2-Element (Series-C, Series-L) [series:16pF:GQM1875C2E160GB12, series:4.7nH:04HP4N7]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-L) #2 RL=2.17dB |Sii|=0.77850 accepted=0.3939 comps=2-Element (Series-C, Series-L) [series:15pF:GQM1875C2E150GB12, series:4.7nH:04HP4N7]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-L) #3 RL=2.17dB |Sii|=0.77861 accepted=0.3938 comps=2-Element (Series-C, Series-L) [series:18pF:GQM1875C2E180GB12, series:4.7nH:04HP4N7]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-L): 3 solutions, best RL=2.17dB 2-Element (Series-C, Series-L) [series:16pF:GQM1875C2E160GB12, series:4.7nH:04HP4N7]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-L), n_comp=2
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   Position 1 (shunt, inductor): 49 candidates, values: [0.1, 0.12, 0.15, 0.18, 0.22, 1.0, 2.0, 2.2, 2.4, 2.7]
+2026-06-25 08:50:04,900 [rf_matching.optimizer] INFO:   Total combinations: 2695
+2026-06-25 08:50:05,226 [rf_matching.optimizer] INFO:   Exhaustive done: 2695 sols, best=0.5196, evaluated=2695
+2026-06-25 08:50:05,226 [rf_matching.optimizer] INFO:   Best: RL=5.7dB 2-Element (Shunt-C, Shunt-L) [56.0pF, 68.0nH]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-L) #1 RL=5.66dB |Sii|=0.52142 accepted=0.7281 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-L) #2 RL=5.65dB |Sii|=0.52175 accepted=0.7278 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:56nH:04HPH56N]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-L) #3 RL=5.64dB |Sii|=0.52234 accepted=0.7272 comps=2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:51nH:04HP51N]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-L): 3 solutions, best RL=5.66dB 2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Series-C), n_comp=2
+2026-06-25 08:50:05,230 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,230 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:05,454 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.7759, evaluated=3025
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO:   Best: RL=2.2dB 2-Element (Series-C, Series-C) [75.0pF, 75.0pF]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-C) #1 RL=2.20dB |Sii|=0.77592 accepted=0.3979 comps=2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-C) #2 RL=2.20dB |Sii|=0.77592 accepted=0.3979 comps=2-Element (Series-C, Series-C) [series:62pF:GQM1882C1H620GB01, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Series-C) #3 RL=2.20dB |Sii|=0.77592 accepted=0.3979 comps=2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:62pF:GQM1882C1H620GB01]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Series-C): 3 solutions, best RL=2.20dB 2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Series-C, Shunt-C), n_comp=2
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO:   Position 0 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,455 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:05,761 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.5188, evaluated=3025
+2026-06-25 08:50:05,761 [rf_matching.optimizer] INFO:   Best: RL=5.7dB 2-Element (Series-C, Shunt-C) [56.0pF, 56.0pF]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Shunt-C) #1 RL=5.68dB |Sii|=0.51982 accepted=0.7298 comps=2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Shunt-C) #2 RL=5.68dB |Sii|=0.52029 accepted=0.7293 comps=2-Element (Series-C, Shunt-C) [series:16pF:GQM1875C2E160GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Series-C, Shunt-C) #3 RL=5.67dB |Sii|=0.52030 accepted=0.7293 comps=2-Element (Series-C, Shunt-C) [series:68pF:GQM1875C2E680GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] INFO:   topology=2-Element (Series-C, Shunt-C): 3 solutions, best RL=5.68dB 2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Series-C), n_comp=2
+2026-06-25 08:50:05,768 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] INFO:   Position 1 (series, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:05,768 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:06,080 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.2288, evaluated=3025
+2026-06-25 08:50:06,080 [rf_matching.optimizer] INFO:   Best: RL=12.8dB 2-Element (Shunt-C, Series-C) [56.0pF, 56.0pF]
+2026-06-25 08:50:06,080 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Series-C) #1 RL=12.81dB |Sii|=0.22880 accepted=0.9476 comps=2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,080 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Series-C) #2 RL=6.02dB |Sii|=0.50018 accepted=0.7498 comps=2-Element (Shunt-C, Series-C) [shunt:68pF:GQM1875C2E680GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,080 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Series-C) #3 RL=5.93dB |Sii|=0.50533 accepted=0.7446 comps=2-Element (Shunt-C, Series-C) [shunt:47pF:GQM1875C2E470GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,080 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Series-C): 3 solutions, best RL=12.81dB 2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,080 [rf_matching.optimizer] INFO: Exhaustive search: topology=2-Element (Shunt-C, Shunt-C), n_comp=2
+2026-06-25 08:50:06,080 [rf_matching.optimizer] INFO:   Position 0 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:06,086 [rf_matching.optimizer] INFO:   Position 1 (shunt, capacitor): 55 candidates, values: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4]
+2026-06-25 08:50:06,086 [rf_matching.optimizer] INFO:   Total combinations: 3025
+2026-06-25 08:50:06,449 [rf_matching.optimizer] INFO:   Exhaustive done: 3025 sols, best=0.1464, evaluated=3025
+2026-06-25 08:50:06,449 [rf_matching.optimizer] INFO:   Best: RL=16.7dB 2-Element (Shunt-C, Shunt-C) [27.0pF, 7.5pF]
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-C) #1 RL=16.69dB |Sii|=0.14644 accepted=0.9786 comps=2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-C) #2 RL=16.69dB |Sii|=0.14644 accepted=0.9786 comps=2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12]
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DBG port=2 topology=2-Element (Shunt-C, Shunt-C) #3 RL=15.65dB |Sii|=0.16496 accepted=0.9728 comps=2-Element (Shunt-C, Shunt-C) [shunt:5.1pF:GQM1875C2E5R1CB12, shunt:47pF:GQM1875C2E470GB12]
+2026-06-25 08:50:06,449 [rf_matching.optimizer] INFO:   topology=2-Element (Shunt-C, Shunt-C): 3 solutions, best RL=16.69dB 2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-C, Series-C) [series:75pF:GQM1882C1H750GB01, series:75pF:GQM1882C1H750GB01] (bucket: 2-Element (Series-C, Series-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-C, Series-L) [series:16pF:GQM1875C2E160GB12, series:4.7nH:04HP4N7] (bucket: 2-Element (Series-C, Series-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-C, Shunt-C) [series:56pF:GQM1875C2E560GB12, shunt:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Series-C, Shunt-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-L, Series-C) [series:4.7nH:04HP4N7, series:16pF:GQM1875C2E160GB12] (bucket: 2-Element (Series-L, Series-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-L, Series-L) [series:2.4nH:04HP2N4, series:2.2nH:04HP2N2] (bucket: 2-Element (Series-L, Series-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Series-L, Shunt-L) [series:4.7nH:04HP4N7, shunt:56nH:04HPH56N] (bucket: 2-Element (Series-L, Shunt-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Shunt-C, Series-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12] (bucket: 2-Element (Shunt-C, Shunt-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-C, Shunt-L) [shunt:56pF:GQM1875C2E560GB12, shunt:68nH:04HPH68N] (bucket: 2-Element (Shunt-C, Shunt-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-L, Series-L) [shunt:0.18nH:04HPHR18, series:5.6nH:04HP5N6] (bucket: 2-Element (Shunt-L, Series-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-L, Shunt-C) [shunt:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] (bucket: 2-Element (Shunt-L, Shunt-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select 2-Element (Shunt-L, Shunt-L) [shunt:56nH:04HPH56N, shunt:56nH:04HPH56N] (bucket: 2-Element (Shunt-L, Shunt-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select L-Network (Series-C, Shunt-L) [series:75pF:GQM1882C1H750GB01, shunt:47nH:04HP47N] (bucket: L-Network (Series-C, Shunt-L), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] (bucket: L-Network (Series-L, Shunt-C), taken=1/1)
+2026-06-25 08:50:06,449 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select L-Network (Shunt-C, Series-L) [shunt:56pF:GQM1875C2E560GB12, series:1nH:04HP1N0] (bucket: L-Network (Shunt-C, Series-L), taken=1/1)
+2026-06-25 08:50:06,455 [rf_matching.optimizer] DEBUG:   DIVERSITY port=2 select L-Network (Shunt-L, Series-C) [shunt:6.2nH:04HP6N2, series:1pF:GQM1875C2E1R0BB12] (bucket: L-Network (Shunt-L, Series-C), taken=1/1)
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO: PHASE1 port=2: 16 diverse candidates selected (from 16 topology buckets)
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO: ╔══ PHASE1 port=2 final candidates (3) ══╗
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO:   cand#01  RL=16.69dB  |Sii|=0.14644  accepted=0.9786  2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO:   cand#02  RL=12.81dB  |Sii|=0.22880  accepted=0.9476  2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO:   cand#03  RL=5.88dB  |Sii|=0.50836  accepted=0.7416  L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO: ╚═══════════════════════════════════════════════╝
+2026-06-25 08:50:06,455 [rf_matching.optimizer] INFO: PHASE2 ports=[0, 1, 2] counts=[3, 3, 3] total_combos=27 full_limit=1728
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO: PHASE2 mode=full evaluated=87 valid=27 top=10
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #01 score=0.87229 avg_eff=0.91140 min_eff=0.89309 coupling=0.09712 comp_loss=0.00923 eff={0: 0.89309, 1: 0.94318, 2: 0.89793} P1:L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #02 score=0.87117 avg_eff=0.91120 min_eff=0.89070 coupling=0.09711 comp_loss=0.00651 eff={0: 0.8907, 1: 0.94409, 2: 0.89881} P1:2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #03 score=0.87117 avg_eff=0.91120 min_eff=0.89070 coupling=0.09711 comp_loss=0.00651 eff={0: 0.8907, 1: 0.94409, 2: 0.89881} P1:2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #04 score=0.80758 avg_eff=0.83563 min_eff=0.82840 coupling=0.03785 comp_loss=0.32049 eff={0: 0.83867, 1: 0.83984, 2: 0.8284} P1:2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #05 score=0.80758 avg_eff=0.83563 min_eff=0.82840 coupling=0.03785 comp_loss=0.32049 eff={0: 0.83867, 1: 0.83984, 2: 0.8284} P1:2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #06 score=0.80707 avg_eff=0.83601 min_eff=0.82744 coupling=0.03787 comp_loss=0.32320 eff={0: 0.84163, 1: 0.83895, 2: 0.82744} P1:L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Shunt-C) [shunt:7.5pF:GQM1875C2E7R5CB12, shunt:27pF:GQM1875C2E270GB12] | P3:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #07 score=0.77955 avg_eff=0.81211 min_eff=0.79449 coupling=0.07810 comp_loss=0.32049 eff={0: 0.80309, 1: 0.83875, 2: 0.79449} P1:2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #08 score=0.77955 avg_eff=0.81211 min_eff=0.79449 coupling=0.07810 comp_loss=0.32049 eff={0: 0.80309, 1: 0.83875, 2: 0.79449} P1:2-Element (Shunt-L, Shunt-C) [shunt:6.8nH:04HP6N8, shunt:1pF:GQM1875C2E1R0BB12] | P2:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,055 [rf_matching.optimizer] INFO:   #09 score=0.77905 avg_eff=0.81238 min_eff=0.79362 coupling=0.07812 comp_loss=0.32320 eff={0: 0.80568, 1: 0.83783, 2: 0.79362} P1:L-Network (Series-C, Shunt-L) [series:1.6pF:GQM1875C2E1R6BB12, shunt:6.8nH:04HP6N8] | P2:2-Element (Shunt-C, Series-C) [shunt:56pF:GQM1875C2E560GB12, series:56pF:GQM1875C2E560GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+2026-06-25 08:50:07,057 [rf_matching.optimizer] INFO:   #10 score=0.73083 avg_eff=0.77200 min_eff=0.68568 coupling=0.02065 comp_loss=0.08106 eff={0: 0.68568, 1: 0.71375, 2: 0.91658} P1:2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] | P2:L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]
+C2E7R5CB12]
+2026-06-25 08:50:07,057 [rf_matching.optimizer] INFO:   #10 score=0.73083 avg_eff=0.77200 min_eff=0.68568 coupling=0.02065 comp_loss=0.08106 eff={0: 0.68568, 1: 0.71375, 2: 0.91658} P1:2-Element (Shunt-C, Shunt-L) [shunt:1pF:GQM1875C2E1R0BB12, shunt:6.8nH:04HP6N8] | P2:L-Network (Series-L, Shunt-C) [series:68nH:04HPH68N, shunt:56pF:GQM1875C2E560GB12] | P3:2-Element (Shunt-C, Shunt-C) [shunt:27pF:GQM1875C2E270GB12, shunt:7.5pF:GQM1875C2E7R5CB12]

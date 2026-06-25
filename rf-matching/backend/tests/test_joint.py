@@ -9,7 +9,7 @@ from engine.component_lib import scan_murata_directory
 from engine.optimizer import MatchingOptimizer, OptimizerConfig, PortState
 
 # Load a 3-port antenna
-with open(r'E:\RF matching\snp\hfss_threeport_MA.s3p', 'r') as f:
+with open(r'E:\RF matching\snp\hfss_threeport_MA.s3p', 'r', encoding='utf-8', errors='replace') as f:
     dut = parse_touchstone(f.read(), 'hfss_threeport_MA.s3p')
 
 print(f'Antenna: {dut.num_ports}-port, {len(dut.frequencies)} freq points')

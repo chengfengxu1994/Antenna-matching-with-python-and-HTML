@@ -1,9 +1,20 @@
 {
+  "legacy_20260624-142701_183870400-deepseek-v4-flash_f46ef38bcae0": "manual",
+  "legacy_20260624-142856_626985600-deepseek-v4-flash_0faece1dd3b8": "manual",
+  "legacy_20260624-231936_820028200-deepseek-v4-flash_75d16f5c7f15": "manual",
+  "legacy_20260624-234604_321289200-deepseek-v4-flash_a587b610948f": "manual",
+  "legacy_20260624-235428_165323200-deepseek-v4-flash_0dab8622338d": "manual",
+  "legacy_20260624-235650_143463600-deepseek-v4-flash_1a97b99f9b4c": "manual",
   "topic_20260620-065356_4154a3becd03c226": "auto",
   "topic_20260620-145206_c0501145e8a00302": "auto",
   "topic_20260620-204406_acf7c0f484542d3c": "auto",
   "topic_20260624-113342_1b3460a737804698": "manual",
   "topic_20260624-115021_60836a880c9709fa": "manual",
-  "topic_20260624-122212_c55b9bc6b2a917f9": "auto",
-  "topic_20260624-122625_c735cf9868a88d73": "auto"
+  "topic_20260624-122625_c735cf9868a88d73": "auto",
+  "topic_20260624-123844_694850c316e8b639": "auto",
+  "topic_20260624-133851_3d32cbbd60bfd59c": "auto",
+  "topic_20260624-135231_407347240e5b05ad": "auto",
+  "topic_20260624-232739_5bb7bc52d3f9b2a1": "auto",
+  "topic_20260624-235936_58cc4f4e86471130": "auto",
+  "topic_20260625-001232_c0cf9176fdf62315": "auto"
 }

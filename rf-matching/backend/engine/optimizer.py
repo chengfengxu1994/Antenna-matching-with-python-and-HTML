@@ -149,6 +149,7 @@ class OptimizerConfig:
     coarse_search_div: int = 20  # Divisions for coarse ideal-value search
     fine_search_tolerance: float = 0.3  # 30% around ideal value for fine search
     max_combinations_to_evaluate: int = 500000  # Hard limit
+    full_exhaustive_max_components: int = 2  # Fully enumerate practical L networks
     use_multiprocessing: bool = True
     max_workers: int = 4
     timeout_seconds: float = 60.0
@@ -159,6 +160,111 @@ class OptimizerConfig:
     radiation_efficiency: Optional[EfficiencyData] = None
     # Min/avg balance control: 0.0 = pure min, 1.0 = pure average, 0.5 = equal weight
     min_avg_balance: float = 0.5
+
+
+def _dedup_components_by_value(parts: List[ComponentInfo]) -> List[ComponentInfo]:
+    """Return one valid component per nominal value, sorted by value."""
+    seen = {}
+    for part in parts:
+        value = getattr(part, "nominal_value", None)
+        if value is not None and value > 0.01 and value not in seen:
+            seen[value] = part
+    return [part for _, part in sorted(seen.items(), key=lambda x: x[0])]
+
+
+def _sample_components_by_value(parts: List[ComponentInfo], max_count: int = 50) -> List[ComponentInfo]:
+    """Sample by value percentiles and avoid hard endpoints when possible."""
+    unique = _dedup_components_by_value(parts)
+    if len(unique) <= max_count:
+        return unique
+
+    values = np.array([part.nominal_value for part in unique], dtype=float)
+    if max_count > 3 and len(unique) > max_count + 2:
+        percentiles = np.linspace(
+            100.0 / (max_count + 1),
+            100.0 - 100.0 / (max_count + 1),
+            max_count,
+        )
+    else:
+        percentiles = np.linspace(0.0, 100.0, max_count)
+
+    selected = []
+    used = set()
+    for percentile in percentiles:
+        target = float(np.percentile(values, percentile))
+        idx = min(
+            (i for i in range(len(unique)) if i not in used),
+            key=lambda i: abs(values[i] - target),
+        )
+        used.add(idx)
+        selected.append(unique[idx])
+    return sorted(selected, key=lambda part: part.nominal_value)
+
+
+def _component_reactance_ohms(component: ComponentInfo, freq_hz: float) -> Optional[float]:
+    """Return ideal nominal reactance magnitude for feasibility pre-filtering."""
+    value = getattr(component, "nominal_value", None)
+    comp_type = getattr(component, "component_type", "")
+    if value is None or value <= 0 or freq_hz <= 0:
+        return None
+    omega = 2.0 * math.pi * freq_hz
+    if comp_type == "inductor":
+        return omega * value * 1e-9
+    if comp_type == "capacitor":
+        return 1.0 / max(omega * value * 1e-12, 1e-30)
+    return None
+
+
+def _edge_value_penalty(value: float, values: List[float]) -> float:
+    """Small ranking penalty for library endpoints; zero in the interior."""
+    if value is None or len(values) < 4:
+        return 0.0
+    v_min, v_max = values[0], values[-1]
+    if v_max <= v_min:
+        return 0.0
+    pos = (value - v_min) / (v_max - v_min)
+    edge_dist = min(pos, 1.0 - pos)
+    if edge_dist > 0.15:
+        return 0.0
+    return 0.015 * (1.0 - edge_dist / 0.15) ** 2
+
+
+def _solution_rank_key(solution: MatchingSolution, library: ComponentLibrary) -> float:
+    """Rank by match quality with a mild endpoint tie-breaker."""
+    return solution.s11_magnitude + _choices_edge_penalty(solution.component_choices, library)
+
+
+def _solution_signature(solution: MatchingSolution) -> Tuple:
+    """Stable signature for duplicate solutions from analytic and exhaustive paths."""
+    return (
+        solution.topology.name,
+        tuple(
+            (
+                choice.position,
+                choice.connection_type,
+                choice.port,
+                choice.port2,
+                choice.component.part_number,
+                getattr(choice.component, "s2p_filename", ""),
+                getattr(choice.component, "zip_path", ""),
+                choice.component.nominal_value,
+                choice.component.nominal_unit,
+            )
+            for choice in solution.component_choices
+        ),
+    )
+
+
+def _choices_edge_penalty(choices: List[ComponentChoice], library: ComponentLibrary) -> float:
+    """Compute the endpoint penalty for a partial or complete component list."""
+    inductor_values = [c.nominal_value for c in _dedup_components_by_value(library.inductors)]
+    capacitor_values = [c.nominal_value for c in _dedup_components_by_value(library.capacitors)]
+    penalty = 0.0
+    for choice in choices:
+        comp = choice.component
+        values = inductor_values if comp.component_type == "inductor" else capacitor_values
+        penalty += _edge_value_penalty(comp.nominal_value, values)
+    return penalty
 
 
 class MatchingOptimizer:
@@ -189,6 +295,78 @@ class MatchingOptimizer:
                 self.config.target_frequency_hz
             )
         return self._component_cache[cache_key]
+
+    def _sample_feasible_components(
+        self,
+        parts: List[ComponentInfo],
+        max_count: int = 50,
+    ) -> List[ComponentInfo]:
+        """
+        Sample components after dropping values with impractical reactance.
+
+        The window is relative to Z0 so it scales across 64 MHz and GHz cases:
+        extremely tiny reactance behaves like a short, extremely huge reactance
+        behaves like an open. Keep a broad fallback so sparse libraries still work.
+        """
+        z0 = self.config.reference_impedance
+        min_x = 0.05 * z0
+        max_x = 20.0 * z0
+
+        unique = _dedup_components_by_value(parts)
+        feasible = [
+            comp for comp in unique
+            if (lambda x: x is not None and min_x <= x <= max_x)(
+                _component_reactance_ohms(comp, self.config.target_frequency_hz)
+            )
+        ]
+        if len(feasible) < min(max_count, 8):
+            loose_min_x = 0.01 * z0
+            loose_max_x = 50.0 * z0
+            feasible = [
+                comp for comp in unique
+                if (lambda x: x is not None and loose_min_x <= x <= loose_max_x)(
+                    _component_reactance_ohms(comp, self.config.target_frequency_hz)
+                )
+            ]
+        if len(feasible) < 4:
+            feasible = unique
+
+        return _sample_components_by_value(feasible, max_count)
+
+    def _primary_components_by_value(self, parts: List[ComponentInfo]) -> List[ComponentInfo]:
+        """
+        Return the library's selected primary component for each nominal value.
+
+        The component library is responsible for ordering same-value parts by
+        precision/tolerance. The optimizer consumes that primary view so it
+        avoids repeated same-value calculations without hiding topology states.
+        """
+        return _dedup_components_by_value(parts)
+
+    def _candidate_components_for_element(
+        self,
+        elem: TopologyElement,
+        exhaustive: bool = True,
+    ) -> List[ComponentInfo]:
+        """Build candidate list for one topology element."""
+        if exhaustive:
+            if elem.component_type == 'inductor':
+                return self._primary_components_by_value(self.library.inductors)
+            if elem.component_type == 'capacitor':
+                return self._primary_components_by_value(self.library.capacitors)
+            return (
+                self._primary_components_by_value(self.library.inductors) +
+                self._primary_components_by_value(self.library.capacitors)
+            )
+
+        if elem.component_type == 'inductor':
+            return self._sample_feasible_components(self.library.inductors, 80)
+        if elem.component_type == 'capacitor':
+            return self._sample_feasible_components(self.library.capacitors, 80)
+        return (
+            self._sample_feasible_components(self.library.inductors, 50) +
+            self._sample_feasible_components(self.library.capacitors, 50)
+        )
 
     def _apply_port_terminations(self, S: np.ndarray,
                                   port_states: Dict[int, PortState]) -> np.ndarray:
@@ -400,27 +578,15 @@ class MatchingOptimizer:
                 # Build candidate component sets — deduplicate by nominal value
                 def _dedup_by_value(parts, limit=30):
                     """Pick one representative per unique nominal value."""
-                    seen = {}
-                    for p in parts:
-                        v = p.nominal_value
-                        if v > 0.01 and v not in seen:
-                            seen[v] = p
-                    return list(seen.values())[:limit]
+                    return self._sample_feasible_components(parts, limit)
 
                 l_candidates = _dedup_by_value(nearby_l) if nearby_l else ([nearest_l] if nearest_l else [])
                 c_candidates = _dedup_by_value(nearby_c) if nearby_c else ([nearest_c] if nearest_c else [])
 
                 if not l_candidates:
-                    # Fallback: one per unique value
-                    seen = {}
-                    for p in self.library.inductors:
-                        if p.nominal_value not in seen: seen[p.nominal_value] = p
-                    l_candidates = list(seen.values())[:50]
+                    l_candidates = self._sample_feasible_components(self.library.inductors, 50)
                 if not c_candidates:
-                    seen = {}
-                    for p in self.library.capacitors:
-                        if p.nominal_value not in seen: seen[p.nominal_value] = p
-                    c_candidates = list(seen.values())[:50]
+                    c_candidates = self._sample_feasible_components(self.library.capacitors, 50)
 
                 # Limit candidates
                 l_candidates = l_candidates[:30]
@@ -463,7 +629,7 @@ class MatchingOptimizer:
                                 return_loss_db=-20 * np.log10(max(mag, 1e-15)),
                             ))
 
-        solutions.sort(key=lambda s: s.s11_magnitude)
+        solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
         # Deduplicate by component values (not part numbers)
         seen_values = set()
         unique = []
@@ -501,18 +667,14 @@ class MatchingOptimizer:
         candidates_per_position = []
         for elem in topology.elements:
             if elem.component_type == 'inductor':
-                # Use unique inductor values → representative component per value
-                unique_vals = self.library.get_unique_inductor_values()
-                comps = [self.library._inductors_by_value[v][0] for v in unique_vals]
+                comps = self._sample_feasible_components(self.library.inductors, 80)
             elif elem.component_type == 'capacitor':
-                unique_vals = self.library.get_unique_capacitor_values()
-                comps = [self.library._capacitors_by_value[v][0] for v in unique_vals]
+                comps = self._sample_feasible_components(self.library.capacitors, 80)
             else:
-                # 'any': combine both
-                ind_vals = self.library.get_unique_inductor_values()
-                cap_vals = self.library.get_unique_capacitor_values()
-                comps = [self.library._inductors_by_value[v][0] for v in ind_vals] + \
-                        [self.library._capacitors_by_value[v][0] for v in cap_vals]
+                comps = (
+                    self._sample_feasible_components(self.library.inductors, 40) +
+                    self._sample_feasible_components(self.library.capacitors, 40)
+                )
             
             candidates_per_position.append(comps)
         
@@ -554,7 +716,7 @@ class MatchingOptimizer:
                         continue
             
             # Keep top beam_width
-            new_beam.sort(key=lambda x: x[2])
+            new_beam.sort(key=lambda x: x[2] + _choices_edge_penalty(x[0], self.library))
             beam = new_beam[:beam_width]
         
         # Stage 2: Fine refinement around best coarse solutions
@@ -625,7 +787,7 @@ class MatchingOptimizer:
                                 new_fine_beam.append((new_choices, new_S, abs(new_S[0, 0])))
                             except np.linalg.LinAlgError:
                                 continue
-                    new_fine_beam.sort(key=lambda x: x[2])
+                    new_fine_beam.sort(key=lambda x: x[2] + _choices_edge_penalty(x[0], self.library))
                     fine_beam = new_fine_beam[:self.config.beam_width]
                 
                 # Build solutions from fine beam results with correct choices
@@ -642,7 +804,7 @@ class MatchingOptimizer:
                             return_loss_db=-20 * np.log10(max(best_mag, 1e-15)),
                         ))
         
-        solutions.sort(key=lambda s: s.s11_magnitude)
+        solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
         return solutions[:self.config.beam_width]
     
     def _make_solution(self, topology, port_states, choices, s11):
@@ -805,13 +967,10 @@ class MatchingOptimizer:
         """
         n_comp = topology.num_components
 
-        if n_comp <= 3:
-            return self._exhaustive_search(
-                self._apply_port_terminations(self._dut_s_at_freq.copy(), port_states),
-                topology, port_states, input_port
-            )
-        else:
-            return self.optimize_progressive(topology, port_states, input_port)
+        return self._exhaustive_search(
+            self._apply_port_terminations(self._dut_s_at_freq.copy(), port_states),
+            topology, port_states, input_port
+        )
 
     def _exhaustive_search(self,
                             S_dut: np.ndarray,
@@ -824,34 +983,9 @@ class MatchingOptimizer:
 
         logger.info("Exhaustive search: topology=%s, n_comp=%d", topology.name, n_comp)
 
-        # For each position, get candidate components (one per unique value)
-        def _sample_by_value(parts, max_count=50):
-            """Pick representatives spread evenly across the full value range."""
-            seen = {}
-            for p in parts:
-                v = p.nominal_value
-                if v > 0.01 and v not in seen:  # Exclude zero-value parts
-                    seen[v] = p
-            sorted_items = sorted(seen.items(), key=lambda x: x[0])
-            logger.debug("  _sample_by_value: %d unique values, range %.2f-%.2f, sampling %d",
-                        len(sorted_items), sorted_items[0][0] if sorted_items else 0,
-                        sorted_items[-1][0] if sorted_items else 0,
-                        min(len(sorted_items), max_count))
-            if len(sorted_items) <= max_count:
-                return [p for _, p in sorted_items]
-            step = len(sorted_items) / max_count
-            return [sorted_items[int(i * step)][1] for i in range(max_count)]
-
         candidates_per_position = []
         for elem in topology.elements:
-            if elem.component_type == 'inductor':
-                comps = _sample_by_value(self.library.inductors)
-            elif elem.component_type == 'capacitor':
-                comps = _sample_by_value(self.library.capacitors)
-            else:
-                comps = _sample_by_value(self.library.inductors, 30) + \
-                        _sample_by_value(self.library.capacitors, 30)
-
+            comps = self._candidate_components_for_element(elem, exhaustive=True)
             candidates_per_position.append(comps)
 
         # Log candidate details
@@ -869,17 +1003,17 @@ class MatchingOptimizer:
         logger.info("  Total combinations: %d", total)
 
         if total > self.config.max_combinations_to_evaluate:
-            # Subsample
-            sample_per_pos = int((self.config.max_combinations_to_evaluate) ** (1.0 / n_comp))
-            candidates_per_position = [c[:sample_per_pos] for c in candidates_per_position]
-            total = sample_per_pos ** n_comp
+            logger.warning(
+                "  Full enumeration requires %d combinations, above configured limit %d. "
+                "Use progressive search for this topology instead of truncating candidates.",
+                total, self.config.max_combinations_to_evaluate,
+            )
+            return self.optimize_progressive(topology, port_states, input_port)
 
         count = 0
         best_mag = 1.0
 
         for combo in itertools.product(*candidates_per_position):
-            if count >= self.config.max_combinations_to_evaluate:
-                break
             count += 1
 
             choices = [
@@ -912,13 +1046,7 @@ class MatchingOptimizer:
                 if mag < best_mag:
                     best_mag = mag
 
-                # Early stop if target reached (target_s11_db is negative, e.g. -20)
-                # return_loss = -20*log10(|S11|) is positive. Good match = high return loss.
-                if mag <= 10 ** (self.config.target_s11_db / 20.0):
-                    logger.debug("  Early stop: |S11|=%.4f <= target %.4f", mag, 10**(self.config.target_s11_db/20))
-                    break
-
-        solutions.sort(key=lambda s: s.s11_magnitude)
+        solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
         logger.info("  Exhaustive done: %d sols, best=%.4f, evaluated=%d",
                    len(solutions), best_mag, count)
         if solutions:
@@ -942,24 +1070,7 @@ class MatchingOptimizer:
         for elem in topology.elements:
             new_beam = []
 
-            # Get candidates (one per unique value)
-            if elem.component_type == 'inductor':
-                seen = {}
-                for p in self.library.inductors:
-                    if p.nominal_value not in seen: seen[p.nominal_value] = p
-                candidates = list(seen.values())[:50]
-            elif elem.component_type == 'capacitor':
-                seen = {}
-                for p in self.library.capacitors:
-                    if p.nominal_value not in seen: seen[p.nominal_value] = p
-                candidates = list(seen.values())[:50]
-            else:
-                seen_l, seen_c = {}, {}
-                for p in self.library.inductors:
-                    if p.nominal_value not in seen_l: seen_l[p.nominal_value] = p
-                for p in self.library.capacitors:
-                    if p.nominal_value not in seen_c: seen_c[p.nominal_value] = p
-                candidates = list(seen_l.values())[:30] + list(seen_c.values())[:30]
+            candidates = self._candidate_components_for_element(elem, exhaustive=False)
 
             for partial_choices, current_S, current_mag in beam:
                 for comp in candidates:
@@ -991,7 +1102,17 @@ class MatchingOptimizer:
                         continue
 
             # Keep best beam_width
-            new_beam.sort(key=lambda x: x[2])
+            new_beam.sort(key=lambda x: x[2] + sum(
+                _edge_value_penalty(
+                    choice.component.nominal_value,
+                    [p.nominal_value for p in _dedup_components_by_value(
+                        self.library.inductors
+                        if choice.component.component_type == 'inductor'
+                        else self.library.capacitors
+                    )],
+                )
+                for choice in x[0]
+            ))
             beam = new_beam[:beam_width]
 
         # Final solutions from beam
@@ -1010,7 +1131,7 @@ class MatchingOptimizer:
                     return_loss_db=-20 * np.log10(max(mag, 1e-15)),
                 ))
 
-        solutions.sort(key=lambda s: s.s11_magnitude)
+        solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
         return solutions[:beam_width]
 
     def optimize_full(self,
@@ -1046,8 +1167,16 @@ class MatchingOptimizer:
             all_solutions.extend(sols)
 
         # Sort best first
-        all_solutions.sort(key=lambda s: s.s11_magnitude)
-        top_solutions = all_solutions[:50]
+        all_solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
+        deduped = []
+        seen = set()
+        for sol in all_solutions:
+            sig = _solution_signature(sol)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            deduped.append(sol)
+        top_solutions = deduped[:50]
 
         # Re-evaluate across bands if configured
         if self.config.bands_mhz:
@@ -1090,7 +1219,7 @@ class MatchingOptimizer:
             sols = self.optimize_full(port_states, topologies, input_port)
             all_solutions.extend(sols)
 
-        all_solutions.sort(key=lambda s: s.s11_magnitude)
+        all_solutions.sort(key=lambda s: _solution_rank_key(s, self.library))
         top_solutions = all_solutions[:50]
 
         # Re-evaluate across bands if configured

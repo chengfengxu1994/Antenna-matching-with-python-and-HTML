@@ -32,6 +32,9 @@ from .murata_parser import (
     parse_murata_part_number, PartInfo,
     get_precision_rank, TOLERANCE_MAP, PRECISION_RANK
 )
+from .optenni_parser import (
+    scan_optenni_library, OptenniComponentData
+)
 from .touchstone import parse_touchstone, TouchstoneData, FREQ_MULTIPLIERS
 
 
@@ -117,11 +120,19 @@ class MurataDatabase:
             CREATE TABLE IF NOT EXISTS series (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
+                manufacturer TEXT DEFAULT '',
                 component_type TEXT NOT NULL,
                 size_code TEXT,
                 component_count INTEGER DEFAULT 0,
                 min_value REAL,
                 max_value REAL
+            );
+            
+            CREATE TABLE IF NOT EXISTS manufacturer (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                country TEXT DEFAULT '',
+                component_count INTEGER DEFAULT 0
             );
             
             CREATE TABLE IF NOT EXISTS components (
@@ -210,9 +221,20 @@ class MurataDatabase:
                 ON value_groups(component_type, nominal_value);
         """)
         self.conn.commit()
+        
+        # Migrate existing DB
+        self._add_manufacturer_column()
     
     # --- Population ---
     
+    def _add_manufacturer_column(self):
+        """Add manufacturer column to series table if missing (migration)."""
+        try:
+            self.cursor.execute("ALTER TABLE series ADD COLUMN manufacturer TEXT DEFAULT ''")
+            self.conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
     def populate_from_murata_dir(self, murata_dir, freq_grid_mhz=None, progress_callback=None):
         """Scan Murata directory and populate database."""
         if freq_grid_mhz is None:
@@ -241,8 +263,8 @@ class MurataDatabase:
             sname = part_info.series
             if sname not in series_map:
                 c.execute(
-                    "INSERT OR IGNORE INTO series (name, component_type, size_code) VALUES (?, ?, ?)",
-                    (sname, part_info.component_type, part_info.size_code)
+                    "INSERT OR IGNORE INTO series (name, manufacturer, component_type, size_code) VALUES (?, ?, ?, ?)",
+                    (sname, 'Murata', part_info.component_type, part_info.size_code)
                 )
                 c.execute("SELECT id FROM series WHERE name = ?", (sname,))
                 row = c.fetchone()
@@ -648,6 +670,246 @@ class MurataDatabase:
         
         self.conn.commit()
     
+    # --- Optenni Library Population ---
+    
+    def populate_from_optenni_dir(self, optenni_dir, freq_grid_mhz=None, progress_callback=None):
+        """Scan Optenni ComponentLibrary and populate database (merge with existing)."""
+        if freq_grid_mhz is None:
+            freq_grid_mhz = DEFAULT_FREQ_GRID_MHZ
+        
+        freq_grid_hz = [f * 1e6 for f in freq_grid_mhz]
+        
+        # Insert frequency grid
+        self._insert_freq_grid(freq_grid_mhz, freq_grid_hz)
+        
+        # Scan Optenni library
+        if progress_callback:
+            progress_callback(0, 0, "Scanning Optenni ComponentLibrary...")
+        
+        all_parts = scan_optenni_library(optenni_dir)
+        
+        if progress_callback:
+            progress_callback(0, len(all_parts), "Found %d S2P files" % len(all_parts))
+        
+        # Insert series and components
+        series_map = {}
+        c = self.cursor
+        total = len(all_parts)
+        
+        # Pre-populate series_map with existing series
+        c.execute("SELECT id, name FROM series")
+        for row in c.fetchall():
+            series_map[row[1]] = row[0]
+        
+        inserted = 0
+        skipped = 0
+        
+        for idx, (comp_data, s2p_path) in enumerate(all_parts):
+            if comp_data is None:
+                skipped += 1
+                continue
+            
+            sname = comp_data.series_name
+            if sname not in series_map:
+                c.execute(
+                    "INSERT OR IGNORE INTO series (name, manufacturer, component_type, size_code) VALUES (?, ?, ?, ?)",
+                    (sname, comp_data.manufacturer, comp_data.component_type, comp_data.size_code)
+                )
+                c.execute("SELECT id FROM series WHERE name = ?", (sname,))
+                row = c.fetchone()
+                if row:
+                    series_map[sname] = row[0]
+            
+            series_id = series_map.get(sname)
+            if series_id is None:
+                skipped += 1
+                continue
+            
+            precision_rank = get_precision_rank(comp_data.tolerance_code)
+            
+            # Map tolerance codes consistently
+            tolerance_code = comp_data.tolerance_code
+            if tolerance_code not in TOLERANCE_MAP:
+                tolerance_code = 'J'  # default ±5%
+            
+            try:
+                c.execute("""
+                    INSERT OR IGNORE INTO components 
+                    (part_number, series_id, component_type, nominal_value, nominal_unit,
+                     tolerance_code, tolerance_pct, tolerance_abs, size_code, voltage_code,
+                     dielectric, value_str, s2p_filename, zip_path, precision_rank, is_primary)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """, (
+                    comp_data.part_number, series_id, comp_data.component_type,
+                    comp_data.nominal_value, comp_data.nominal_unit,
+                    tolerance_code, comp_data.tolerance_pct, comp_data.tolerance_abs,
+                    comp_data.size_code, '', '', comp_data.value_str,
+                    comp_data.s2p_filename, s2p_path, precision_rank
+                ))
+                if self.cursor.rowcount > 0:
+                    inserted += 1
+            except sqlite3.IntegrityError:
+                skipped += 1
+            
+            if progress_callback and (idx + 1) % 5000 == 0:
+                progress_callback(idx + 1, total, 
+                    "Optenni: inserted %d, skipped %d (total %d/%d)" % (
+                        inserted, skipped, idx + 1, total))
+        
+        self.conn.commit()
+        
+        # Update series counts
+        c.execute("""
+            UPDATE series SET component_count = (
+                SELECT COUNT(*) FROM components WHERE components.series_id = series.id
+            )
+        """)
+        self.conn.commit()
+        
+        # Assign primaries (for new components only)
+        # Re-run for all to ensure best precision wins across merged data
+        self._assign_primaries()
+        
+        # Pre-compute S-parameters
+        self._precompute_optenni_sparams(freq_grid_hz, progress_callback)
+        
+        # Rebuild value groups
+        self._build_value_groups()
+        
+        # Update statistics
+        self._update_statistics()
+        
+        if progress_callback:
+            progress_callback(total, total, 
+                "Optenni population complete: %d inserted, %d skipped" % (inserted, skipped))
+    
+    def _precompute_optenni_sparams(self, freq_grid_hz, progress_callback=None):
+        """Pre-compute S-parameters for Optenni components that need it."""
+        c = self.cursor
+        
+        # Build freq map
+        c.execute("SELECT id, freq_hz FROM freq_grid")
+        freq_map = {row[1]: row[0] for row in c.fetchall()}
+        
+        # Precompute for each primary component (or all new ones)
+        c.execute("""
+            SELECT c.id, c.part_number, c.component_type, 
+                   c.nominal_value, c.nominal_unit, c.zip_path
+            FROM components c
+            WHERE c.is_primary = 1 
+              AND NOT EXISTS (SELECT 1 FROM sparam_at_freq WHERE component_id = c.id)
+        """)
+        new_primaries = c.fetchall()
+        
+        total = len(new_primaries)
+        if total == 0:
+            return
+        
+        if progress_callback:
+            progress_callback(0, total, "Pre-computing S-params for %d new components" % total)
+        
+        errors = 0
+        batch = []
+        
+        for idx, row in enumerate(new_primaries):
+            comp_id = row[0]
+            part_number = row[1]
+            comp_type = row[2]
+            nominal_value = row[3]
+            nominal_unit = row[4]
+            s2p_path = row[5]  # zip_path from the query
+            
+            batch.append((comp_id, part_number, comp_type, nominal_value, nominal_unit, s2p_path))
+            
+            if len(batch) >= 100:
+                self._precompute_batch(batch, freq_grid_hz, freq_map, errors)
+                if progress_callback:
+                    progress_callback(idx + 1, total, "Pre-computing S-params...")
+                batch = []
+        
+        if batch:
+            self._precompute_batch(batch, freq_grid_hz, freq_map, errors)
+        
+        if progress_callback:
+            progress_callback(total, total, "S-param pre-computation done (%d errors)" % errors)
+    
+    def _precompute_batch(self, batch, freq_grid_hz, freq_map, errors):
+        """Pre-compute S-params and derived values for a batch of components.
+        
+        Each batch entry: (comp_id, part_number, component_type, nominal_value, nominal_unit, s2p_path)
+        """
+        from .touchstone import load_touchstone_file as load_ts_file
+        
+        c = self.cursor
+        
+        for comp_id, part_number, comp_type, nominal_value, nominal_unit, s2p_path in batch:
+            if not s2p_path or not os.path.exists(s2p_path):
+                errors += 1
+                continue
+            
+            try:
+                ts_data = load_ts_file(s2p_path)
+                srf_hz = self._find_srf(ts_data)
+                
+                for freq_hz in freq_grid_hz:
+                    freq_id = freq_map.get(freq_hz)
+                    if freq_id is None:
+                        continue
+                    
+                    S = ts_data.get_s_matrix_interpolated(freq_hz)
+                    
+                    s11 = S[0, 0]
+                    s21 = S[0, 1]
+                    s12 = S[1, 0]
+                    s22 = S[1, 1]
+                    
+                    z_in, z_trans = self._compute_z_from_s(S)
+                    
+                    # Effective value (L or C)
+                    eff_value, eff_unit = self._compute_effective_lc(
+                        z_in, freq_hz, comp_type, nominal_value, nominal_unit
+                    )
+                    
+                    s11_mag = abs(s11)
+                    s11_db = 20 * np.log10(s11_mag) if s11_mag > 0 else -200
+                    s21_mag = abs(s21)
+                    s21_db = 20 * np.log10(s21_mag) if s21_mag > 0 else -200
+                    
+                    # Q factor from Z
+                    if abs(z_in.real) > 1e-12:
+                        q_factor = abs(z_in.imag / z_in.real)
+                    else:
+                        q_factor = 0.0
+                    
+                    # Insert sparam
+                    c.execute("""
+                        INSERT OR IGNORE INTO sparam_at_freq
+                        (component_id, freq_id, s11_re, s11_im, s21_re, s21_im, s12_re, s12_im, s22_re, s22_im)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (comp_id, freq_id,
+                        s11.real, s11.imag, s21.real, s21.imag,
+                        s12.real, s12.imag, s22.real, s22.imag))
+                    
+                    # Insert derived
+                    srf_mhz = (srf_hz / 1e6) if srf_hz else None
+                    c.execute("""
+                        INSERT OR IGNORE INTO derived_at_freq
+                        (component_id, freq_id, z_in_re, z_in_im, z_trans_re, z_trans_im,
+                         eff_value, eff_unit, s11_mag, s11_db, s21_mag, s21_db,
+                         q_factor, self_resonant_mhz)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (comp_id, freq_id,
+                        z_in.real, z_in.imag, z_trans.real, z_trans.imag,
+                        eff_value, eff_unit,
+                        s11_mag, s11_db, s21_mag, s21_db,
+                        q_factor, srf_mhz))
+                
+                self.conn.commit()
+                
+            except Exception as e:
+                errors += 1
+                continue
+    
     # --- Query Interface ---
     
     def get_primary_inductors(self):
@@ -918,16 +1180,16 @@ class MurataDatabase:
         """Export summary of all series."""
         c = self.cursor
         c.execute("""
-            SELECT s.name, s.component_type, s.size_code, s.component_count,
+            SELECT s.name, s.manufacturer, s.component_type, s.size_code, s.component_count,
                    s.min_value, s.max_value
             FROM series s
-            ORDER BY s.component_type, s.name
+            ORDER BY s.manufacturer, s.component_type, s.name
         """)
         
         return [
             {
-                'name': row[0], 'type': row[1], 'size': row[2],
-                'count': row[3], 'min_value': row[4], 'max_value': row[5]
+                'name': row[0], 'manufacturer': row[1], 'type': row[2], 'size': row[3],
+                'count': row[4], 'min_value': row[5], 'max_value': row[6]
             }
             for row in c.fetchall()
         ]
@@ -974,11 +1236,92 @@ def build_database(murata_dir, db_path, freq_grid_mhz=None, progress_callback=No
     return db
 
 
+def build_full_database(murata_dir, optenni_dir, db_path, freq_grid_mhz=None, progress_callback=None):
+    """Build a combined database from both Murata and Optenni libraries.
+    
+    If Murata ZIP files are available, imports from them.
+    Otherwise copies existing murata_components.db as starting point.
+    """
+    import shutil
+    
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    
+    db = MurataDatabase(db_path)
+    db.connect()
+    db.create_schema()
+    
+    # Phase 1: Murata data
+    if progress_callback:
+        progress_callback(0, 0, "Phase 1: Importing Murata components...")
+    
+    # Check if Murata ZIPs exist
+    has_zips = False
+    if os.path.isdir(murata_dir):
+        has_zips = any(f.lower().endswith('.zip') for f in os.listdir(murata_dir))
+    
+    if has_zips:
+        db.populate_from_murata_dir(murata_dir, freq_grid_mhz, 
+            lambda c, t, m: progress_callback(c, t, "Murata: " + m) if progress_callback else None)
+    else:
+        # Try copying existing murata_components.db
+        legacy_db = os.path.join(murata_dir, 'murata_components.db')
+        if os.path.isfile(legacy_db):
+            if progress_callback:
+                progress_callback(0, 0, "Murata: copying existing database...")
+            db.close()
+            shutil.copy2(legacy_db, db_path)
+            db.conn = sqlite3.connect(db_path, check_same_thread=False)
+            db.conn.execute("PRAGMA journal_mode=WAL")
+            db.conn.execute("PRAGMA synchronous=NORMAL")
+            db.conn.execute("PRAGMA cache_size=-64000")
+            db.conn.row_factory = sqlite3.Row
+            db.cursor = db.conn.cursor()
+            db._add_manufacturer_column()
+            db.cursor.execute("UPDATE series SET manufacturer='Murata' WHERE manufacturer='' OR manufacturer IS NULL")
+            db.conn.commit()
+            stats = db.get_statistics()
+            if progress_callback:
+                progress_callback(stats['total_components'], stats['total_components'],
+                    "Murata: loaded %d components from existing DB" % stats['total_components'])
+        else:
+            if progress_callback:
+                progress_callback(0, 0, "Murata: no ZIPs or existing DB found, skipping")
+    
+    # Phase 2: Optenni data (merge)
+    if progress_callback:
+        progress_callback(0, 0, "Phase 2: Merging Optenni components...")
+    db.populate_from_optenni_dir(optenni_dir, freq_grid_mhz,
+        lambda c, t, m: progress_callback(c, t, "Optenni: " + m) if progress_callback else None)
+    
+    return db
+
+
 if __name__ == '__main__':
     """Build the database from command line."""
     
+    import sys
+    
     murata_dir = r'E:\RF matching\Murata'
-    db_path = r'E:\RF matching\Murata\murata_components.db'
+    optenni_dir = r'C:\Users\mocha\AppData\Roaming\Optenni\ComponentLibrary'
+    db_path = r'E:\RF matching\Murata\full_components.db'
+    
+    # Check command-line args
+    mode = 'full'  # 'murata', 'optenni', or 'full'
+    if len(sys.argv) > 1:
+        mode = sys.argv[1].lower()
+        if mode not in ('murata', 'optenni', 'full'):
+            print("Usage: python -m engine.murata_db [murata|optenni|full]")
+            print("  Default: full (both Murata and Optenni)")
+            sys.exit(1)
+    
+    # Override db_path for non-full modes
+    if mode == 'murata':
+        db_path = r'E:\RF matching\Murata\murata_components.db'
+    elif mode == 'optenni':
+        db_path = r'E:\RF matching\Murata\optenni_components.db'
+    else:
+        db_path = r'E:\RF matching\Murata\full_components.db'
     
     def progress(current, total, msg):
         pct = current / total * 100 if total > 0 else 0
@@ -987,13 +1330,31 @@ if __name__ == '__main__':
         if current == total:
             print()
     
-    print("Building Murata component database...")
-    print("  Source: %s" % murata_dir)
-    print("  Output: %s" % db_path)
-    print()
-    
     t0 = time.time()
-    db = build_database(murata_dir, db_path, progress_callback=progress)
+    
+    if mode == 'murata':
+        print("Building Murata-only database...")
+        print("  Source: %s" % murata_dir)
+        print("  Output: %s" % db_path)
+        print()
+        db = build_database(murata_dir, db_path, progress_callback=progress)
+    elif mode == 'optenni':
+        print("Building Optenni-only database...")
+        print("  Source: %s" % optenni_dir)
+        print("  Output: %s" % db_path)
+        print()
+        db = MurataDatabase(db_path)
+        db.connect()
+        db.create_schema()
+        db.populate_from_optenni_dir(optenni_dir, progress_callback=progress)
+    else:
+        print("Building FULL component database (Murata + Optenni)...")
+        print("  Murata:  %s" % murata_dir)
+        print("  Optenni: %s" % optenni_dir)
+        print("  Output:  %s" % db_path)
+        print()
+        db = build_full_database(murata_dir, optenni_dir, db_path, progress_callback=progress)
+    
     t1 = time.time()
     
     print()
@@ -1006,52 +1367,67 @@ if __name__ == '__main__':
         print("  %s: %s" % (key, value))
     
     print()
+    print("=== Series Summary ===")
+    series_list = db.export_series_summary()
+    mfr_counts = {}
+    for s in series_list:
+        mfr = s.get('manufacturer', 'Unknown')
+        mfr_counts[mfr] = mfr_counts.get(mfr, 0) + s['count']
+    
+    for mfr, count in sorted(mfr_counts.items(), key=lambda x: -x[1]):
+        print("  %s: %d components" % (mfr, count))
+    
+    print()
     print("=== Sample Queries ===")
     
-    ind_values = db.get_unique_values('inductor')
-    cap_values = db.get_unique_values('capacitor')
-    if ind_values:
-        print("  Unique inductor values: %d (%.2f to %.1f nH)" % (
-            len(ind_values), ind_values[0], ind_values[-1]))
-    if cap_values:
-        print("  Unique capacitor values: %d (%.2f to %.1f pF)" % (
-            len(cap_values), cap_values[0], cap_values[-1]))
-    
-    # Find components near 10nH
-    near_10nH = db.get_inductors_near(10.0, tolerance=0.1)
-    print("\n  Inductors near 10nH (primary): %d" % len(near_10nH))
-    for comp in near_10nH[:5]:
-        print("    %s: %snH (%s, %s)" % (
-            comp.part_number, comp.nominal_value, comp.tolerance_code, comp.series))
-    
-    # Find components near 100pF
-    near_100pF = db.get_capacitors_near(100.0, tolerance=0.1)
-    print("\n  Capacitors near 100pF (primary): %d" % len(near_100pF))
-    for comp in near_100pF[:5]:
-        print("    %s: %spF (%s, %s)" % (
-            comp.part_number, comp.nominal_value, comp.tolerance_code, comp.series))
-    
-    # Test derived data
-    if near_10nH:
-        comp = near_10nH[0]
-        derived_900 = db.get_component_derived(comp.id, 900.0)
-        if derived_900:
-            print("\n  %s at 900MHz:" % comp.part_number)
-            print("    Z_in = %.2f + j%.2f ohm" % (
-                derived_900['z_in'].real, derived_900['z_in'].imag))
-            print("    Effective L = %.2f %s" % (
-                derived_900['eff_value'], derived_900['eff_unit']))
-            print("    |S11| = %.4f (%.1f dB)" % (
-                derived_900['s11_mag'], derived_900['s11_db']))
-            print("    Q = %.1f" % derived_900['q_factor'])
-            if derived_900['self_resonant_mhz']:
-                print("    SRF = %.0f MHz" % derived_900['self_resonant_mhz'])
-    
-    # Benchmark: time a bulk query
-    t0 = time.time()
-    all_ind = db.get_all_primaries_with_derived_at_freq(900.0, comp_type='inductor')
-    t1 = time.time()
-    print("\n  Bulk query: %d inductors with derived data at 900MHz in %.1f ms" % (
-        len(all_ind), (t1 - t0) * 1000))
+    try:
+        ind_values = db.get_unique_values('inductor')
+        cap_values = db.get_unique_values('capacitor')
+        if ind_values:
+            print("  Unique inductor values: %d (%.2f to %.1f nH)" % (
+                len(ind_values), ind_values[0], ind_values[-1]))
+        if cap_values:
+            print("  Unique capacitor values: %d (%.2f to %.1f pF)" % (
+                len(cap_values), cap_values[0], cap_values[-1]))
+        
+        # Find components near 10nH
+        near_10nH = db.get_inductors_near(10.0, tolerance=0.1)
+        print("\n  Inductors near 10nH (primary): %d" % len(near_10nH))
+        for comp in near_10nH[:5]:
+            print("    %s: %snH (%s, %s)" % (
+                comp.part_number, comp.nominal_value, comp.tolerance_code, comp.series))
+        
+        # Find components near 100pF
+        near_100pF = db.get_capacitors_near(100.0, tolerance=0.1)
+        print("\n  Capacitors near 100pF (primary): %d" % len(near_100pF))
+        for comp in near_100pF[:5]:
+            print("    %s: %spF (%s, %s)" % (
+                comp.part_number, comp.nominal_value, comp.tolerance_code, comp.series))
+        
+        # Test derived data
+        if near_10nH:
+            comp = near_10nH[0]
+            derived_900 = db.get_component_derived(comp.id, 900.0)
+            if derived_900:
+                print("\n  %s at 900MHz:" % comp.part_number)
+                print("    Z_in = %.2f + j%.2f ohm" % (
+                    derived_900['z_in'].real, derived_900['z_in'].imag))
+                print("    Effective L = %.2f %s" % (
+                    derived_900['eff_value'], derived_900['eff_unit']))
+                print("    |S11| = %.4f (%.1f dB)" % (
+                    derived_900['s11_mag'], derived_900['s11_db']))
+                print("    Q = %.1f" % derived_900['q_factor'])
+                if derived_900['self_resonant_mhz']:
+                    print("    SRF = %.0f MHz" % derived_900['self_resonant_mhz'])
+        
+        # Benchmark: time a bulk query
+        t2 = time.time()
+        all_ind = db.get_all_primaries_with_derived_at_freq(900.0, comp_type='inductor')
+        t3 = time.time()
+        print("\n  Bulk query: %d inductors with derived data at 900MHz in %.1f ms" % (
+            len(all_ind), (t3 - t2) * 1000))
+        
+    except Exception as e:
+        print("  Query test failed: %s" % e)
     
     db.close()

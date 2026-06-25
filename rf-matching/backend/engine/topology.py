@@ -146,6 +146,31 @@ def get_standard_topologies() -> List[Topology]:
     ))
 
     # ─── 3-component Pi-Networks ───
+    existing_two_elem = {
+        tuple((e.connection_type.value, e.component_type) for e in t.elements)
+        for t in topologies
+        if t.num_components == 2
+    }
+    conn_labels = {'series': 'Series', 'shunt': 'Shunt'}
+    type_labels = {'inductor': 'L', 'capacitor': 'C'}
+    for comp_a in ['inductor', 'capacitor']:
+        for comp_b in ['inductor', 'capacitor']:
+            for conn_a in ['series', 'shunt']:
+                for conn_b in ['series', 'shunt']:
+                    signature = ((conn_a, comp_a), (conn_b, comp_b))
+                    if signature in existing_two_elem:
+                        continue
+                    topologies.append(_make_topology(
+                        f"2-Element ({conn_labels[conn_a]}-{type_labels[comp_a]}, "
+                        f"{conn_labels[conn_b]}-{type_labels[comp_b]})",
+                        "Complete two-element search topology",
+                        [
+                            {'type': conn_a, 'port': 0, 'comp_type': comp_a},
+                            {'type': conn_b, 'port': 0, 'comp_type': comp_b},
+                        ]
+                    ))
+                    existing_two_elem.add(signature)
+
     # Pi: shunt - series - shunt (all on port 0)
     topologies.append(_make_topology(
         "Pi-Network (C-L-C)",

@@ -10,7 +10,7 @@
   --accent-red: #dc3545;
   --accent-yellow: #ffc107;
   --shadow: 0 2px 8px rgba(0,0,0,0.08);
-  --sidebar-w: 400px;
+  --sidebar-w: 340px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,6 +30,28 @@ body {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+}
+
+.app-main-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.data-sidebar {
+  width: 220px;
+  min-width: 220px;
+  padding: 10px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.tuning-host {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
 }
 
 /* ── Header ── */
@@ -98,6 +120,7 @@ body {
 /* ── Workspace panel ── */
 .workspace-panel {
   flex: 1;
+  min-width: 0;
   padding: 16px 20px;
   overflow-y: auto;
   display: flex;
@@ -310,6 +333,10 @@ body {
   border-radius: 8px;
   padding: 16px;
   box-shadow: var(--shadow);
+  transition: box-shadow 0.15s;
+}
+.workspace-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 .workspace-card h3 {
   font-size: 14px;
@@ -318,6 +345,88 @@ body {
   color: var(--text);
   border-bottom: 1px solid var(--border);
   padding-bottom: 8px;
+}
+
+.tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab-button.active {
+  color: var(--accent-blue);
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+.schematic-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
+.schematic-svg {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+  height: auto;
+  color: #111;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.schematic-editor-node {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #222;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+  font-family: var(--font-sans);
+}
+.schematic-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.schematic-editor-row select,
+.schematic-editor-row input {
+  min-width: 0;
+  height: 22px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: #fff;
+  color: #111;
+  font-size: 10px;
+}
+.schematic-editor-row input {
+  width: 54px;
+}
+.schematic-editor-row span {
+  font-size: 10px;
+  color: #333;
+}
+.realtime-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(520px, 1.1fr);
+  gap: 12px;
+  align-items: start;
+}
+.realtime-curves {
+  display: grid;
+  gap: 10px;
 }
 
 /* ── Metric tiles (system summary) ── */
@@ -378,6 +487,9 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+@media (max-width: 900px) {
+  .chart-grid { grid-template-columns: 1fr; }
 }
 .chart-grid .chart-card {
   background: var(--bg-card);
@@ -447,6 +559,92 @@ tr.best-row { background: rgba(25,135,84,0.05); }
 .empty-state p {
   font-size: 14px;
   max-width: 360px;
+}
+
+@media (max-width: 1100px) {
+  :root { --sidebar-w: 320px; }
+
+  .data-sidebar {
+    width: 200px;
+    min-width: 200px;
+  }
+
+  .workspace-panel {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .layout-shell {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .header-left {
+    min-width: 0;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .header-right {
+    flex-shrink: 0;
+  }
+
+  .app-main-shell,
+  .main-body {
+    flex-direction: column;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .data-sidebar,
+  .control-sidebar,
+  .workspace-panel,
+  .tuning-host {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .data-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-height: 260px;
+  }
+
+  .control-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 10px;
+    overflow: visible;
+  }
+
+  .workspace-panel {
+    padding: 12px;
+    overflow: visible;
+  }
+
+  .card,
+  .workspace-card,
+  .chart-grid .chart-card {
+    padding: 12px;
+  }
+
+  .empty-state {
+    min-height: 220px;
+    padding: 32px 14px;
+  }
 }
 .status-badge {
   display: inline-flex;

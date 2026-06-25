@@ -1,0 +1,634 @@
+# -*- coding: utf-8 -*-
+"""
+Grid S2P Optimizer — Direct S2P Cascade Grid Search
+====================================================
+
+Alternative to vector_pathfinding (Mobius model) and fast_s1p (Q-model + L-BFGS-B).
+
+Key differences:
+  1. NO Mobius model — uses exact S-parameter cascade_s for ALL evaluations
+  2. NO Q-model — uses real Murata S2P component data throughout
+  3. Multi-frequency — evaluates mean(GT) across ALL band frequencies
+  4. Grid over real library component indices — not continuous linspace
+  5. Fully vectorized 2D grid (numpy broadcasting)
+  6. Coarse 3D grid + refinement for 3-element topologies
+
+Algorithm:
+  1. Pre-index all library components by type (L/C)
+  2. Enumerate (topology, type_assignment) combinations
+  3. For each combination:
+     - 2-element: vectorized 2D grid over all library index pairs
+     - 3-element: coarse sampled 3D grid + refine around best
+  4. Score = mean(transducer_gain) across ALL band frequencies
+  5. Return best result
+
+Performance (estimated):
+  - 2-element: ~10-50ms (full grid)
+  - 3-element: ~50-200ms (coarse + refine)
+  - Deterministic output
+
+Author: RF Matching Project
+Date: 2026-06-25
+"""
+
+import time
+import logging
+import numpy as np
+from itertools import product as iproduct
+
+logger = logging.getLogger('engines.grid_s2p_optimizer')
+
+Z0 = 50.0
+
+
+def _band_weighted_score(gt_array, freqs_hz, bands_mhz):
+    """Band-weighted mean GT — each band equal weight regardless of point count."""
+    if bands_mhz is None or len(bands_mhz) == 0:
+        return np.mean(gt_array, axis=-1)
+    band_means = []
+    for start_mhz, end_mhz in bands_mhz:
+        mask = (freqs_hz >= start_mhz * 1e6) & (freqs_hz <= end_mhz * 1e6)
+        if not np.any(mask):
+            center_hz = 0.5 * (start_mhz + end_mhz) * 1e6
+            nearest_idx = int(np.argmin(np.abs(freqs_hz - center_hz)))
+            mask = np.zeros_like(freqs_hz, dtype=bool)
+            mask[nearest_idx] = True
+        band_means.append(np.mean(gt_array[..., mask], axis=-1))
+    if not band_means:
+        return np.mean(gt_array, axis=-1)
+    return np.mean(np.stack(band_means, axis=-1), axis=-1)
+
+
+def _series_s_matrix(comp_data):
+    """Build S-matrix for a series component from Murata S2P data.
+
+    For a series impedance:
+      S11 = S22 = Z/(2Z0+Z)
+      S21 = S12 = 2Z0/(2Z0+Z)
+
+    Args:
+        comp_data: dict with 's' key — (nf, 2, 2) complex S-params
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    return comp_data['s']
+
+
+def _shunt_s_matrix(comp_data):
+    """Build S-matrix for a shunt component from Y-parameters.
+
+    For a shunt admittance Ys:
+      S11 = S22 = -Ys / (2Y0 + Ys)
+      S21 = S12 = 2Y0 / (2Y0 + Ys)
+
+    Args:
+        comp_data: dict with 'y' key — (nf, 2, 2) complex Y-params
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    Ys = comp_data['y'][:, 0, 0]  # Y11
+    nf = len(Ys)
+    Y0 = 1.0 / Z0
+    ds = 2.0 * Y0 + Ys
+    ds = np.where(np.abs(ds) < 1e-15, 1e-15 + 0j, ds)
+    S = np.zeros((nf, 2, 2), dtype=complex)
+    S[:, 0, 0] = -Ys / ds
+    S[:, 1, 1] = -Ys / ds
+    S[:, 0, 1] = 2.0 * Y0 / ds
+    S[:, 1, 0] = 2.0 * Y0 / ds
+    return S
+
+
+def _build_component_s_matrix(comp_data, topo_type):
+    """Get S-matrix for a component from pre-loaded library data.
+
+    Args:
+        comp_data: dict with 's' key — (nf, 2, 2) complex S-params
+        topo_type: 'S' for series or 'P' for shunt
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    if topo_type == 'S':
+        return _series_s_matrix(comp_data)
+    else:
+        return _shunt_s_matrix(comp_data)
+
+
+def _cascade_s_vectorized(Sa, Sb):
+    """Vectorized S-parameter cascade supporting broadcasting.
+
+    Core cascade_s formulas:
+      S11 = S11a + S12a*S21a*S11b / (1 - S22a*S11b)
+      S21 = S21a*S21b / (1 - S22a*S11b)
+      S12 = S12a*S12b / (1 - S22a*S11b)
+      S22 = S22b + S12b*S22a*S21b / (1 - S22a*S11b)
+
+    Args:
+        Sa: (..., nf, 2, 2) complex — first network
+        Sb: (..., nf, 2, 2) complex — second network
+            (broadcast-compatible with Sa)
+
+    Returns:
+        (..., nf, 2, 2) complex — cascaded network
+    """
+    denom = 1.0 / (1.0 - Sa[..., 1, 1] * Sb[..., 0, 0] + 1e-50)
+    S11 = Sa[..., 0, 0] + Sa[..., 0, 1] * Sb[..., 0, 0] * Sa[..., 1, 0] * denom
+    S21 = Sa[..., 1, 0] * Sb[..., 1, 0] * denom
+    S12 = Sa[..., 0, 1] * Sb[..., 0, 1] * denom
+    S22 = Sb[..., 1, 1] + Sb[..., 0, 1] * Sa[..., 1, 1] * Sb[..., 1, 0] * denom
+
+    # Stack into (..., nf, 2, 2)
+    S = np.stack([
+        np.stack([S11, S12], axis=-1),
+        np.stack([S21, S22], axis=-1),
+    ], axis=-2)
+    return S
+
+
+def _transducer_gain_vectorized(S, G_load):
+    """Compute transducer gain from S-matrix and load reflection coefficient.
+
+    GT = |S21|^2 * (1 - |G_L|^2) / |1 - S22 * G_L|^2
+
+    Args:
+        S: (..., nf, 2, 2) complex — cascaded network
+        G_load: (nf,) complex — antenna reflection coefficient per frequency
+
+    Returns:
+        (..., nf) float — GT per frequency (linear 0-1)
+    """
+    # Broadcast G_load to match S shape
+    # S shape: (..., nf, 2, 2)
+    # Need G_load broadcast across leading dims: (..., nf)
+    G_bc = G_load  # will auto-broadcast trailing dims
+
+    S21 = S[..., 1, 0]
+    S22 = S[..., 1, 1]
+
+    gt = np.abs(S21) ** 2 * (1.0 - np.abs(G_bc) ** 2) / (
+        np.abs(1.0 - S22 * G_bc) ** 2 + 1e-50)
+    return gt
+
+
+class GridS2POptimizer:
+    """Direct S2P grid search optimizer — no Mobius, no Q-model.
+
+    Usage:
+        optimizer = GridS2POptimizer(l_library, c_library, band_freqs)
+        result = optimizer.optimize(antenna_s11, target_hz, bands_mhz)
+    """
+
+    def __init__(self, l_library, c_library, target_freqs_hz):
+        """Pre-index library component S-matrices.
+
+        Args:
+            l_library: list of (nom, pn, data) from component_db.get_library()
+            c_library: same for capacitors
+            target_freqs_hz: (nf,) frequency array for the band
+        """
+        self._freqs_hz = np.asarray(target_freqs_hz, dtype=np.float64)
+        nf = len(self._freqs_hz)
+
+        # Pre-index components with BOTH series and shunt S-matrices
+        self._l_components = []  # list of (nom, pn, (nf,2,2) series, (nf,2,2) shunt)
+        self._c_components = []
+
+        for nom, pn, data in l_library:
+            s_series = _series_s_matrix(data)
+            s_shunt = _shunt_s_matrix(data)
+            if s_series.shape[0] == nf and s_shunt.shape[0] == nf:
+                self._l_components.append((float(nom), pn, s_series, s_shunt))
+
+        for nom, pn, data in c_library:
+            s_series = _series_s_matrix(data)
+            s_shunt = _shunt_s_matrix(data)
+            if s_series.shape[0] == nf and s_shunt.shape[0] == nf:
+                self._c_components.append((float(nom), pn, s_series, s_shunt))
+
+        # Build numpy arrays for vectorized access
+        def _stack(arr_list):
+            return np.stack(arr_list) if arr_list else np.empty((0, nf, 2, 2), dtype=complex)
+
+        self._l_series_arr = _stack([c[2] for c in self._l_components])
+        self._l_shunt_arr = _stack([c[3] for c in self._l_components])
+        self._c_series_arr = _stack([c[2] for c in self._c_components])
+        self._c_shunt_arr = _stack([c[3] for c in self._c_components])
+
+        self._l_noms = np.array([c[0] for c in self._l_components], dtype=np.float64)
+        self._l_pns = [c[1] for c in self._l_components]
+        self._c_noms = np.array([c[0] for c in self._c_components], dtype=np.float64)
+        self._c_pns = [c[1] for c in self._c_components]
+
+        self.nf = nf
+        logger.info(
+            f'GridS2P: {len(self._l_components)}L + {len(self._c_components)}C, '
+            f'{nf} freq pts ({self._freqs_hz[0]/1e9:.2f}-{self._freqs_hz[-1]/1e9:.2f}GHz)')
+
+    # ── Topology helpers ────────────────────────────────────────
+
+    def _get_s_matrix(self, comp_type, topo_type, idx):
+        """Get pre-computed S-matrix for a component in a given topology config.
+
+        Args:
+            comp_type: 'L' or 'C'
+            topo_type: 'S' (series) or 'P' (shunt)
+            idx: library index
+
+        Returns:
+            (nf, 2, 2) complex S-matrix
+        """
+        if comp_type == 'L':
+            return self._l_series_arr[idx] if topo_type == 'S' else self._l_shunt_arr[idx]
+        else:
+            return self._c_series_arr[idx] if topo_type == 'S' else self._c_shunt_arr[idx]
+
+    def _get_s_matrix_series(self, comp_type, idx):
+        """Get series S-matrix."""
+        return self._l_series_arr[idx] if comp_type == 'L' else self._c_series_arr[idx]
+
+    def _get_s_matrix_shunt(self, comp_type, idx):
+        """Get shunt S-matrix."""
+        return self._l_shunt_arr[idx] if comp_type == 'L' else self._c_shunt_arr[idx]
+
+    def _get_vals_arr(self, comp_type):
+        """Get nominal values array by component type."""
+        return self._l_noms if comp_type == 'L' else self._c_noms
+
+    def _get_pns(self, comp_type):
+        """Get part numbers list by component type."""
+        return self._l_pns if comp_type == 'L' else self._c_pns
+
+    # ── Candidate evaluation ────────────────────────────────────
+
+    def _eval_candidates(self, s_matrix_list, G_load):
+        """Evaluate cascade GT for a list of component S-matrices.
+
+        Used for individual candidate evaluation (non-vectorized path).
+
+        Args:
+            s_matrix_list: list of (nf, 2, 2) S-matrices in source→antenna order
+            G_load: (nf,) complex antenna reflection coefficient
+
+        Returns:
+            float — mean GT across all frequencies
+        """
+        S = np.zeros((self.nf, 2, 2), dtype=complex)
+        S[:, 0, 1] = 1.0
+        S[:, 1, 0] = 1.0
+        for sm in s_matrix_list:
+            S = self._cascade_s(S, sm)
+        gt = self._transducer_gain(S, G_load)
+        return float(np.mean(gt))
+
+    @staticmethod
+    def _cascade_s(Sa, Sb):
+        """Cascade two 2-port S-parameter networks.
+
+        Args:
+            Sa: (nf, 2, 2) complex
+            Sb: (nf, 2, 2) complex
+
+        Returns:
+            (nf, 2, 2) complex — cascaded network
+        """
+        denom = 1.0 / (1.0 - Sa[:, 1, 1] * Sb[:, 0, 0] + 1e-50)
+        S11 = Sa[:, 0, 0] + Sa[:, 0, 1] * Sb[:, 0, 0] * Sa[:, 1, 0] * denom
+        S21 = Sa[:, 1, 0] * Sb[:, 1, 0] * denom
+        S12 = Sa[:, 0, 1] * Sb[:, 0, 1] * denom
+        S22 = Sb[:, 1, 1] + Sb[:, 0, 1] * Sa[:, 1, 1] * Sb[:, 1, 0] * denom
+
+        S = np.empty((Sa.shape[0], 2, 2), dtype=complex)
+        S[:, 0, 0] = S11
+        S[:, 0, 1] = S12
+        S[:, 1, 0] = S21
+        S[:, 1, 1] = S22
+        return S
+
+    @staticmethod
+    def _transducer_gain(S, G_load):
+        """Compute transducer gain. GT = |S21|^2*(1-|GL|^2)/|1-S22*GL|^2
+
+        Args:
+            S: (nf, 2, 2) complex — cascaded network
+            G_load: (nf,) complex — antenna reflection coefficient
+
+        Returns:
+            (nf,) float — GT per frequency (linear 0-1)
+        """
+        gt = np.abs(S[:, 1, 0])**2 * (1.0 - np.abs(G_load)**2) / (
+            np.abs(1.0 - S[:, 1, 1] * G_load)**2 + 1e-50)
+        return gt
+
+    # ── 2-element grid search (fully vectorized) ────────────────
+
+    def _grid_2d_vectorized(self, s0_arr, s1_arr, G_load,
+                            freqs_hz=None, bands_mhz=None):
+        """Vectorized 2D grid search over component index pairs.
+
+        Args:
+            s0_arr: (n0, nf, 2, 2) — first component (source side)
+            s1_arr: (n1, nf, 2, 2) — second component (antenna side)
+            G_load: (nf,) complex — antenna reflection coefficient
+            freqs_hz: (nf,) optional — for band-weighted scoring
+            bands_mhz: list of [start, end] — for band-weighted scoring
+
+        Returns:
+            (best_i0, best_i1, best_mean_gt)
+        """
+        n0, n1 = s0_arr.shape[0], s1_arr.shape[0]
+
+        # Vectorized cascade: broadcast s0 × s1 → (n0, n1, nf, 2, 2)
+        denom = 1.0 / (1.0 - s0_arr[:, None, :, 1, 1] * s1_arr[None, :, :, 0, 0] + 1e-50)
+
+        S11 = (s0_arr[:, None, :, 0, 0]
+               + s0_arr[:, None, :, 0, 1] * s1_arr[None, :, :, 0, 0] * s0_arr[:, None, :, 1, 0] * denom)
+        S21 = s0_arr[:, None, :, 1, 0] * s1_arr[None, :, :, 1, 0] * denom
+        S12 = s0_arr[:, None, :, 0, 1] * s1_arr[None, :, :, 0, 1] * denom
+        S22 = (s1_arr[None, :, :, 1, 1]
+               + s1_arr[None, :, :, 0, 1] * s0_arr[:, None, :, 1, 1] * s1_arr[None, :, :, 1, 0] * denom)
+
+        # Transducer gain: (n0, n1, nf)
+        gt = (np.abs(S21)**2 * (1.0 - np.abs(G_load)**2)
+              / (np.abs(1.0 - S22 * G_load)**2 + 1e-50))
+
+        # Band-weighted or simple mean
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+            mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)
+        else:
+            mean_gt = np.mean(gt, axis=-1)
+
+        # Find best pair
+        best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
+        return int(best_idx[0]), int(best_idx[1]), float(mean_gt[best_idx])
+
+    # ── 3-element grid search (coarse + refine) ─────────────────
+
+    def _grid_3d_coarse(self, s0_arr, s1_arr, s2_arr, G_load, sample_rate=4,
+                        freqs_hz=None, bands_mhz=None):
+        """Coarse 3D grid search by sampling every Kth library index.
+
+        Signal flow: source → s0 → s1 → s2 → antenna (load)
+
+        Args:
+            s0_arr: (n0, nf, 2, 2) — source side
+            s1_arr: (n1, nf, 2, 2) — middle
+            s2_arr: (n2, nf, 2, 2) — antenna side
+            G_load: (nf,) complex
+            sample_rate: downsample rate (every Nth index)
+            freqs_hz: (nf,) optional — for band-weighted scoring
+            bands_mhz: list of [start, end] — for band-weighted scoring
+
+        Returns:
+            (best_i0, best_i1, best_i2, best_mean_gt)
+        """
+        n0, n1, n2 = s0_arr.shape[0], s1_arr.shape[0], s2_arr.shape[0]
+
+        # Sample indices
+        idx0 = np.arange(0, n0, max(1, sample_rate))
+        idx1 = np.arange(0, n1, max(1, sample_rate))
+        idx2 = np.arange(0, n2, max(1, sample_rate))
+
+        # Subset arrays
+        s0_sub = s0_arr[idx0]
+        s1_sub = s1_arr[idx1]
+        s2_sub = s2_arr[idx2]
+
+        # Step 1: cascade_s(s1, s2)
+        denom_12 = 1.0 / (1.0 - s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 0, 0] + 1e-50)
+        S11_12 = (s1_sub[:, None, :, 0, 0]
+                  + s1_sub[:, None, :, 0, 1] * s2_sub[None, :, :, 0, 0] * s1_sub[:, None, :, 1, 0] * denom_12)
+        S21_12 = s1_sub[:, None, :, 1, 0] * s2_sub[None, :, :, 1, 0] * denom_12
+        S12_12 = s1_sub[:, None, :, 0, 1] * s2_sub[None, :, :, 0, 1] * denom_12
+        S22_12 = (s2_sub[None, :, :, 1, 1]
+                  + s2_sub[None, :, :, 0, 1] * s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 1, 0] * denom_12)
+
+        # Step 2: cascade_s(s0, S_12)
+        denom_total = 1.0 / (1.0 - s0_sub[:, None, None, :, 1, 1] * S11_12[None, :, :, :] + 1e-50)
+        S21_total = s0_sub[:, None, None, :, 1, 0] * S21_12[None, :, :, :] * denom_total
+        S22_total = (S22_12[None, :, :, :]
+                     + S12_12[None, :, :, :] * s0_sub[:, None, None, :, 1, 1] * S21_12[None, :, :, :] * denom_total)
+
+        # GT: (n0, n1, n2, nf)
+        gt = (np.abs(S21_total)**2 * (1.0 - np.abs(G_load)**2)
+              / (np.abs(1.0 - S22_total * G_load)**2 + 1e-50))
+        # Band-weighted or simple mean
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+            mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)  # (n0, n1, n2)
+        else:
+            mean_gt = np.mean(gt, axis=-1)
+
+        best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
+        best_i0 = idx0[best_idx[0]]
+        best_i1 = idx1[best_idx[1]]
+        best_i2 = idx2[best_idx[2]]
+        best_score = float(mean_gt[best_idx])
+
+        # ── Refine: check ±1 neighbor in each dimension ──
+        refine_radius = max(1, int(sample_rate))
+        refine_range = lambda i, n: range(max(0, i - refine_radius),
+                                          min(n, i + refine_radius + 1))
+        for ri0 in refine_range(best_i0, n0):
+            for ri1 in refine_range(best_i1, n1):
+                for ri2 in refine_range(best_i2, n2):
+                    S = self._cascade_s(s1_arr[ri1], s2_arr[ri2])
+                    S = self._cascade_s(s0_arr[ri0], S)
+                    gt_val = self._transducer_gain(S, G_load)
+                    if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+                        score = float(_band_weighted_score(gt_val, freqs_hz, bands_mhz))
+                    else:
+                        score = float(np.mean(gt_val))
+                    if score > best_score:
+                        best_score = score
+                        best_i0, best_i1, best_i2 = ri0, ri1, ri2
+
+        return best_i0, best_i1, best_i2, best_score
+
+    # ── Main optimize entry point ───────────────────────────────
+
+    def optimize(self, antenna_s11, target_hz, bands_mhz,
+                 elem_count=2, elem_min=None, elem_max=None,
+                 mode='GT', top_n=10):
+        """Run grid S2P optimization.
+
+        Args:
+            antenna_s11: (nf,) complex antenna reflection coefficient
+            target_hz: (nf,) frequency array in Hz
+            bands_mhz: list of [start_mhz, end_mhz]
+            elem_count: default element count
+            elem_min, elem_max: element count range
+            mode: 'GT' or 'S11'
+            top_n: return top N results
+
+        Returns:
+            dict with:
+                results: list sorted by score
+                best: the best result
+                time_sec: total wall time
+                n_evaluated: number of topology+type combos
+                mode: the mode used
+        """
+        t0 = time.time()
+        nf = len(target_hz)
+        G_load = np.asarray(antenna_s11, dtype=complex)
+        G_load_center = G_load[nf // 2]
+
+        logger.info(f'═══ GridS2P START ═══ bands={bands_mhz} '
+                    f'elem={elem_count} mode={mode} freqs={nf}pts')
+
+        # ── Determine topologies ──
+        emin = elem_min if elem_min is not None else elem_count
+        emax = elem_max if elem_max is not None else elem_count
+        topos = list(self._generate_topologies(emin, emax))
+        logger.info(f'  Topologies ({emin}-{emax} elem): {len(topos)}')
+
+        results = []
+        n_evaluated = 0
+
+        for topo in topos:
+            # Enumerate type assignments
+            for types in self._type_assignments(topo):
+                n_evaluated += 1
+                t1 = time.perf_counter()
+
+                result = self._evaluate_topo(
+                    topo, types, G_load,
+                    freqs_hz=self._freqs_hz, bands_mhz=bands_mhz)
+                if result is None:
+                    continue
+
+                eval_ms = (time.perf_counter() - t1) * 1000
+                result['elapsed_ms'] = eval_ms
+                results.append(result)
+
+        # Sort by score
+        if mode == 'S11':
+            results.sort(key=lambda r: r['s11_db'])  # lower S11 = better
+        else:
+            results.sort(key=lambda r: r['gt'], reverse=True)  # higher GT = better
+
+        total_time = time.time() - t0
+        logger.info(f'═══ GridS2P DONE ═══ '
+                    f'{n_evaluated} combos in {total_time:.3f}s')
+
+        return {
+            'results': results[:top_n],
+            'best': results[0] if results else None,
+            'time_sec': total_time,
+            'n_evaluated': n_evaluated,
+            'mode': mode,
+        }
+
+    def _evaluate_topo(self, topo, types, G_load,
+                       freqs_hz=None, bands_mhz=None):
+        """Evaluate one (topology, type_assignment) combination."""
+        n_elem = len(topo)
+
+        # Build per-position arrays
+        pos_data = []
+        for tt, ct in zip(topo, types):
+            if ct == 'L':
+                s_arr = self._l_series_arr if tt == 'S' else self._l_shunt_arr
+                vals = self._l_noms
+                pns = self._l_pns
+            else:
+                s_arr = self._c_series_arr if tt == 'S' else self._c_shunt_arr
+                vals = self._c_noms
+                pns = self._c_pns
+
+            if len(s_arr) == 0:
+                return None
+            pos_data.append((ct, tt, s_arr, vals, pns))
+
+        if n_elem == 2:
+            _, _, s0_arr, _, _ = pos_data[0]
+            _, _, s1_arr, _, _ = pos_data[1]
+            i0, i1, mean_gt = self._grid_2d_vectorized(
+                s0_arr, s1_arr, G_load, freqs_hz, bands_mhz)
+            best_mean_gt = mean_gt
+            best_i = [i0, i1]
+        elif n_elem == 3:
+            _, _, s0_arr, _, _ = pos_data[0]
+            _, _, s1_arr, _, _ = pos_data[1]
+            _, _, s2_arr, _, _ = pos_data[2]
+
+            n0, n1, n2 = s0_arr.shape[0], s1_arr.shape[0], s2_arr.shape[0]
+            total = n0 * n1 * n2
+            if total <= 8000:
+                i0, i1, i2, best_mean_gt = self._grid_3d_coarse(
+                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=1,
+                    freqs_hz=freqs_hz, bands_mhz=bands_mhz)
+            else:
+                sr = max(2, int(round(total ** (1/3) / 15)))
+                i0, i1, i2, best_mean_gt = self._grid_3d_coarse(
+                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=sr,
+                    freqs_hz=freqs_hz, bands_mhz=bands_mhz)
+            best_i = [i0, i1, i2]
+        else:
+            return None
+
+        # Build component list
+        values = []
+        comp_types = []
+        part_numbers = []
+        s_matrix_list = []
+        for pos in range(n_elem):
+            ct, tt, _, vals, pns = pos_data[pos]
+            idx = best_i[pos]
+            values.append(float(vals[idx]))
+            comp_types.append(ct)
+            part_numbers.append(pns[idx])
+            s_matrix_list.append(self._get_s_matrix(ct, tt, idx))
+
+        # Cascade all frequencies to compute mean GT (band-weighted)
+        S_cascade = np.zeros((self.nf, 2, 2), dtype=complex)
+        S_cascade[:, 0, 1] = 1.0
+        S_cascade[:, 1, 0] = 1.0
+        for sm in s_matrix_list:
+            S_cascade = self._cascade_s(S_cascade, sm)
+
+        gt_all = self._transducer_gain(S_cascade, G_load)
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+            mean_gt = float(_band_weighted_score(gt_all, freqs_hz, bands_mhz))
+        else:
+            mean_gt = float(np.mean(gt_all))
+
+        # S11 at center frequency
+        ci = self.nf // 2
+        G_in = (S_cascade[ci, 0, 0]
+                + S_cascade[ci, 0, 1] * S_cascade[ci, 1, 0] * G_load[ci]
+                / (1.0 - S_cascade[ci, 1, 1] * G_load[ci] + 1e-50))
+        s11_db = float(20 * np.log10(max(abs(G_in), 1e-12)))
+
+        return {
+            'topology': list(topo),
+            'comp_types': comp_types,
+            'values': values,
+            'part_numbers': part_numbers,
+            's11_db': s11_db,
+            'gt': mean_gt,
+            'gamma_final': G_in,
+            'score_db': float(10 * np.log10(max(mean_gt, 1e-10))),
+            'elapsed_ms': 0,
+            'mode': 'GT',
+        }
+
+    @staticmethod
+    def _generate_topologies(elem_min, elem_max):
+        """Generate all valid S/P topology patterns."""
+        for n in range(elem_min, elem_max + 1):
+            if n == 0:
+                yield ()
+                continue
+            for combo in iproduct(['S', 'P'], repeat=n):
+                yield combo
+
+    @staticmethod
+    def _type_assignments(topology):
+        """Generate valid L/C type assignments (allows P+L)."""
+        # Note: unlike vector_pathfinding, P+L is NOT filtered
+        # because the S2P cascade correctly handles it.
+        for types in iproduct(['L', 'C'], repeat=len(topology)):
+            yield types

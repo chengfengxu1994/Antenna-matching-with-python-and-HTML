@@ -103,4 +103,53 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ port_index: portIndex }),
     }),
+
+  /* ─── Tuning API (unified, Optenni-style) ─── */
+
+  tuningOptimize: (params) =>
+    request('/tuning/optimize', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  tuningTunable: (params) =>
+    request('/tuning/optimize', {
+      method: 'POST',
+      body: JSON.stringify({ ...params, mode: 'tunable' }),
+    }),
+
+  tuningSweep: (portIndex, startHz, stopHz, numPoints = 201, solutionIndex = 0, useSnpPoints = true) =>
+    request(
+      `/tuning/sweep?port_index=${portIndex}&start_hz=${startHz}&stop_hz=${stopHz}&num_points=${numPoints}&solution_index=${solutionIndex}&use_snp_points=${useSnpPoints}`
+    ),
+
+  tuningPowerBalance: (freqHz = 2.45e9) =>
+    request(`/tuning/power-balance?frequency_hz=${freqHz}`),
+
+  tuningSelect: (solutionIndex) =>
+    request(`/tuning/select?solution_index=${solutionIndex}`, { method: 'POST' }),
+
+  tuningStatus: () => request('/tuning/status'),
+
+  /* ─── Tune API (legacy) ─── */
+
+  tuneSingle: (params) =>
+    request('/tune/single', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  tuneJoint: (params) =>
+    request('/tune/joint', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  tuneSweep: (portIndex, startHz, stopHz, numPoints = 200, solutionIndex = 0) =>
+    request(
+      `/tune/sweep?port_index=${portIndex}&start_hz=${startHz}&stop_hz=${stopHz}&num_points=${numPoints}&solution_index=${solutionIndex}&include_efficiency=true`
+    ),
+
+  tunePowerBalance: (freqHz = 2.45e9) =>
+    request(`/tune/power-balance?frequency_hz=${freqHz}`),
 };
