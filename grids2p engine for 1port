@@ -41,6 +41,20 @@ logger = logging.getLogger('engines.grid_s2p_optimizer')
 Z0 = 50.0
 
 
+def _band_weighted_score(gt_array, freqs_hz, bands_mhz):
+    """Band-weighted mean GT — each band equal weight regardless of point count."""
+    if bands_mhz is None or len(bands_mhz) <= 1:
+        return np.mean(gt_array, axis=-1)
+    band_means = []
+    for start_mhz, end_mhz in bands_mhz:
+        mask = (freqs_hz >= start_mhz * 1e6) & (freqs_hz <= end_mhz * 1e6)
+        if np.any(mask):
+            band_means.append(np.mean(gt_array[..., mask], axis=-1))
+    if not band_means:
+        return np.mean(gt_array, axis=-1)
+    return np.mean(np.stack(band_means, axis=-1), axis=-1)
+
+
 def _series_s_matrix(comp_data):
     """Build S-matrix for a series component from Murata S2P data.
 
@@ -306,15 +320,16 @@ class GridS2POptimizer:
 
     # ── 2-element grid search (fully vectorized) ────────────────
 
-    def _grid_2d_vectorized(self, s0_arr, s1_arr, G_load):
+    def _grid_2d_vectorized(self, s0_arr, s1_arr, G_load,
+                            freqs_hz=None, bands_mhz=None):
         """Vectorized 2D grid search over component index pairs.
-
-        Evaluates ALL (n0 × n1) pairs at once via numpy broadcasting.
 
         Args:
             s0_arr: (n0, nf, 2, 2) — first component (source side)
             s1_arr: (n1, nf, 2, 2) — second component (antenna side)
             G_load: (nf,) complex — antenna reflection coefficient
+            freqs_hz: (nf,) optional — for band-weighted scoring
+            bands_mhz: list of [start, end] — for band-weighted scoring
 
         Returns:
             (best_i0, best_i1, best_mean_gt)
@@ -322,9 +337,6 @@ class GridS2POptimizer:
         n0, n1 = s0_arr.shape[0], s1_arr.shape[0]
 
         # Vectorized cascade: broadcast s0 × s1 → (n0, n1, nf, 2, 2)
-        # Cascade order: s1 (antenna) then s0 (source)
-        # S_total = cascade_s(s1, s0) — because s1 is closer to antenna
-        # Sa = s0 (source), Sb = s1 (antenna) for the cascade
         denom = 1.0 / (1.0 - s0_arr[:, None, :, 1, 1] * s1_arr[None, :, :, 0, 0] + 1e-50)
 
         S11 = (s0_arr[:, None, :, 0, 0]
@@ -338,8 +350,11 @@ class GridS2POptimizer:
         gt = (np.abs(S21)**2 * (1.0 - np.abs(G_load)**2)
               / (np.abs(1.0 - S22 * G_load)**2 + 1e-50))
 
-        # Mean GT across frequencies: (n0, n1)
-        mean_gt = np.mean(gt, axis=-1)
+        # Band-weighted or simple mean
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 1:
+            mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)
+        else:
+            mean_gt = np.mean(gt, axis=-1)
 
         # Find best pair
         best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
@@ -347,11 +362,11 @@ class GridS2POptimizer:
 
     # ── 3-element grid search (coarse + refine) ─────────────────
 
-    def _grid_3d_coarse(self, s0_arr, s1_arr, s2_arr, G_load, sample_rate=4):
+    def _grid_3d_coarse(self, s0_arr, s1_arr, s2_arr, G_load, sample_rate=4,
+                        freqs_hz=None, bands_mhz=None):
         """Coarse 3D grid search by sampling every Kth library index.
 
         Signal flow: source → s0 → s1 → s2 → antenna (load)
-        Cascade: S_total = cascade_s(s0, cascade_s(s1, s2))
 
         Args:
             s0_arr: (n0, nf, 2, 2) — source side
@@ -359,6 +374,8 @@ class GridS2POptimizer:
             s2_arr: (n2, nf, 2, 2) — antenna side
             G_load: (nf,) complex
             sample_rate: downsample rate (every Nth index)
+            freqs_hz: (nf,) optional — for band-weighted scoring
+            bands_mhz: list of [start, end] — for band-weighted scoring
 
         Returns:
             (best_i0, best_i1, best_i2, best_mean_gt)
@@ -375,10 +392,8 @@ class GridS2POptimizer:
         s1_sub = s1_arr[idx1]
         s2_sub = s2_arr[idx2]
 
-        # Step 1: cascade_s(s1, s2) — s1 source side, s2 antenna/load side
-        # denom_12 = 1/(1 - S22_s1 * S11_s2)
+        # Step 1: cascade_s(s1, s2)
         denom_12 = 1.0 / (1.0 - s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 0, 0] + 1e-50)
-        # Results: (n1, n2, nf) — first dim=s1 index, second dim=s2 index
         S11_12 = (s1_sub[:, None, :, 0, 0]
                   + s1_sub[:, None, :, 0, 1] * s2_sub[None, :, :, 0, 0] * s1_sub[:, None, :, 1, 0] * denom_12)
         S21_12 = s1_sub[:, None, :, 1, 0] * s2_sub[None, :, :, 1, 0] * denom_12
@@ -386,22 +401,20 @@ class GridS2POptimizer:
         S22_12 = (s2_sub[None, :, :, 1, 1]
                   + s2_sub[None, :, :, 0, 1] * s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 1, 0] * denom_12)
 
-        # Step 2: cascade_s(s0, S_12) — s0 source side, S_12 load/antenna side
-        # We need S21_total and S22_total for GT
-        # denom_total = 1/(1 - S22_s0 * S11_12)
-        # s0: (n0, nf, 2, 2), S11_12: (n1, n2, nf)
+        # Step 2: cascade_s(s0, S_12)
         denom_total = 1.0 / (1.0 - s0_sub[:, None, None, :, 1, 1] * S11_12[None, :, :, :] + 1e-50)
-        # Results: (n0, n1, n2, nf)
         S21_total = s0_sub[:, None, None, :, 1, 0] * S21_12[None, :, :, :] * denom_total
-
-        # S22_total = S22_12 + S12_12 * S22_s0 * S21_12 / (1 - S22_s0 * S11_12)
         S22_total = (S22_12[None, :, :, :]
                      + S12_12[None, :, :, :] * s0_sub[:, None, None, :, 1, 1] * S21_12[None, :, :, :] * denom_total)
 
         # GT: (n0, n1, n2, nf)
         gt = (np.abs(S21_total)**2 * (1.0 - np.abs(G_load)**2)
               / (np.abs(1.0 - S22_total * G_load)**2 + 1e-50))
-        mean_gt = np.mean(gt, axis=-1)  # (n0, n1, n2)
+        # Band-weighted or simple mean
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 1:
+            mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)  # (n0, n1, n2)
+        else:
+            mean_gt = np.mean(gt, axis=-1)
 
         best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
         best_i0 = idx0[best_idx[0]]
@@ -414,11 +427,13 @@ class GridS2POptimizer:
         for ri0 in refine_range(best_i0, n0):
             for ri1 in refine_range(best_i1, n1):
                 for ri2 in refine_range(best_i2, n2):
-                    # Individual cascade evaluation: correct order
                     S = self._cascade_s(s1_arr[ri1], s2_arr[ri2])
                     S = self._cascade_s(s0_arr[ri0], S)
                     gt_val = self._transducer_gain(S, G_load)
-                    score = float(np.mean(gt_val))
+                    if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 1:
+                        score = float(_band_weighted_score(gt_val, freqs_hz, bands_mhz))
+                    else:
+                        score = float(np.mean(gt_val))
                     if score > best_score:
                         best_score = score
                         best_i0, best_i1, best_i2 = ri0, ri1, ri2
@@ -472,7 +487,9 @@ class GridS2POptimizer:
                 n_evaluated += 1
                 t1 = time.perf_counter()
 
-                result = self._evaluate_topo(topo, types, G_load)
+                result = self._evaluate_topo(
+                    topo, types, G_load,
+                    freqs_hz=self._freqs_hz, bands_mhz=bands_mhz)
                 if result is None:
                     continue
 
@@ -498,12 +515,12 @@ class GridS2POptimizer:
             'mode': mode,
         }
 
-    def _evaluate_topo(self, topo, types, G_load):
+    def _evaluate_topo(self, topo, types, G_load,
+                       freqs_hz=None, bands_mhz=None):
         """Evaluate one (topology, type_assignment) combination."""
         n_elem = len(topo)
 
         # Build per-position arrays
-        # For each position, store (comp_type, topo_type, S-array, vals, pns)
         pos_data = []
         for tt, ct in zip(topo, types):
             if ct == 'L':
@@ -520,15 +537,13 @@ class GridS2POptimizer:
             pos_data.append((ct, tt, s_arr, vals, pns))
 
         if n_elem == 2:
-            # 2-element: vectorized full grid
-            # Sa = pos0 (source side), Sb = pos1 (antenna side)
             _, _, s0_arr, _, _ = pos_data[0]
             _, _, s1_arr, _, _ = pos_data[1]
-            i0, i1, mean_gt = self._grid_2d_vectorized(s0_arr, s1_arr, G_load)
+            i0, i1, mean_gt = self._grid_2d_vectorized(
+                s0_arr, s1_arr, G_load, freqs_hz, bands_mhz)
             best_mean_gt = mean_gt
             best_i = [i0, i1]
         elif n_elem == 3:
-            # 3-element: coarse 3D grid + refine
             _, _, s0_arr, _, _ = pos_data[0]
             _, _, s1_arr, _, _ = pos_data[1]
             _, _, s2_arr, _, _ = pos_data[2]
@@ -537,16 +552,18 @@ class GridS2POptimizer:
             total = n0 * n1 * n2
             if total <= 8000:
                 i0, i1, i2, best_mean_gt = self._grid_3d_coarse(
-                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=1)
+                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=1,
+                    freqs_hz=freqs_hz, bands_mhz=bands_mhz)
             else:
                 sr = max(2, int(round(total ** (1/3) / 15)))
                 i0, i1, i2, best_mean_gt = self._grid_3d_coarse(
-                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=sr)
+                    s0_arr, s1_arr, s2_arr, G_load, sample_rate=sr,
+                    freqs_hz=freqs_hz, bands_mhz=bands_mhz)
             best_i = [i0, i1, i2]
         else:
             return None
 
-        # Build component list in source→antenna order
+        # Build component list
         values = []
         comp_types = []
         part_numbers = []
@@ -559,7 +576,7 @@ class GridS2POptimizer:
             part_numbers.append(pns[idx])
             s_matrix_list.append(self._get_s_matrix(ct, tt, idx))
 
-        # Cascade all frequencies to compute mean GT
+        # Cascade all frequencies to compute mean GT (band-weighted)
         S_cascade = np.zeros((self.nf, 2, 2), dtype=complex)
         S_cascade[:, 0, 1] = 1.0
         S_cascade[:, 1, 0] = 1.0
@@ -567,7 +584,10 @@ class GridS2POptimizer:
             S_cascade = self._cascade_s(S_cascade, sm)
 
         gt_all = self._transducer_gain(S_cascade, G_load)
-        mean_gt = float(np.mean(gt_all))
+        if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 1:
+            mean_gt = float(_band_weighted_score(gt_all, freqs_hz, bands_mhz))
+        else:
+            mean_gt = float(np.mean(gt_all))
 
         # S11 at center frequency
         ci = self.nf // 2
