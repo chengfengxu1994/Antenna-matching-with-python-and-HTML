@@ -1,0 +1,704 @@
+{
+  "schema_version": 1,
+  "case": "Optenni three-antenna coupled search recall",
+  "software": {
+    "rfmatch_core_version": "0.2.0",
+    "benchmark": "joint measured search vs exhaustive v1"
+  },
+  "input": {
+    "relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "reference_resistance_ohm": 50.0,
+    "frequency_points": [
+      1216000000.0,
+      1258000000.0,
+      1300000000.0,
+      1920000000.0,
+      2044000000.0,
+      2170000000.0,
+      2500000000.0,
+      2596000000.0,
+      2690000000.0
+    ],
+    "bands_by_port_hz": {
+      "0": [
+        [
+          2500000000.0,
+          2690000000.0
+        ]
+      ],
+      "1": [
+        [
+          1920000000.0,
+          2170000000.0
+        ]
+      ],
+      "2": [
+        [
+          1215000000.0,
+          1300000000.0
+        ]
+      ]
+    }
+  },
+  "component_grid": [
+    {
+      "name": "04HP4N7",
+      "kind": "L",
+      "value_si": 4.700000000000001e-09,
+      "model_sha256": "2d8799380baebdef2621b88728a3d6ed0c940a0be8774b3dd2e9da286be008de"
+    },
+    {
+      "name": "04HP39N",
+      "kind": "L",
+      "value_si": 3.9000000000000005e-08,
+      "model_sha256": "589024d29072fdb8517181431800a3bc528d154d11dab18c3bf7a372e77c4690"
+    },
+    {
+      "name": "GQM1875C2E1R0BB12",
+      "kind": "C",
+      "value_si": 1e-12,
+      "model_sha256": "bd33fd13cc1351c2a60f18fbef7aec577948aae3cbc49766112533d96426e940"
+    },
+    {
+      "name": "GQM1875C2E2R0BB12",
+      "kind": "C",
+      "value_si": 2e-12,
+      "model_sha256": "4a4bb46f824cba2827143a52d56be21da8fe4e4380de682c452aea074c3ab97f"
+    }
+  ],
+  "search_config": {
+    "ideal_restarts": 2,
+    "ideal_iterations": 6,
+    "ideal_keep": 16,
+    "nearest_parts": 2,
+    "per_port_keep": 8,
+    "result_keep": 50,
+    "joint_refine_seeds": 4,
+    "joint_refine_passes": 1,
+    "joint_refine_neighbors": 2,
+    "seed": 1,
+    "max_components_per_port": 1
+  },
+  "objective": {
+    "within_band_average_weight": 0.05,
+    "across_band_average_weight": 0.1,
+    "port_average_weight": 0.1,
+    "complexity_penalty_db": 0.0,
+    "impedance_target_db": null,
+    "impedance_weight": 0.0
+  },
+  "recall": {
+    "top_k": 10,
+    "exhaustive_candidate_count": 729,
+    "heuristic_candidate_count": 50,
+    "exact_matches": 10,
+    "exact_top_k_recall": 1.0,
+    "topology_matches": 10,
+    "topology_top_k_recall": 1.0,
+    "best_score_gap_db": 0.0,
+    "best_exhaustive_rank_found": 1,
+    "exhaustive_physical_evaluations": 729,
+    "heuristic_physical_evaluations": 567,
+    "exhaustive_loaded_component_models": 4,
+    "heuristic_loaded_component_models": 4
+  },
+  "performance": {
+    "heuristic_wall_seconds": 12.518771000002744,
+    "exhaustive_wall_seconds": 15.591695599992818,
+    "heuristic_peak_tracemalloc_bytes": 4115770,
+    "exhaustive_peak_tracemalloc_bytes": 5245072
+  },
+  "exhaustive_top_k": [
+    {
+      "score_db": -4.441624899497743,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -1.9085501258805284,
+        -4.549011014048121,
+        -3.967888465704374
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.524423679778189,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.23065319656116,
+        -4.6132476021669175,
+        -4.3311243361108085
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.579150257001876,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.590631343667521,
+        -4.671973412077356,
+        -3.9686208282227846
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.7748167770100185,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.2381809191743365,
+        -4.8741799754774355,
+        -4.529283077758036
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.023395958200592,
+      "topology_code": "PCSCSC",
+      "signature": [
+        [
+          "shunt",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -4.712994224946322,
+        -4.088922792649818,
+        -5.067855776015056
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.0798742024325545,
+      "topology_code": "PCSCSC",
+      "signature": [
+        [
+          "shunt",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -4.997420035969998,
+        -4.937819668560233,
+        -5.087892370301657
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.192035157247423,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -1.8665480688353528,
+        -5.35477489096372,
+        -3.960809701603179
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.236700057238449,
+      "topology_code": "SCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.3906360724965543,
+        -4.68208504986278,
+        -5.358152878385504
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.278145498818198,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.188506944510016,
+        -5.423048276261337,
+        -4.3105062847184845
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.337546053666674,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.548874652227039,
+        -5.490570288690655,
+        -3.841538874434849
+      ],
+      "maximum_power_balance_error": 0.0
+    }
+  ],
+  "heuristic_top_k": [
+    {
+      "score_db": -4.441624899497743,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -1.9085501258805284,
+        -4.549011014048121,
+        -3.967888465704374
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.524423679778189,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.23065319656116,
+        -4.6132476021669175,
+        -4.3311243361108085
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.579150257001876,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.590631343667521,
+        -4.671973412077356,
+        -3.9686208282227846
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -4.7748167770100185,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.2381809191743365,
+        -4.8741799754774355,
+        -4.529283077758036
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.023395958200592,
+      "topology_code": "PCSCSC",
+      "signature": [
+        [
+          "shunt",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -4.712994224946322,
+        -4.088922792649818,
+        -5.067855776015056
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.0798742024325545,
+      "topology_code": "PCSCSC",
+      "signature": [
+        [
+          "shunt",
+          0,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -4.997420035969998,
+        -4.937819668560233,
+        -5.087892370301657
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.192035157247423,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -1.8665480688353528,
+        -5.35477489096372,
+        -3.960809701603179
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.236700057238449,
+      "topology_code": "SCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.3906360724965543,
+        -4.68208504986278,
+        -5.358152878385504
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.278145498818198,
+      "topology_code": "SCSCPC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "shunt",
+          2,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.188506944510016,
+        -5.423048276261337,
+        -4.3105062847184845
+      ],
+      "maximum_power_balance_error": 0.0
+    },
+    {
+      "score_db": -5.337546053666674,
+      "topology_code": "SCSCSC",
+      "signature": [
+        [
+          "series",
+          0,
+          "C",
+          "GQM1875C2E1R0BB12"
+        ],
+        [
+          "series",
+          1,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ],
+        [
+          "series",
+          2,
+          "C",
+          "GQM1875C2E2R0BB12"
+        ]
+      ],
+      "port_scores_db": [
+        -2.548874652227039,
+        -5.490570288690655,
+        -3.841538874434849
+      ],
+      "maximum_power_balance_error": 0.0
+    }
+  ]
+}

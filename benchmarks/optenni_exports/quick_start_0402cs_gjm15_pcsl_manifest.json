@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "case": "quick-start",
+  "exported_at": "2026-07-16T18:24:52+08:00",
+  "source_application": "Optenni Lab 4.3",
+  "source_project_tab": "Untitled (rebuilt from the official Quick Start tutorial)",
+  "source_dut": {
+    "tutorial_relative_path": "1 - START HERE/measured_antenna.s1p",
+    "sha256": "FAD7716E0F2AAE52319082DD0B2C94B4EEF5818C8698D34ED54AA6B0BF63C949",
+    "points": 531,
+    "frequency_range_hz": [100000000, 5400000000],
+    "reference_impedance_ohm": 50
+  },
+  "matching_settings": {
+    "target_bands_mhz": [[2500, 2690]],
+    "maximum_components": 2,
+    "inductor_series": "Coilcraft 0402CS",
+    "capacitor_series": "Murata GJM15"
+  },
+  "selected_candidate": {
+    "result_group": "2 components_1",
+    "topology_code": "PCSL",
+    "topology_dut_outward": "shunt capacitor then series inductor",
+    "displayed_shunt_capacitor_pf": 0.2,
+    "displayed_series_inductor_nh": 8.2,
+    "component_values_are_ui_rounded": true,
+    "network_source_port": 1,
+    "network_load_port": 2
+  },
+  "numeric_band_summary": {
+    "points": 20,
+    "best_s11_db": -11.069,
+    "worst_s11_db": -6.68422,
+    "minimum_total_efficiency_db": -1.16881,
+    "average_total_efficiency_db_from_db_average": -0.87309755,
+    "optenni_ui_minimum_total_efficiency_db": -1.2,
+    "optenni_ui_average_total_efficiency_db": -0.9
+  },
+  "native_complex_replay": {
+    "definition": "Terminate matching-network port 2 in the original DUT S11 and observe port 1",
+    "total_efficiency_definition": "transducer power delivered through the passive matching network to the DUT",
+    "points": 531,
+    "maximum_s11_error_db": 0.0002417631579412216,
+    "rms_s11_error_db": 0.000018880994674509352,
+    "maximum_efficiency_error_db": 0.000059123859916354604,
+    "rms_efficiency_error_db": 0.000022505123257908317,
+    "acceptance": {
+      "maximum_s11_error_db": 0.0005,
+      "maximum_efficiency_error_db": 0.0001
+    }
+  },
+  "files": {
+    "matching_network": {
+      "path": "quick_start_0402cs_gjm15_pcsl_circuit.s2p",
+      "sha256": "C30ADCE5814B9425CBD8D5BA9C4044E0AF13DE46F13FBFA7870AC05C150DB1E7",
+      "format": "Touchstone 1.x, 2-port, RI, 50 ohm"
+    },
+    "plotted_response": {
+      "path": "quick_start_0402cs_gjm15_pcsl_plot.txt",
+      "sha256": "9F656C5E2C938B6D2FE324EB6439CDF2EA811B6EF361703259BEA30C0D9EC8D2",
+      "format": "Optenni 4.3 native tab-delimited plot export with S11 and total efficiency in dB"
+    }
+  },
+  "notes": [
+    "The tutorial project was rebuilt without saving or overwriting the original Optenni project.",
+    "The native plot and complex circuit S2P share the original DUT's complete 531-point frequency grid.",
+    "Port orientation is proven by pointwise replay rather than inferred from the circuit-view drawing.",
+    "The replay reproduces every plotted row far below the manifest acceptance limits."
+  ]
+}

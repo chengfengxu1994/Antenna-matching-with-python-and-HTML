@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "case": "product joint measured-S2P soft deadline",
+  "input": {
+    "relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "raw_catalog_size": {
+      "inductors": 49,
+      "capacitors": 322
+    },
+    "maximum_components_by_port": {
+      "0": 2,
+      "1": 2,
+      "2": 2
+    },
+    "frequency_points_per_band": 3,
+    "beam_width": 10,
+    "timeout_seconds": 10.0
+  },
+  "result": {
+    "elapsed_seconds": 10.189904300001217,
+    "candidate_count": 10,
+    "score_db": -4.361384565607137,
+    "topology_code": "SCPCSLPCPL",
+    "components_by_port": {
+      "0": 1,
+      "1": 2,
+      "2": 2
+    },
+    "physical_evaluations": 458,
+    "component_models_loaded": 42,
+    "search_profile": "time_budgeted",
+    "search_truncated": true,
+    "termination_reason": "cancelled during joint ranking",
+    "maximum_power_balance_error": 0.0
+  }
+}

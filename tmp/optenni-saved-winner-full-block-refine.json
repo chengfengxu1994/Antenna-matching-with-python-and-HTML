@@ -1,0 +1,1051 @@
+{
+  "schema_version": 1,
+  "case": "Optenni saved three-port winner automatic discovery",
+  "software": {
+    "rfmatch_core_version": "0.2.0"
+  },
+  "input": {
+    "relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "frequency_points_hz": [
+      1216000000.0,
+      1258000000.0,
+      1300000000.0,
+      1920000000.0,
+      2044000000.0,
+      2170000000.0,
+      2500000000.0,
+      2596000000.0,
+      2690000000.0
+    ],
+    "points_per_band": 3
+  },
+  "component_grid": [
+    {
+      "name": "04HP1N0",
+      "kind": "L",
+      "value_si": 1e-09,
+      "model_sha256": "a9bdfdad82ecb71f6be6fe0301f858c4eb7dfe040b66254f56664bb5c7a1115f"
+    },
+    {
+      "name": "04HP2N0",
+      "kind": "L",
+      "value_si": 2e-09,
+      "model_sha256": "24bbe080f192def9711839db45e5f77f18fb127aebc5bd190da66180a5a75639"
+    },
+    {
+      "name": "04HP2N2",
+      "kind": "L",
+      "value_si": 2.2000000000000003e-09,
+      "model_sha256": "784e22b5d37206e73f76979486078bd41a5587a917f0ef1887ef330961511c42"
+    },
+    {
+      "name": "04HP2N4",
+      "kind": "L",
+      "value_si": 2.4e-09,
+      "model_sha256": "eaf1be46fa6454288d16c51a557668a6bb8b1aa1b789a9154697c601a6735c56"
+    },
+    {
+      "name": "04HP2N7",
+      "kind": "L",
+      "value_si": 2.7e-09,
+      "model_sha256": "09b6f0cb73c653a7e97006cea0cfb53444da80a56f72bec3f618d67c4e616a20"
+    },
+    {
+      "name": "04HP3N3",
+      "kind": "L",
+      "value_si": 3.3e-09,
+      "model_sha256": "b58a8fff9bd9fa93e1c3a7dfdd9ae96ead18278f5968b782e45995ca3a88380e"
+    },
+    {
+      "name": "04HP3N6",
+      "kind": "L",
+      "value_si": 3.6000000000000004e-09,
+      "model_sha256": "2aa9de3f8bae6bbe5ca1c4198aa097e004f9bcbb54342e16c99fd96e6334942d"
+    },
+    {
+      "name": "04HP3N9",
+      "kind": "L",
+      "value_si": 3.9e-09,
+      "model_sha256": "a0b70d1c6d06cc6f57427d105d7fffd85bb7369d68c3e4feddcdf2c26f4ac6dd"
+    },
+    {
+      "name": "04HP4N3",
+      "kind": "L",
+      "value_si": 4.3000000000000005e-09,
+      "model_sha256": "3f200dbb19f558632254df215682015d68152400a21c3dde166ceea63578853d"
+    },
+    {
+      "name": "04HP4N7",
+      "kind": "L",
+      "value_si": 4.700000000000001e-09,
+      "model_sha256": "2d8799380baebdef2621b88728a3d6ed0c940a0be8774b3dd2e9da286be008de"
+    },
+    {
+      "name": "04HP5N1",
+      "kind": "L",
+      "value_si": 5.1e-09,
+      "model_sha256": "fbb6e09360926074d166d6719960479edccf5c9c2619f7b78d6db5efd6863f21"
+    },
+    {
+      "name": "04HP5N6",
+      "kind": "L",
+      "value_si": 5.6e-09,
+      "model_sha256": "09800f0353b815621e20a157d4e6761c2e920414937126ff9e0a0908b64deb36"
+    },
+    {
+      "name": "04HP6N2",
+      "kind": "L",
+      "value_si": 6.200000000000001e-09,
+      "model_sha256": "02354d640c24eb8bb0d3866589e5607b0437a041977fc1c7b0bf49b0f28ce86b"
+    },
+    {
+      "name": "04HP6N8",
+      "kind": "L",
+      "value_si": 6.8000000000000005e-09,
+      "model_sha256": "20b212da043db35831535e94302c4d042a86daf008c115e04835c5c0a9a06878"
+    },
+    {
+      "name": "04HP7N5",
+      "kind": "L",
+      "value_si": 7.500000000000001e-09,
+      "model_sha256": "76914c67090fd43a9bac5730448a87737c8849a530ec3c6077c5c694a18d3bed"
+    },
+    {
+      "name": "04HP8N2",
+      "kind": "L",
+      "value_si": 8.199999999999999e-09,
+      "model_sha256": "65177fe2994fbbbd8c9e3c2738b85800035c82ccd7bed4ba6208476001bbab0e"
+    },
+    {
+      "name": "04HP8N7",
+      "kind": "L",
+      "value_si": 8.7e-09,
+      "model_sha256": "639ce994a286c4d0189e061d083fc10d909fd44f0b62b31cafd48ca06c22908a"
+    },
+    {
+      "name": "04HP9N0",
+      "kind": "L",
+      "value_si": 9.000000000000001e-09,
+      "model_sha256": "726a22a4e02ac2eacb1ea22d54e1837ab90210da307eb8ed699aed6f2b6572e4"
+    },
+    {
+      "name": "04HP9N5",
+      "kind": "L",
+      "value_si": 9.5e-09,
+      "model_sha256": "7a0310c96cb652a1b148d75b2157d334842687598dd2bf34ff6a79891e3f024b"
+    },
+    {
+      "name": "04HP10N",
+      "kind": "L",
+      "value_si": 1e-08,
+      "model_sha256": "c204d2b8063427a590738211d076915e83ae8263f1afd33e4e354e907f218c73"
+    },
+    {
+      "name": "04HP11N",
+      "kind": "L",
+      "value_si": 1.1000000000000001e-08,
+      "model_sha256": "ff3c6d3d0894e84948dd46131031667bcd07528addfd817f0502a70748372f88"
+    },
+    {
+      "name": "04HP12N",
+      "kind": "L",
+      "value_si": 1.2000000000000002e-08,
+      "model_sha256": "a66b9ba3dc593bbdf73da0c16e5e5a5089046ffae9000098cba234e1d4a6503d"
+    },
+    {
+      "name": "04HP13N",
+      "kind": "L",
+      "value_si": 1.3e-08,
+      "model_sha256": "10d498766fd986c94e6e27470850b990963ebd3fdd43fd5c7fa3dfab66682586"
+    },
+    {
+      "name": "04HP15N",
+      "kind": "L",
+      "value_si": 1.5000000000000002e-08,
+      "model_sha256": "45dca0a976148ec4b42b2ce4fe685a868c63345a2d264c0687e044338c0a9a47"
+    },
+    {
+      "name": "04HP16N",
+      "kind": "L",
+      "value_si": 1.6e-08,
+      "model_sha256": "ed0a53c7adaab6bd89a30f6e29e02c88b32a655e0a73c889a8144412b3afa0a4"
+    },
+    {
+      "name": "04HP18N",
+      "kind": "L",
+      "value_si": 1.8000000000000002e-08,
+      "model_sha256": "3f71e352d0ef51eb0d6cdc5a2cbfe846267f7092ceb4b7f25fdafb4cf902ce33"
+    },
+    {
+      "name": "04HP19N",
+      "kind": "L",
+      "value_si": 1.9e-08,
+      "model_sha256": "7cd29782031bd84dd77cb2121a0b251309da9716235c9cc2cfae369bd55d8a3e"
+    },
+    {
+      "name": "04HP20N",
+      "kind": "L",
+      "value_si": 2e-08,
+      "model_sha256": "a40d8f70da5da9e97741fd990faacbee7fb366b734482b7465cdaaf6267a3faa"
+    },
+    {
+      "name": "04HP22N",
+      "kind": "L",
+      "value_si": 2.2000000000000002e-08,
+      "model_sha256": "56938b3cd974c53239b0d3bf5fa789f46906bc90d2ad3c4cc823a6a7b6343bb3"
+    },
+    {
+      "name": "04HP23N",
+      "kind": "L",
+      "value_si": 2.3e-08,
+      "model_sha256": "062aed0e17e0730f654c9593db9fa28f041a5205695de5870a0f1e3da2524d6c"
+    },
+    {
+      "name": "04HP24N",
+      "kind": "L",
+      "value_si": 2.4000000000000003e-08,
+      "model_sha256": "08c657667382f2ebef1f81ac5c7179c3f511623d1dd395ee30a10fc59357f96d"
+    },
+    {
+      "name": "04HP27N",
+      "kind": "L",
+      "value_si": 2.7e-08,
+      "model_sha256": "f5bf8b858991a7abf9d95175ba7c9f477b5e4e6dafa9bf2925e139eef47c14c3"
+    },
+    {
+      "name": "04HP30N",
+      "kind": "L",
+      "value_si": 3.0000000000000004e-08,
+      "model_sha256": "c712167fcf42006f62697bd375a7526c854d7fb96c5a73dd57288baac7da645a"
+    },
+    {
+      "name": "04HP33N",
+      "kind": "L",
+      "value_si": 3.3000000000000004e-08,
+      "model_sha256": "abc01d49d60d66f70c72c83eb119d8d872b4e916b7f158e8604a31af77d163f5"
+    },
+    {
+      "name": "04HP36N",
+      "kind": "L",
+      "value_si": 3.6000000000000005e-08,
+      "model_sha256": "7ee8bec59eb9d5e8adda13bf98e4b18320da111621200d2c7e9a60c6a201e09e"
+    },
+    {
+      "name": "04HP37N",
+      "kind": "L",
+      "value_si": 3.7e-08,
+      "model_sha256": "3ba1a48600ce04c1af4a7c5ae74b737ca6be0bb3cc6ac8f3720bfcba1b8d2c66"
+    },
+    {
+      "name": "04HP39N",
+      "kind": "L",
+      "value_si": 3.9000000000000005e-08,
+      "model_sha256": "589024d29072fdb8517181431800a3bc528d154d11dab18c3bf7a372e77c4690"
+    },
+    {
+      "name": "04HP40N",
+      "kind": "L",
+      "value_si": 4e-08,
+      "model_sha256": "6d1680e4fa27dc71b890d780d3b9154486d1b5ba13ffaa538fec027ac86f3ad8"
+    },
+    {
+      "name": "04HP43N",
+      "kind": "L",
+      "value_si": 4.3e-08,
+      "model_sha256": "1dec82e4546d25d7a94de9be42fff62ac92de8e6546abe4362e100d5c0b6eb5d"
+    },
+    {
+      "name": "04HP47N",
+      "kind": "L",
+      "value_si": 4.7000000000000004e-08,
+      "model_sha256": "132637394f2bd51609070aac253b127c87dbc6cd7c7a3b90b1cb952c4c4424f3"
+    },
+    {
+      "name": "04HP51N",
+      "kind": "L",
+      "value_si": 5.1e-08,
+      "model_sha256": "7033d3cce035f45674e7172d62ea743662b6df4af2b634963459ff3d6f2ccf94"
+    },
+    {
+      "name": "GQM1875C2E1R0BB12",
+      "kind": "C",
+      "value_si": 1e-12,
+      "model_sha256": "bd33fd13cc1351c2a60f18fbef7aec577948aae3cbc49766112533d96426e940"
+    },
+    {
+      "name": "GQM1885C2A1R0BB01",
+      "kind": "C",
+      "value_si": 1e-12,
+      "model_sha256": "4b48a93c65c403c84a01c5b6e47a55264b84207cf7b0a6e5e81e190031bfe79d"
+    },
+    {
+      "name": "GQM1875C2E1R0CB12",
+      "kind": "C",
+      "value_si": 1e-12,
+      "model_sha256": "b2bb2bbe0988f67d73d98f5ba057de8c548cc0d1e69030354e22422b6ff34dbd"
+    },
+    {
+      "name": "GQM1875C2E1R1BB12",
+      "kind": "C",
+      "value_si": 1.1000000000000002e-12,
+      "model_sha256": "bf2b60594ee224bfe5447753df1a01bbd9340324cc6f13732f23d9e421181975"
+    },
+    {
+      "name": "GQM1875C2E1R1CB12",
+      "kind": "C",
+      "value_si": 1.1000000000000002e-12,
+      "model_sha256": "8c12f9e8a3573fd686ad29b2b49809cfb415f0c1c617c18b587ed9c51ce555bf"
+    },
+    {
+      "name": "GQM1875C2E1R2BB12",
+      "kind": "C",
+      "value_si": 1.2e-12,
+      "model_sha256": "9bf7ea076df361ebf4a663629faa8141b9ab401f54de1347807a471cc9a0cb88"
+    },
+    {
+      "name": "GQM1875C2E1R2CB12",
+      "kind": "C",
+      "value_si": 1.2e-12,
+      "model_sha256": "0e9bff0fa1611dc0b473142b0441b6e5e1ae600f9ec0e7f1ee0a9a98d67d2550"
+    },
+    {
+      "name": "GQM1875C2E1R3BB12",
+      "kind": "C",
+      "value_si": 1.3000000000000001e-12,
+      "model_sha256": "a123eeddeb3b6ad8d18751d2ab6d6515976b1f553aa9849e11f1d3ded0224ffa"
+    },
+    {
+      "name": "GQM1875C2E1R3CB12",
+      "kind": "C",
+      "value_si": 1.3000000000000001e-12,
+      "model_sha256": "ec7eab31111f111f75ca6fe72992f5acf35597176f65d03e893828921d3ad375"
+    },
+    {
+      "name": "GQM1875C2E1R5BB12",
+      "kind": "C",
+      "value_si": 1.5e-12,
+      "model_sha256": "2bbb33652c28348c445e62c99fd8384aec49baf3da0597349854d4f5e3c5977a"
+    },
+    {
+      "name": "GQM1875C2E1R5CB12",
+      "kind": "C",
+      "value_si": 1.5e-12,
+      "model_sha256": "36eaab712ef901338c09e60820da170b175a9135a0b8d68c497108c3424a33ed"
+    },
+    {
+      "name": "GQM1875C2E1R6BB12",
+      "kind": "C",
+      "value_si": 1.6e-12,
+      "model_sha256": "461ce8120981ac8cc4848bf1fcf77e25aad4b9b0d8721f5dfa5bb8018009119b"
+    },
+    {
+      "name": "GQM1875C2E1R6CB12",
+      "kind": "C",
+      "value_si": 1.6e-12,
+      "model_sha256": "282ac2e8038d08f2cdfed4f4da6edc436e056c1c8399e8827dd95081e71eb49d"
+    },
+    {
+      "name": "GQM1875C2E1R8BB12",
+      "kind": "C",
+      "value_si": 1.8e-12,
+      "model_sha256": "0c55423790f8cb98ecafead80ad88d9753623d5f7b14d98b479750e12212c33e"
+    },
+    {
+      "name": "GQM1875C2E1R8CB12",
+      "kind": "C",
+      "value_si": 1.8e-12,
+      "model_sha256": "51a0e887b9221e7f8d4d13122be6f02582a69954c931ed7b7e27241b2b9a33c0"
+    },
+    {
+      "name": "GQM1875C2E2R0BB12",
+      "kind": "C",
+      "value_si": 2e-12,
+      "model_sha256": "4a4bb46f824cba2827143a52d56be21da8fe4e4380de682c452aea074c3ab97f"
+    },
+    {
+      "name": "GQM1875C2E2R0CB12",
+      "kind": "C",
+      "value_si": 2e-12,
+      "model_sha256": "f2e51ef957050abf244ce5ea408f421181790cf372875f9607d2671090bca7d1"
+    },
+    {
+      "name": "GQM1875C2E2R2BB12",
+      "kind": "C",
+      "value_si": 2.2000000000000003e-12,
+      "model_sha256": "d96c66f62759c5f1303e5b44734441c55ad738719e8df11e66a28817baca28f8"
+    },
+    {
+      "name": "GQM1875C2E2R2CB12",
+      "kind": "C",
+      "value_si": 2.2000000000000003e-12,
+      "model_sha256": "df4033c19d120e1a431d658f7fb800e7ade45f80871b1c99c9ab40f647fe13e4"
+    },
+    {
+      "name": "GQM1875C2E2R4BB12",
+      "kind": "C",
+      "value_si": 2.4e-12,
+      "model_sha256": "d6701f754c69619a22a55c7a9078368a9045b0bf2fecee339de8d31e26626e7e"
+    },
+    {
+      "name": "GQM1875C2E2R4CB12",
+      "kind": "C",
+      "value_si": 2.4e-12,
+      "model_sha256": "09ede410a6afd2f4b2c08a34a9bc0f1356a0853b8f3d438574d29b8899d0ec0c"
+    },
+    {
+      "name": "GQM1875C2E2R7BB12",
+      "kind": "C",
+      "value_si": 2.7000000000000002e-12,
+      "model_sha256": "71953d7db988c8abffc66406756e195d113ae6b07c292b3b567ed0b1e359462b"
+    },
+    {
+      "name": "GQM1875C2E2R7CB12",
+      "kind": "C",
+      "value_si": 2.7000000000000002e-12,
+      "model_sha256": "ba9c4a5da0a3be5928e96afdd925d62a608cc2cbbcdc8d2d94bfe05218001343"
+    },
+    {
+      "name": "GQM1875C2E3R0BB12",
+      "kind": "C",
+      "value_si": 3e-12,
+      "model_sha256": "ee33abe6355c5314840bd6948033c6412c9deef400f88004a72c81b4c159fc78"
+    },
+    {
+      "name": "GQM1885C2A3R0BB01",
+      "kind": "C",
+      "value_si": 3e-12,
+      "model_sha256": "f9efdd85d17bf693757fd0b3b74e813d2441788a538b9be7ec872960ebcc66f3"
+    },
+    {
+      "name": "GQM1875C2E3R0CB12",
+      "kind": "C",
+      "value_si": 3e-12,
+      "model_sha256": "c337f0f83279011fc019eb8a9c12213356767434298fe570596fbc3e57efb130"
+    },
+    {
+      "name": "GQM1875C2E3R3BB12",
+      "kind": "C",
+      "value_si": 3.2999999999999997e-12,
+      "model_sha256": "1b7c69179f77adba7106aebcaa184ea4a17e5ac6364565311f56971bd5030fc9"
+    },
+    {
+      "name": "GQM1875C2E3R3CB12",
+      "kind": "C",
+      "value_si": 3.2999999999999997e-12,
+      "model_sha256": "83ce120d432fcf79ef55c0440aa485759111bbbae96306120b452e18112c9c82"
+    },
+    {
+      "name": "GQM1875C2E3R6BB12",
+      "kind": "C",
+      "value_si": 3.6e-12,
+      "model_sha256": "32a768cf214e07266a14c9ab16b0b7ef5b1bc05f637793d0798f520a52bb5fa1"
+    },
+    {
+      "name": "GQM1875C2E3R6CB12",
+      "kind": "C",
+      "value_si": 3.6e-12,
+      "model_sha256": "e560117e163bbe1074f4d0af8a7e33fd0af1b13e575744ef52945b1bbcf7e171"
+    },
+    {
+      "name": "GQM1875C2E3R9BB12",
+      "kind": "C",
+      "value_si": 3.9e-12,
+      "model_sha256": "d719108198e6f5e53bff03ef31eeba24a114b46245080ac56f77c1f2207cb7f7"
+    },
+    {
+      "name": "GQM1875C2E3R9CB12",
+      "kind": "C",
+      "value_si": 3.9e-12,
+      "model_sha256": "220f19a4ca6221e5cd2b08cd733ecd3170ed6e07260f209ea79a0293f5e5fc0b"
+    },
+    {
+      "name": "GQM1875C2E4R0BB12",
+      "kind": "C",
+      "value_si": 4e-12,
+      "model_sha256": "a199464b3fc5b05b7cc315c682d76a86145bfb6ceccd29cd72c56e25227bd138"
+    },
+    {
+      "name": "GQM1875C2E4R0CB12",
+      "kind": "C",
+      "value_si": 4e-12,
+      "model_sha256": "588b014d8cfb91d1c4ea06af7068d419377407e1c3764518109cc77db020c769"
+    },
+    {
+      "name": "GQM1875C2E4R3BB12",
+      "kind": "C",
+      "value_si": 4.3e-12,
+      "model_sha256": "b46b904116e1fd830fd832e04815a92fe484e762d801bc7db26c7bed60dfeed3"
+    },
+    {
+      "name": "GQM1875C2E4R3CB12",
+      "kind": "C",
+      "value_si": 4.3e-12,
+      "model_sha256": "f30a94ec9b8da921914d8ece6234647a34d9f0921311c0a79bc8e56bd31b0129"
+    },
+    {
+      "name": "GQM1875C2E4R7BB12",
+      "kind": "C",
+      "value_si": 4.7e-12,
+      "model_sha256": "d60bf77916aa26b53e10218cdbabfaa8f58d74833b0b95941b40ac9068bf869f"
+    },
+    {
+      "name": "GQM1875C2E4R7CB12",
+      "kind": "C",
+      "value_si": 4.7e-12,
+      "model_sha256": "5d2b7252f792d6bc21bd642a3b3fd18c31251b6c89069badc639967ffb62d9a6"
+    },
+    {
+      "name": "GQM1875C2E5R0BB12",
+      "kind": "C",
+      "value_si": 5e-12,
+      "model_sha256": "922563a7395db28214e4f57679b426cb6cd49122c0a3578f734ad0f0c444f1ad"
+    },
+    {
+      "name": "GQM1875C2E5R0CB12",
+      "kind": "C",
+      "value_si": 5e-12,
+      "model_sha256": "8ab2b95df0c17515056d1bc9ce0d123e74a4dae5621e50a9b7be5f4c740b8124"
+    },
+    {
+      "name": "GQM1875C2E5R1CB12",
+      "kind": "C",
+      "value_si": 5.1e-12,
+      "model_sha256": "76ef96667d09b9674dfabfe8fcb6b1c84ffc1af706d7ce93f5beddc7e79fdb10"
+    },
+    {
+      "name": "GQM1875C2E5R1DB12",
+      "kind": "C",
+      "value_si": 5.1e-12,
+      "model_sha256": "9c72896a8cb2cf3fbaaede5ac4fb1fe2612de1db6554ddf2bf6e52cba9595b6f"
+    },
+    {
+      "name": "GQM1875C2E5R6CB12",
+      "kind": "C",
+      "value_si": 5.5999999999999996e-12,
+      "model_sha256": "bfc92603045f684c2bffd68130b266ef84bba29fbbd6e46ebe85d02a889bc942"
+    },
+    {
+      "name": "GQM1875C2E5R6DB12",
+      "kind": "C",
+      "value_si": 5.5999999999999996e-12,
+      "model_sha256": "620d020585b95164bbc1689f8edc87c74f43e31797854b80a1bd7449b272e9c4"
+    },
+    {
+      "name": "GQM1875C2E6R0CB12",
+      "kind": "C",
+      "value_si": 6e-12,
+      "model_sha256": "ddef654c89ae7d86763819943567f0b33811ed2a4c48a004b75eb744aa149b34"
+    },
+    {
+      "name": "GQM1875C2E6R0DB12",
+      "kind": "C",
+      "value_si": 6e-12,
+      "model_sha256": "422394cd0451c5a193009ed84f04b8e90a36e618b297314552657eab10d34502"
+    },
+    {
+      "name": "GQM1875C2E6R2CB12",
+      "kind": "C",
+      "value_si": 6.2e-12,
+      "model_sha256": "55e4bb13f2130ba0cc33cfa00379fc231276b0a926a84df54001063fa7449039"
+    },
+    {
+      "name": "GQM1875C2E6R2DB12",
+      "kind": "C",
+      "value_si": 6.2e-12,
+      "model_sha256": "2972db682ba84fb5e3971a95d8f849dc9c7877c800c5b544058f1b3e8db18964"
+    },
+    {
+      "name": "GQM1875C2E6R8CB12",
+      "kind": "C",
+      "value_si": 6.799999999999999e-12,
+      "model_sha256": "a67666ed42052c4bd0d985e9e758c1c40b208eebf5848cb0332dbbd54bee788d"
+    },
+    {
+      "name": "GQM1875C2E6R8DB12",
+      "kind": "C",
+      "value_si": 6.799999999999999e-12,
+      "model_sha256": "562641593fceb276e7d1175aee0fa59dd9f0e48ffe5ffcad3b8ed44255ad3ecc"
+    },
+    {
+      "name": "GQM1875C2E7R0CB12",
+      "kind": "C",
+      "value_si": 7e-12,
+      "model_sha256": "e8b71b1ae742e970761999b221c09dc398f3acf40590c012d86641543247fcce"
+    },
+    {
+      "name": "GQM1875C2E7R0DB12",
+      "kind": "C",
+      "value_si": 7e-12,
+      "model_sha256": "26941a0e2f276f2028d2bdc8ea6525684c1652d1c71d57357d8e0dfd0cf5d457"
+    },
+    {
+      "name": "GQM1875C2E7R5CB12",
+      "kind": "C",
+      "value_si": 7.5e-12,
+      "model_sha256": "ae57048873af6f075708162328e66b8495f93b056dd11886178c9acf6eeada0c"
+    },
+    {
+      "name": "GQM1875C2E7R5DB12",
+      "kind": "C",
+      "value_si": 7.5e-12,
+      "model_sha256": "cce1263aeb875bdecbb9854edc713a2f27f3865db00f256f7428795f9e4cdf46"
+    },
+    {
+      "name": "GQM1875C2E8R0CB12",
+      "kind": "C",
+      "value_si": 8e-12,
+      "model_sha256": "c36f555847a0dccf59165d2be5e88c55f615102538201e1bfd6e588f36a26436"
+    },
+    {
+      "name": "GQM1875C2E8R0DB12",
+      "kind": "C",
+      "value_si": 8e-12,
+      "model_sha256": "d351ceb182924d9bd910813f78b6c426da799df618356fba267aa00390226e80"
+    },
+    {
+      "name": "GQM1875C2E8R2CB12",
+      "kind": "C",
+      "value_si": 8.2e-12,
+      "model_sha256": "b19406da359a3717b160bd4560b641c33ea692b65acbe8346817319d41662ac6"
+    },
+    {
+      "name": "GQM1875C2E8R2DB12",
+      "kind": "C",
+      "value_si": 8.2e-12,
+      "model_sha256": "75d95de965efc1d190fc25392dd729ee0e43cecb8ae1a45f1fae6fc9dbd48ce7"
+    },
+    {
+      "name": "GQM1875C2E9R0CB12",
+      "kind": "C",
+      "value_si": 9e-12,
+      "model_sha256": "eb2d525d24d729625bbdc30bc14f214a2dd30f5dd3be5d7f06774aea4c0f803f"
+    },
+    {
+      "name": "GQM1875C2E9R0DB12",
+      "kind": "C",
+      "value_si": 9e-12,
+      "model_sha256": "e3d368d441b9f6292fb31f768057a044f1bb655ef014d6b004cc6e8f48aea189"
+    },
+    {
+      "name": "GQM1875C2E9R1CB12",
+      "kind": "C",
+      "value_si": 9.1e-12,
+      "model_sha256": "545f28c8edc8e4deac19eeb8066d66118ee447cc581cee37a37f5f62aeb468f9"
+    },
+    {
+      "name": "GQM1875C2E9R1DB12",
+      "kind": "C",
+      "value_si": 9.1e-12,
+      "model_sha256": "21366390c0b2b16976cd4802fc77a9124531e9cf168f9cc39e645a0c06a55746"
+    },
+    {
+      "name": "GQM1875C2E100GB12",
+      "kind": "C",
+      "value_si": 1e-11,
+      "model_sha256": "8f7f3644c0e78c42296cd594aea3faa46e6063930a116082e7155621a41cb821"
+    },
+    {
+      "name": "GQM1875C2E100JB12",
+      "kind": "C",
+      "value_si": 1e-11,
+      "model_sha256": "54d5f2e96ab176a3825f30d1827da27e768f0d2fd94c73b7056fc3a5c06309c5"
+    },
+    {
+      "name": "GQM1875C2E110GB12",
+      "kind": "C",
+      "value_si": 1.0999999999999999e-11,
+      "model_sha256": "ffd72942b0e16e591a416908839a76d3a27fb237c0f4cba1fb4632df2b056eb9"
+    },
+    {
+      "name": "GQM1875C2E110JB12",
+      "kind": "C",
+      "value_si": 1.0999999999999999e-11,
+      "model_sha256": "cffccbad3bbcfcc1b751c13ac3b20c365eb9f217209280252d50809a361e7680"
+    },
+    {
+      "name": "GQM1875C2E120GB12",
+      "kind": "C",
+      "value_si": 1.2e-11,
+      "model_sha256": "898e9b285be731a571628e6ba03624d24233385dd0cbcf98c8b5d67045339061"
+    },
+    {
+      "name": "GQM1875C2E120JB12",
+      "kind": "C",
+      "value_si": 1.2e-11,
+      "model_sha256": "323ad87ad1b8e5798bc34c9f2fc30150be9f3dcdd8c6e3a7cf3acdb69e8419d2"
+    },
+    {
+      "name": "GQM1875C2E130GB12",
+      "kind": "C",
+      "value_si": 1.3e-11,
+      "model_sha256": "40ee82cd97b707b3223b347df74b424230ebf501ac63e344eef5b41096d9ed07"
+    },
+    {
+      "name": "GQM1875C2E130JB12",
+      "kind": "C",
+      "value_si": 1.3e-11,
+      "model_sha256": "7f06097d317ef0c70dc62688d581a7f2e0076e289519f269efcc2066f6026944"
+    },
+    {
+      "name": "GQM1875C2E150GB12",
+      "kind": "C",
+      "value_si": 1.5e-11,
+      "model_sha256": "a2100b288235aaaa95bc654132a34ebfc57634c34fe841555fe09dd5b92d956f"
+    },
+    {
+      "name": "GQM1875C2E150JB12",
+      "kind": "C",
+      "value_si": 1.5e-11,
+      "model_sha256": "a12f50da78020f0e1b3b31d97c44e18c347ad2637f496258b04831cd8d2a288a"
+    },
+    {
+      "name": "GQM1875C2E160GB12",
+      "kind": "C",
+      "value_si": 1.6e-11,
+      "model_sha256": "1c0de87a87a6d122c18f63f186b17fc4c03eb4581091d3be31fd6ff0d0d1ab15"
+    },
+    {
+      "name": "GQM1875C2E160JB12",
+      "kind": "C",
+      "value_si": 1.6e-11,
+      "model_sha256": "03ea62c3375d3bcf7437d81169f843853f566dc043fabfcc4a5e2003fc25d6b4"
+    },
+    {
+      "name": "GQM1875C2E180GB12",
+      "kind": "C",
+      "value_si": 1.8e-11,
+      "model_sha256": "070ea86a997b57b1dc3aae489229d3394341e6c53106e065e09f3c086d1a07d3"
+    },
+    {
+      "name": "GQM1875C2E180JB12",
+      "kind": "C",
+      "value_si": 1.8e-11,
+      "model_sha256": "aeb2a22f722cb7aec9968d3232eeefcaa1c96e864554b1cf4cb886a6c0e32753"
+    },
+    {
+      "name": "GQM1875C2E200GB12",
+      "kind": "C",
+      "value_si": 2e-11,
+      "model_sha256": "5690907c94dc28aff638341312b3f89b805b9e14293e24f341ea5067f324b6b7"
+    },
+    {
+      "name": "GQM1875C2E200JB12",
+      "kind": "C",
+      "value_si": 2e-11,
+      "model_sha256": "6b6276267c0151d72987a8e8594a3e245511d4ab3b3219f987a759920f230aa1"
+    },
+    {
+      "name": "GQM1875C2E220GB12",
+      "kind": "C",
+      "value_si": 2.1999999999999998e-11,
+      "model_sha256": "082ee282d3fb20f778f3b4ced55194459e6c0fd8f6f3544e98f4ee260da4cffa"
+    },
+    {
+      "name": "GQM1875C2E220JB12",
+      "kind": "C",
+      "value_si": 2.1999999999999998e-11,
+      "model_sha256": "56f811ff9e14edc0f501f35cf68ee7967d3172791800e9e4ab09953a3b31ff09"
+    },
+    {
+      "name": "GQM1875C2E240GB12",
+      "kind": "C",
+      "value_si": 2.4e-11,
+      "model_sha256": "8f1514b73ab640270bd7358c04c06bf20fba380a4d172c7b8af9676cf3259987"
+    },
+    {
+      "name": "GQM1875C2E240JB12",
+      "kind": "C",
+      "value_si": 2.4e-11,
+      "model_sha256": "5343e4bdec254185a4afe857e167310304e6f5b9b20a2bec376312e9ea364210"
+    },
+    {
+      "name": "GQM1875C2E270GB12",
+      "kind": "C",
+      "value_si": 2.7e-11,
+      "model_sha256": "3d036c6fe046d2292c5a2922b26ac08cee1d2994e7ce7dc24ad0579052931077"
+    },
+    {
+      "name": "GQM1875C2E270JB12",
+      "kind": "C",
+      "value_si": 2.7e-11,
+      "model_sha256": "cd5fac381a1a5a1c84d628364ee47b06a2b0ef66bb22d79e3d67ec93cc31d96e"
+    },
+    {
+      "name": "GQM1875C2E300GB12",
+      "kind": "C",
+      "value_si": 3e-11,
+      "model_sha256": "f8a4e76fd944f2d42a2ffddcd94524e13bad31bb5e4c68d1a12f49d4bf039f9f"
+    },
+    {
+      "name": "GQM1875C2E300JB12",
+      "kind": "C",
+      "value_si": 3e-11,
+      "model_sha256": "379493e84ebe4b73a571b782c41a44234b3dc2f2af07d498086e880d1c98dbe1"
+    },
+    {
+      "name": "GQM1875C2E330GB12",
+      "kind": "C",
+      "value_si": 3.3e-11,
+      "model_sha256": "4e7a0eccead56c0c53471de8cbc4b205b05a48db91f4ae0d3969555d0ac4fb7b"
+    },
+    {
+      "name": "GQM1875C2E330JB12",
+      "kind": "C",
+      "value_si": 3.3e-11,
+      "model_sha256": "9d720944e9fb614b746d104eb6faf797d49cdfffd6afd77fd219e4eef5f04ab9"
+    },
+    {
+      "name": "GQM1875C2E360GB12",
+      "kind": "C",
+      "value_si": 3.6e-11,
+      "model_sha256": "8c45557450b2ce0cdd54503d3691f25af59a91ff2d46b9c78f9c202fe2c942c2"
+    },
+    {
+      "name": "GQM1875C2E360JB12",
+      "kind": "C",
+      "value_si": 3.6e-11,
+      "model_sha256": "a8c10dbb9686e83e15c026f9ccb0e4cfddd4a2f178d182d22a2b4fb6014e97c0"
+    },
+    {
+      "name": "GQM1875C2E390GB12",
+      "kind": "C",
+      "value_si": 3.9e-11,
+      "model_sha256": "7bcc1dd15bdb788cdc8b0a574512bd1a9f24b67120348ea19da10697f6616c30"
+    },
+    {
+      "name": "GQM1875C2E390JB12",
+      "kind": "C",
+      "value_si": 3.9e-11,
+      "model_sha256": "2360004d32a258d7948658548fddbe9849ce5b0bc63ca41a1a3a81bb9ec015a9"
+    },
+    {
+      "name": "GQM1875C2E430GB12",
+      "kind": "C",
+      "value_si": 4.3e-11,
+      "model_sha256": "e0bccc774beeb6089d9ef608beb71d2d9ffda8184e58028ab504fb7319eea538"
+    },
+    {
+      "name": "GQM1875C2E430JB12",
+      "kind": "C",
+      "value_si": 4.3e-11,
+      "model_sha256": "96d0714704674c10ac59cd645385c7e206630d44e61ba931e00d64131a3887e3"
+    },
+    {
+      "name": "GQM1875C2E470GB12",
+      "kind": "C",
+      "value_si": 4.7e-11,
+      "model_sha256": "7d75d384cd552162f380b15c4dfaea4d6e708ac33dfd4fc932cddfc1d9a2f6a8"
+    },
+    {
+      "name": "GQM1875C2E470JB12",
+      "kind": "C",
+      "value_si": 4.7e-11,
+      "model_sha256": "026371da9060520612466a5d8d943cd74aa07bcca9071e84e4becb12c1d56948"
+    },
+    {
+      "name": "GQM1875C2E560GB12",
+      "kind": "C",
+      "value_si": 5.6e-11,
+      "model_sha256": "60466099bf2d5f36933ad6e63b27de6e9b6277449690ebfb9dfdb5baf906f748"
+    },
+    {
+      "name": "GQM1875C2E560JB12",
+      "kind": "C",
+      "value_si": 5.6e-11,
+      "model_sha256": "5e147981c96ccd6e09d4f1d5e121b7fd522234e3162f007938f422156975e8fa"
+    },
+    {
+      "name": "GQM1875C2E680GB12",
+      "kind": "C",
+      "value_si": 6.8e-11,
+      "model_sha256": "dbd95ac12c92ae20aed31ebbba96e5230c20ef109dcc272d7e602349d5111acb"
+    },
+    {
+      "name": "GQM1875C2E680JB12",
+      "kind": "C",
+      "value_si": 6.8e-11,
+      "model_sha256": "2c95e7cc671b0159ab8e36823990c9f8f143da86804d9b01817d6837ec7f7bee"
+    },
+    {
+      "name": "GQM1875C2E820GB12",
+      "kind": "C",
+      "value_si": 8.2e-11,
+      "model_sha256": "3f0c23e12325ee927808865dd97e8cbe48ccf10f468de73bd777c989f37cdf62"
+    },
+    {
+      "name": "GQM1875C2E820JB12",
+      "kind": "C",
+      "value_si": 8.2e-11,
+      "model_sha256": "8f687543c4f891a01a9ccae42e1205504bb7182db9efa560bd4b2fa68b925abf"
+    },
+    {
+      "name": "GQM1875C2E101GB12",
+      "kind": "C",
+      "value_si": 1e-10,
+      "model_sha256": "d1ddc4dd937fb0facf9c250f3c0d5ffed2c1f209e304575199741b4e84e41273"
+    },
+    {
+      "name": "GQM1875C2E101JB12",
+      "kind": "C",
+      "value_si": 1e-10,
+      "model_sha256": "08bf2378b6152841bd6a29afab3cf29b20b34105581258b712276c2941dd9e3c"
+    }
+  ],
+  "catalog_mode": "full",
+  "catalog_size": {
+    "inductors": 41,
+    "capacitors": 104
+  },
+  "saved_winner": {
+    "score_db": -2.198501242461048,
+    "topology_by_port": {
+      "0": "SCPL",
+      "1": "PCSL",
+      "2": "PCSL"
+    },
+    "signature": [
+      [
+        "series",
+        0,
+        "C",
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "shunt",
+        0,
+        "L",
+        "04HP2N0"
+      ],
+      [
+        "shunt",
+        1,
+        "C",
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "series",
+        1,
+        "L",
+        "04HP5N6"
+      ],
+      [
+        "shunt",
+        2,
+        "C",
+        "GQM1885C2A3R0BB01"
+      ],
+      [
+        "series",
+        2,
+        "L",
+        "04HP5N6"
+      ]
+    ]
+  },
+  "searches": {
+    "topology_constrained": {
+      "wall_seconds": 46.56188269999984,
+      "candidate_count": 100,
+      "per_port_candidate_count": {
+        "0": 8,
+        "1": 8,
+        "2": 8
+      },
+      "ideal_evaluations": 2126,
+      "physical_evaluations": 1993,
+      "loaded_component_models": 44,
+      "exact_saved_winner_rank": null,
+      "saved_topology_rank": 1,
+      "saved_port_evaluation": {
+        "0": {
+          "evaluated": false,
+          "rank_among_evaluated": null,
+          "evaluated_candidate_count": 8,
+          "diagnostic_saved_score_db": -3.629956973880346,
+          "diagnostic_rank_if_injected": 9,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "1": {
+          "evaluated": true,
+          "rank_among_evaluated": 2,
+          "evaluated_candidate_count": 8,
+          "diagnostic_saved_score_db": -3.833752873223772,
+          "diagnostic_rank_if_injected": 2,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "2": {
+          "evaluated": false,
+          "rank_among_evaluated": null,
+          "evaluated_candidate_count": 8,
+          "diagnostic_saved_score_db": -8.043953308556333,
+          "diagnostic_rank_if_injected": 5,
+          "diagnostic_only_not_injected_into_search": true
+        }
+      },
+      "best_score_db": -2.2988242368758165,
+      "best_minus_saved_score_db": -0.10032299441476855,
+      "best_candidate": {
+        "score_db": -2.2988242368758165,
+        "topology_by_port": {
+          "0": "SCPL",
+          "1": "PCSL",
+          "2": "PCSL"
+        },
+        "signature": [
+          [
+            "series",
+            0,
+            "C",
+            "GQM1875C2E1R2BB12"
+          ],
+          [
+            "shunt",
+            0,
+            "L",
+            "04HP2N0"
+          ],
+          [
+            "shunt",
+            1,
+            "C",
+            "GQM1875C2E1R0BB12"
+          ],
+          [
+            "series",
+            1,
+            "L",
+            "04HP5N1"
+          ],
+          [
+            "shunt",
+            2,
+            "C",
+            "GQM1875C2E3R0BB12"
+          ],
+          [
+            "series",
+            2,
+            "L",
+            "04HP6N2"
+          ]
+        ]
+      },
+      "config": {
+        "ideal_restarts": 2,
+        "ideal_iterations": 8,
+        "ideal_keep": 32,
+        "nearest_parts": 2,
+        "per_port_keep": 8,
+        "result_keep": 100,
+        "joint_refine_seeds": 8,
+        "joint_refine_passes": 3,
+        "joint_refine_neighbors": 8,
+        "joint_refine_port_blocks": true,
+        "joint_ideal_topologies_per_port": 1,
+        "max_components_per_port": 2,
+        "topology_constrained": true
+      }
+    }
+  }
+}

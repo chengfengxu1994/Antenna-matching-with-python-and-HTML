@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "exported_at": "2026-07-15T03:44:00+08:00",
+  "source_application": "Optenni Lab 4.3",
+  "source_project_tab": "Optenni Lab Optimization Settings",
+  "source_dut_label": "measured_antenna.s1p",
+  "selected_group": "4 bands default",
+  "selected_candidate": "PLSCSLPCSLPC",
+  "target_bands_mhz": [[1000, 1100], [1700, 2000], [2900, 3100], [4800, 5000]],
+  "ui_band_summary_db": [
+    {"band_mhz": [1000, 1100], "minimum": -3.3, "average_db": -2.8},
+    {"band_mhz": [1700, 2000], "minimum": -3.0, "average_db": -1.4},
+    {"band_mhz": [2900, 3100], "minimum": -3.2, "average_db": -2.9},
+    {"band_mhz": [4800, 5000], "minimum": -3.3, "average_db": -2.7}
+  ],
+  "loss_model": {
+    "inductor_q": 30.0,
+    "inductor_q_reference_hz": 1000000000.0,
+    "capacitor_esr_ohm": 0.4
+  },
+  "elements_dut_outward": [
+    {"connection": "shunt", "kind": "L", "display_value": "32.1 nH", "fitted_value_si": 3.20897021954055e-08},
+    {"connection": "series", "kind": "C", "display_value": "0.602 pF", "fitted_value_si": 6.01663035233869e-13},
+    {"connection": "series", "kind": "L", "display_value": "6.44 nH", "fitted_value_si": 6.43920991110147e-09},
+    {"connection": "shunt", "kind": "C", "display_value": "0.559 pF", "fitted_value_si": 5.59175118349776e-13},
+    {"connection": "series", "kind": "L", "display_value": "4.63 nH", "fitted_value_si": 4.63296894532993e-09},
+    {"connection": "shunt", "kind": "C", "display_value": "0.804 pF", "fitted_value_si": 8.03532270134045e-13}
+  ],
+  "cross_validation": {
+    "frequency_points": 531,
+    "s11_rms_error_db": 6.72865687934883e-06,
+    "s11_maximum_error_db": 4.84837924670245e-05,
+    "maximum_power_balance_error": 0.0
+  },
+  "files": {
+    "original_dut": {
+      "path": "optimization_settings_original.s1p",
+      "sha256": "317BDF0F9CA5FE3FAC111162C5F2C8E6D87E2D13793174126E162612149BFECD"
+    },
+    "native_plot": {
+      "path": "optimization_settings_4bands_default_best_plot.txt",
+      "sha256": "983E2855DF61ADB61CCCEBD28785DB28CB2F770181059061FF5C86629F0C998F"
+    }
+  },
+  "notes": [
+    "The circuit UI rounds component values; fitted values are inferred from all 531 exported S11 points under the configured generic loss model.",
+    "Optenni ave eff. is the arithmetic mean of efficiency in dB, equivalent to the geometric mean of linear efficiency.",
+    "The Optenni project was restored to the previously selected PCSL view after export."
+  ]
+}

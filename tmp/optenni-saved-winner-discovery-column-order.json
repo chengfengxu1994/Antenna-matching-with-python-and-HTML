@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "case": "Optenni saved three-port winner automatic discovery",
+  "software": {
+    "rfmatch_core_version": "0.2.0"
+  },
+  "input": {
+    "relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "frequency_points_hz": [
+      1216000000.0,
+      1258000000.0,
+      1300000000.0,
+      1920000000.0,
+      2044000000.0,
+      2170000000.0,
+      2500000000.0,
+      2596000000.0,
+      2690000000.0
+    ],
+    "points_per_band": 3
+  },
+  "component_grid": [
+    {
+      "name": "04HP2N0",
+      "kind": "L",
+      "value_si": 2e-09,
+      "model_sha256": "24bbe080f192def9711839db45e5f77f18fb127aebc5bd190da66180a5a75639"
+    },
+    {
+      "name": "04HP5N6",
+      "kind": "L",
+      "value_si": 5.6e-09,
+      "model_sha256": "09800f0353b815621e20a157d4e6761c2e920414937126ff9e0a0908b64deb36"
+    },
+    {
+      "name": "GQM1885C2A1R0BB01",
+      "kind": "C",
+      "value_si": 1e-12,
+      "model_sha256": "4b48a93c65c403c84a01c5b6e47a55264b84207cf7b0a6e5e81e190031bfe79d"
+    },
+    {
+      "name": "GQM1885C2A3R0BB01",
+      "kind": "C",
+      "value_si": 3e-12,
+      "model_sha256": "f9efdd85d17bf693757fd0b3b74e813d2441788a538b9be7ec872960ebcc66f3"
+    }
+  ],
+  "catalog_mode": "saved_bom_grid",
+  "catalog_size": {
+    "inductors": 2,
+    "capacitors": 2
+  },
+  "saved_winner": {
+    "score_db": -2.198501242461048,
+    "topology_by_port": {
+      "0": "SCPL",
+      "1": "PCSL",
+      "2": "PCSL"
+    },
+    "signature": [
+      [
+        "series",
+        0,
+        "C",
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "shunt",
+        0,
+        "L",
+        "04HP2N0"
+      ],
+      [
+        "shunt",
+        1,
+        "C",
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "series",
+        1,
+        "L",
+        "04HP5N6"
+      ],
+      [
+        "shunt",
+        2,
+        "C",
+        "GQM1885C2A3R0BB01"
+      ],
+      [
+        "series",
+        2,
+        "L",
+        "04HP5N6"
+      ]
+    ]
+  },
+  "searches": {
+    "topology_constrained": {
+      "wall_seconds": 1.7829768000010517,
+      "candidate_count": 64,
+      "per_port_candidate_count": {
+        "0": 4,
+        "1": 4,
+        "2": 4
+      },
+      "ideal_evaluations": 198,
+      "physical_evaluations": 77,
+      "loaded_component_models": 4,
+      "exact_saved_winner_rank": 1,
+      "saved_topology_rank": 1,
+      "saved_port_evaluation": {
+        "0": {
+          "evaluated": true,
+          "rank_among_evaluated": 2,
+          "evaluated_candidate_count": 4,
+          "diagnostic_saved_score_db": -3.629956973880346,
+          "diagnostic_rank_if_injected": 2,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "1": {
+          "evaluated": true,
+          "rank_among_evaluated": 1,
+          "evaluated_candidate_count": 4,
+          "diagnostic_saved_score_db": -3.833752873223772,
+          "diagnostic_rank_if_injected": 1,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "2": {
+          "evaluated": true,
+          "rank_among_evaluated": 1,
+          "evaluated_candidate_count": 4,
+          "diagnostic_saved_score_db": -8.043953308556333,
+          "diagnostic_rank_if_injected": 1,
+          "diagnostic_only_not_injected_into_search": true
+        }
+      },
+      "best_score_db": -2.198501242461048,
+      "best_minus_saved_score_db": 0.0,
+      "best_candidate": {
+        "score_db": -2.198501242461048,
+        "topology_by_port": {
+          "0": "SCPL",
+          "1": "PCSL",
+          "2": "PCSL"
+        },
+        "signature": [
+          [
+            "series",
+            0,
+            "C",
+            "GQM1885C2A1R0BB01"
+          ],
+          [
+            "shunt",
+            0,
+            "L",
+            "04HP2N0"
+          ],
+          [
+            "shunt",
+            1,
+            "C",
+            "GQM1885C2A1R0BB01"
+          ],
+          [
+            "series",
+            1,
+            "L",
+            "04HP5N6"
+          ],
+          [
+            "shunt",
+            2,
+            "C",
+            "GQM1885C2A3R0BB01"
+          ],
+          [
+            "series",
+            2,
+            "L",
+            "04HP5N6"
+          ]
+        ]
+      },
+      "config": {
+        "ideal_restarts": 2,
+        "ideal_iterations": 8,
+        "ideal_keep": 32,
+        "nearest_parts": 2,
+        "per_port_keep": 8,
+        "result_keep": 100,
+        "joint_refine_seeds": 8,
+        "joint_refine_passes": 1,
+        "joint_refine_neighbors": 8,
+        "joint_refine_port_blocks": false,
+        "joint_refine_variants_per_value": 1,
+        "joint_refine_beam_width": 1,
+        "joint_ideal_topologies_per_port": 0,
+        "max_components_per_port": 2,
+        "topology_constrained": true
+      }
+    },
+    "automatic": {
+      "wall_seconds": 12.986347199999727,
+      "candidate_count": 100,
+      "per_port_candidate_count": {
+        "0": 8,
+        "1": 8,
+        "2": 8
+      },
+      "ideal_evaluations": 1995,
+      "physical_evaluations": 675,
+      "loaded_component_models": 4,
+      "exact_saved_winner_rank": 1,
+      "saved_topology_rank": 1,
+      "saved_port_evaluation": {
+        "0": {
+          "evaluated": true,
+          "rank_among_evaluated": 9,
+          "evaluated_candidate_count": 41,
+          "diagnostic_saved_score_db": -3.629956973880346,
+          "diagnostic_rank_if_injected": 9,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "1": {
+          "evaluated": true,
+          "rank_among_evaluated": 1,
+          "evaluated_candidate_count": 41,
+          "diagnostic_saved_score_db": -3.833752873223772,
+          "diagnostic_rank_if_injected": 1,
+          "diagnostic_only_not_injected_into_search": true
+        },
+        "2": {
+          "evaluated": true,
+          "rank_among_evaluated": 6,
+          "evaluated_candidate_count": 41,
+          "diagnostic_saved_score_db": -8.043953308556333,
+          "diagnostic_rank_if_injected": 6,
+          "diagnostic_only_not_injected_into_search": true
+        }
+      },
+      "best_score_db": -2.198501242461048,
+      "best_minus_saved_score_db": 0.0,
+      "best_candidate": {
+        "score_db": -2.198501242461048,
+        "topology_by_port": {
+          "0": "SCPL",
+          "1": "PCSL",
+          "2": "PCSL"
+        },
+        "signature": [
+          [
+            "series",
+            0,
+            "C",
+            "GQM1885C2A1R0BB01"
+          ],
+          [
+            "shunt",
+            0,
+            "L",
+            "04HP2N0"
+          ],
+          [
+            "shunt",
+            1,
+            "C",
+            "GQM1885C2A1R0BB01"
+          ],
+          [
+            "series",
+            1,
+            "L",
+            "04HP5N6"
+          ],
+          [
+            "shunt",
+            2,
+            "C",
+            "GQM1885C2A3R0BB01"
+          ],
+          [
+            "series",
+            2,
+            "L",
+            "04HP5N6"
+          ]
+        ]
+      },
+      "config": {
+        "ideal_restarts": 2,
+        "ideal_iterations": 8,
+        "ideal_keep": 32,
+        "nearest_parts": 2,
+        "per_port_keep": 8,
+        "result_keep": 100,
+        "joint_refine_seeds": 8,
+        "joint_refine_passes": 1,
+        "joint_refine_neighbors": 8,
+        "joint_refine_port_blocks": false,
+        "joint_refine_variants_per_value": 1,
+        "joint_refine_beam_width": 1,
+        "joint_ideal_topologies_per_port": 0,
+        "max_components_per_port": 2,
+        "topology_constrained": false
+      }
+    }
+  }
+}

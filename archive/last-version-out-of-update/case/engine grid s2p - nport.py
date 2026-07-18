@@ -1,0 +1,1574 @@
+# -*- coding: utf-8 -*-
+"""
+Grid S2P for N-port — Joint Multi-Port S2P Cascade Grid Search
+===============================================================
+
+For N-port antenna systems (3+, 4+, etc.). CRITICALLY different from
+independent per-port optimization: antenna ports have cross-coupling
+(off-diagonal S_ij for i≠j), so changing one port's matching network
+changes the impedance environment for ALL other ports.
+
+This engine optimizes ALL ports SIMULTANEOUSLY using alternating
+coordinate descent over real S2P component libraries.
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Joint optimization is MANDATORY for multi-port antennas.      ║
+║  Per-port independent optimization is INCORRECT because:       ║
+║  - Γ_eff@port_A = f(S_antenna, Γ_B, Γ_C, ...)                 ║
+║  - Changing port B's match directly shifts Γ_eff@port_A        ║
+║  - Only joint optimization captures these interactions          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Algorithm: Multi-Port Alternating Coordinate Descent
+──────────────────────────────────────────────────────
+Phase 1: Identify load ports and ground ports from port_configs
+
+Phase 2: For each round (max_rounds, typically 3-5):
+    For each load port p (in order):
+        a. Compute Γ_eff at port p using effective_1port() with ALL
+           other ports' CURRENT matching networks as terminations
+        b. Enumerate all (topology × type_assignment) combos for port p
+        c. For each combo, run vectorized grid search over real S2P
+           component values using Γ_eff as load
+        d. Pick the combo + values maximizing mean GT at port p
+        e. Update port p's matching network
+
+    For each ground port g:
+        a. Same approach but objective = best termination quality
+           (minimize |Γ_eff - Γ_target|)
+
+Phase 3: Re-evaluate all ports jointly, return best configuration
+
+Key benefits of alternating descent:
+- Linear complexity in number of ports (not exponential)
+- Each sub-problem is a single-port matching optimization (fast)
+- Naturally handles cross-coupling through effective_1port
+- Converges quickly (typically 2-3 rounds)
+
+Author: RF Matching Project
+Date: 2026-06-25
+"""
+
+import time
+import logging
+import numpy as np
+from itertools import product as iproduct
+
+logger = logging.getLogger('engines.grid_s2p_nport')
+
+Z0 = 50.0
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Band-weighted scoring — each band equal weight regardless of point count
+# ═══════════════════════════════════════════════════════════════════════
+
+def _band_weighted_score(gt_array, freqs_hz, bands_mhz):
+    """Compute band-weighted mean GT across frequency axis.
+
+    Each band contributes equally to the final score, regardless of
+    how many frequency points fall within that band. This prevents
+    wide bands (many pts) from dominating narrow bands (few pts).
+
+    Args:
+        gt_array: (..., nf) GT values or (nf,) 1D array
+        freqs_hz: (nf,) frequency array in Hz
+        bands_mhz: [(start_mhz, end_mhz), ...] or None
+
+    Returns:
+        (...) band-weighted mean GT (same shape as gt_array except last dim)
+    """
+    if bands_mhz is None or len(bands_mhz) == 0:
+        return np.mean(gt_array, axis=-1)
+
+    # Build frequency mask for each band
+    band_means = []
+    for start_mhz, end_mhz in bands_mhz:
+        mask = (freqs_hz >= start_mhz * 1e6) & (freqs_hz <= end_mhz * 1e6)
+        if not np.any(mask):
+            center_hz = 0.5 * (start_mhz + end_mhz) * 1e6
+            nearest_idx = int(np.argmin(np.abs(freqs_hz - center_hz)))
+            mask = np.zeros_like(freqs_hz, dtype=bool)
+            mask[nearest_idx] = True
+        if np.any(mask):
+            # gt_array: (..., nf) → take masked freqs along last axis
+            gt_masked = gt_array[..., mask]
+            band_means.append(np.mean(gt_masked, axis=-1))
+
+    if not band_means:
+        return np.mean(gt_array, axis=-1)
+
+    # Stack bands along a new last axis and mean across bands
+    stacked = np.stack(band_means, axis=-1)
+    return np.mean(stacked, axis=-1)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Component S-matrix helpers (same as grid_s2p_optimizer.py)
+# ═══════════════════════════════════════════════════════════════════════
+
+def _series_s_matrix(comp_data):
+    """Build S-matrix for a series component from Murata S2P data.
+
+    Args:
+        comp_data: dict with 's' key — (nf, 2, 2) complex S-params
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    return comp_data['s']
+
+
+def _shunt_s_matrix(comp_data):
+    """Build S-matrix for a shunt component from Y-parameters.
+
+    For a shunt admittance Ys:
+      S11 = S22 = -Ys / (2Y0 + Ys)
+      S21 = S12 = 2Y0 / (2Y0 + Ys)
+
+    Args:
+        comp_data: dict with 'y' key — (nf, 1, 1) or (nf, 2, 2) Y-params
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    Ys = comp_data['y'][:, 0, 0]  # Y11
+    nf = len(Ys)
+    Y0 = 1.0 / Z0
+    ds = 2.0 * Y0 + Ys
+    ds = np.where(np.abs(ds) < 1e-15, 1e-15 + 0j, ds)
+    S = np.zeros((nf, 2, 2), dtype=complex)
+    S[:, 0, 0] = -Ys / ds
+    S[:, 1, 1] = -Ys / ds
+    S[:, 0, 1] = 2.0 * Y0 / ds
+    S[:, 1, 0] = 2.0 * Y0 / ds
+    return S
+
+
+def _build_component_s_matrix(comp_data, topo_type):
+    """Get S-matrix for a component from pre-loaded library data.
+
+    Args:
+        comp_data: dict with 's' key — (nf, 2, 2) complex S-params
+        topo_type: 'S' for series or 'P' for shunt
+
+    Returns:
+        (nf, 2, 2) complex S-matrix
+    """
+    if topo_type == 'S':
+        return _series_s_matrix(comp_data)
+    else:
+        return _shunt_s_matrix(comp_data)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Cascade & GT functions (vectorized versions for grid search)
+# ═══════════════════════════════════════════════════════════════════════
+
+def _cascade_2port(Sa, Sb):
+    """Cascade two 2-port networks.
+
+    Args:
+        Sa: (nf, 2, 2) complex — first network (source side)
+        Sb: (nf, 2, 2) complex — second network (load side)
+
+    Returns:
+        (nf, 2, 2) complex — cascaded network
+    """
+    denom = 1.0 / (1.0 - Sa[:, 1, 1] * Sb[:, 0, 0] + 1e-50)
+    S11 = Sa[:, 0, 0] + Sa[:, 0, 1] * Sb[:, 0, 0] * Sa[:, 1, 0] * denom
+    S21 = Sa[:, 1, 0] * Sb[:, 1, 0] * denom
+    S12 = Sa[:, 0, 1] * Sb[:, 0, 1] * denom
+    S22 = Sb[:, 1, 1] + Sb[:, 0, 1] * Sa[:, 1, 1] * Sb[:, 1, 0] * denom
+
+    S = np.empty((Sa.shape[0], 2, 2), dtype=complex)
+    S[:, 0, 0] = S11
+    S[:, 0, 1] = S12
+    S[:, 1, 0] = S21
+    S[:, 1, 1] = S22
+    return S
+
+
+def _transducer_gain(S, G_load):
+    """Compute transducer gain: GT = |S21|²*(1-|GL|²)/|1-S22·GL|²
+
+    Args:
+        S: (nf, 2, 2) complex — cascaded network
+        G_load: (nf,) complex — load reflection coefficient
+
+    Returns:
+        (nf,) float — GT per frequency (linear 0-1)
+    """
+    gt = np.abs(S[:, 1, 0])**2 * (1.0 - np.abs(G_load)**2) / (
+        np.abs(1.0 - S[:, 1, 1] * G_load)**2 + 1e-50)
+    return gt
+
+
+def _cascade_s_vectorized(Sa, Sb):
+    """Vectorized 2-port cascade supporting broadcasting.
+
+    Args:
+        Sa: (..., nf, 2, 2) complex
+        Sb: (..., nf, 2, 2) complex
+
+    Returns:
+        (..., nf, 2, 2) complex
+    """
+    denom = 1.0 / (1.0 - Sa[..., 1, 1] * Sb[..., 0, 0] + 1e-50)
+    S11 = Sa[..., 0, 0] + Sa[..., 0, 1] * Sb[..., 0, 0] * Sa[..., 1, 0] * denom
+    S21 = Sa[..., 1, 0] * Sb[..., 1, 0] * denom
+    S12 = Sa[..., 0, 1] * Sb[..., 0, 1] * denom
+    S22 = Sb[..., 1, 1] + Sb[..., 0, 1] * Sa[..., 1, 1] * Sb[..., 1, 0] * denom
+
+    S = np.stack([
+        np.stack([S11, S12], axis=-1),
+        np.stack([S21, S22], axis=-1),
+    ], axis=-2)
+    return S
+
+
+def _transducer_gain_vectorized(S, G_load):
+    """Vectorized transducer gain supporting broadcasting.
+
+    Args:
+        S: (..., nf, 2, 2) complex
+        G_load: (nf,) complex
+
+    Returns:
+        (..., nf) float
+    """
+    S21 = S[..., 1, 0]
+    S22 = S[..., 1, 1]
+    gt = np.abs(S21)**2 * (1.0 - np.abs(G_load)**2) / (
+        np.abs(1.0 - S22 * G_load)**2 + 1e-50)
+    return gt
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Grid search functions (standalone versions for reuse)
+# ═══════════════════════════════════════════════════════════════════════
+
+def _grid_2d_vectorized(s0_arr, s1_arr, G_load,
+                        freqs_hz=None, bands_mhz=None):
+    """Fully vectorized 2D grid search over component index pairs.
+
+    Evaluates ALL (n0 × n1) pairs at once via numpy broadcasting.
+
+    Args:
+        s0_arr: (n0, nf, 2, 2) — source-side component
+        s1_arr: (n1, nf, 2, 2) — load-side component
+        G_load: (nf,) complex — load reflection coefficient
+        freqs_hz: (nf,) optional — for band-weighted scoring
+        bands_mhz: list of [start, end] — for band-weighted scoring
+
+    Returns:
+        (best_i0, best_i1, best_mean_gt)
+    """
+    n0, n1 = s0_arr.shape[0], s1_arr.shape[0]
+
+    # Vectorized cascade: broadcast s0 × s1 → (n0, n1, nf, 2, 2)
+    denom = 1.0 / (1.0 - s0_arr[:, None, :, 1, 1] * s1_arr[None, :, :, 0, 0] + 1e-50)
+    S11 = (s0_arr[:, None, :, 0, 0]
+           + s0_arr[:, None, :, 0, 1] * s1_arr[None, :, :, 0, 0] * s0_arr[:, None, :, 1, 0] * denom)
+    S21 = s0_arr[:, None, :, 1, 0] * s1_arr[None, :, :, 1, 0] * denom
+    S22 = (s1_arr[None, :, :, 1, 1]
+           + s1_arr[None, :, :, 0, 1] * s0_arr[:, None, :, 1, 1] * s1_arr[None, :, :, 1, 0] * denom)
+
+    # Transducer gain: (n0, n1, nf)
+    gt = (np.abs(S21)**2 * (1.0 - np.abs(G_load)**2)
+          / (np.abs(1.0 - S22 * G_load)**2 + 1e-50))
+
+    # Band-weighted or simple mean
+    if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+        mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)  # (n0, n1)
+    else:
+        mean_gt = np.mean(gt, axis=-1)  # (n0, n1)
+
+    best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
+    return int(best_idx[0]), int(best_idx[1]), float(mean_gt[best_idx])
+
+
+def _grid_3d_coarse(s0_arr, s1_arr, s2_arr, G_load, sample_rate=4,
+                    freqs_hz=None, bands_mhz=None):
+    """Coarse 3D grid search with refinement.
+
+    Signal flow: source → s0 → s1 → s2 → load
+
+    Args:
+        s0_arr: (n0, nf, 2, 2) — source side
+        s1_arr: (n1, nf, 2, 2) — middle
+        s2_arr: (n2, nf, 2, 2) — load side
+        G_load: (nf,) complex
+        sample_rate: downsample rate (every Nth index)
+        freqs_hz: (nf,) optional — for band-weighted scoring
+        bands_mhz: list of [start, end] — for band-weighted scoring
+
+    Returns:
+        (best_i0, best_i1, best_i2, best_mean_gt)
+    """
+    n0, n1, n2 = s0_arr.shape[0], s1_arr.shape[0], s2_arr.shape[0]
+
+    idx0 = np.arange(0, n0, max(1, sample_rate))
+    idx1 = np.arange(0, n1, max(1, sample_rate))
+    idx2 = np.arange(0, n2, max(1, sample_rate))
+
+    s0_sub = s0_arr[idx0]
+    s1_sub = s1_arr[idx1]
+    s2_sub = s2_arr[idx2]
+
+    # Step 1: cascade(s1, s2) — s1 middle, s2 load
+    denom_12 = 1.0 / (1.0 - s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 0, 0] + 1e-50)
+    S11_12 = (s1_sub[:, None, :, 0, 0]
+              + s1_sub[:, None, :, 0, 1] * s2_sub[None, :, :, 0, 0] * s1_sub[:, None, :, 1, 0] * denom_12)
+    S21_12 = s1_sub[:, None, :, 1, 0] * s2_sub[None, :, :, 1, 0] * denom_12
+    S12_12 = s1_sub[:, None, :, 0, 1] * s2_sub[None, :, :, 0, 1] * denom_12
+    S22_12 = (s2_sub[None, :, :, 1, 1]
+              + s2_sub[None, :, :, 0, 1] * s1_sub[:, None, :, 1, 1] * s2_sub[None, :, :, 1, 0] * denom_12)
+
+    # Step 2: cascade(s0, S_12) — s0 source, S_12 load
+    denom_total = 1.0 / (1.0 - s0_sub[:, None, None, :, 1, 1] * S11_12[None, :, :, :] + 1e-50)
+    S21_total = s0_sub[:, None, None, :, 1, 0] * S21_12[None, :, :, :] * denom_total
+    S22_total = (S22_12[None, :, :, :]
+                 + S12_12[None, :, :, :] * s0_sub[:, None, None, :, 1, 1] * S21_12[None, :, :, :] * denom_total)
+
+    gt = (np.abs(S21_total)**2 * (1.0 - np.abs(G_load)**2)
+          / (np.abs(1.0 - S22_total * G_load)**2 + 1e-50))
+
+    # Band-weighted or simple mean for coarse step
+    if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+        mean_gt = _band_weighted_score(gt, freqs_hz, bands_mhz)
+    else:
+        mean_gt = np.mean(gt, axis=-1)
+
+    best_idx = np.unravel_index(np.argmax(mean_gt), mean_gt.shape)
+    best_i0 = idx0[best_idx[0]]
+    best_i1 = idx1[best_idx[1]]
+    best_i2 = idx2[best_idx[2]]
+    best_score = float(mean_gt[best_idx])
+
+    # Refine: check ±1 neighbor
+    refine_radius = max(1, int(sample_rate))
+    refine_range = lambda i, n: range(max(0, i - refine_radius),
+                                      min(n, i + refine_radius + 1))
+    for ri0 in refine_range(best_i0, n0):
+        for ri1 in refine_range(best_i1, n1):
+            for ri2 in refine_range(best_i2, n2):
+                S = _cascade_2port(s1_arr[ri1], s2_arr[ri2])
+                S = _cascade_2port(s0_arr[ri0], S)
+                gt_val = _transducer_gain(S, G_load)
+                if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+                    score = float(_band_weighted_score(gt_val, freqs_hz, bands_mhz))
+                else:
+                    score = float(np.mean(gt_val))
+                if score > best_score:
+                    best_score = score
+                    best_i0, best_i1, best_i2 = ri0, ri1, ri2
+
+    return best_i0, best_i1, best_i2, best_score
+
+
+def _cascade_port_network(s_matrix_list, nf):
+    """Build a 2-port cascade from a list of component S-matrices.
+
+    Args:
+        s_matrix_list: list of (nf, 2, 2) S-matrices in source→load order
+        nf: number of frequency points
+
+    Returns:
+        (nf, 2, 2) cascaded S-matrix
+    """
+    S = np.zeros((nf, 2, 2), dtype=complex)
+    S[:, 0, 1] = 1.0
+    S[:, 1, 0] = 1.0
+    for sm in s_matrix_list:
+        S = _cascade_2port(S, sm)
+    return S
+
+
+def _compute_port_reflection(S_match, port_type, ground_term='short'):
+    """Compute the reflection coefficient at a port's antenna interface.
+
+    For a LOAD port: Γ = S11 of the matching network (50Ω source on input)
+    For a GROUND port: Γ = ground_gamma(S_match, Γ_term)
+
+    This is the gamma seen looking INTO the port's matching network from
+    the antenna side. Used as termination gamma in effective_1port().
+
+    Args:
+        S_match: (nf, 2, 2) matching network S-matrix
+        port_type: 'load' or 'ground'
+        ground_term: 'short'(-1), 'open'(+1), or 'load'(0) for ground ports
+
+    Returns:
+        (nf,) complex reflection coefficient
+    """
+    nf = S_match.shape[0]
+    if port_type == 'load':
+        # 50Ω source on input → Γ_source=0 → Γ = S11
+        return S_match[:, 1, 1].copy()
+    else:
+        # Ground port: terminated with Γ_term
+        term_map = {'short': -1.0, 'open': 1.0, 'load': 0.0}
+        term_g = complex(term_map.get(ground_term, -1.0))
+        S11 = S_match[:, 0, 0]
+        S12 = S_match[:, 0, 1]
+        S21 = S_match[:, 1, 0]
+        S22 = S_match[:, 1, 1]
+        denom = 1.0 - S11 * term_g
+        denom = np.where(np.abs(denom) < 1e-15, 1e-15 + 0j, denom)
+        return S22 + S12 * S21 * term_g / denom
+
+
+def _effective_1port_fast(S_nport, port_idx, gamma_dict):
+    """Extract effective 1-port gamma from N-port with terminations.
+
+    Uses the general matrix reduction formula:
+      S_eff = S_KK + S_KT @ inv(I - Γ_T @ S_TT) @ Γ_T @ S_TK
+
+    Args:
+        S_nport: (nf, K, K) antenna S-parameters
+        port_idx: port to keep (0-based)
+        gamma_dict: {other_port_index: (nf,) gamma} — terminations
+
+    Returns:
+        (nf,) effective reflection coefficient at port_idx
+    """
+    K = S_nport.shape[-1]
+    nf = S_nport.shape[0]
+
+    # 2-port fast path
+    if K == 2:
+        other_idx = 1 - port_idx
+        g = gamma_dict.get(other_idx, 0.0)
+        if isinstance(g, np.ndarray):
+            g_arr = g
+        else:
+            g_arr = np.full(nf, complex(g), dtype=complex)
+
+        if port_idx == 0:
+            Sii, Sjj, Sij, Sji = (
+                S_nport[:, 0, 0], S_nport[:, 1, 1],
+                S_nport[:, 0, 1], S_nport[:, 1, 0])
+        else:
+            Sii, Sjj, Sij, Sji = (
+                S_nport[:, 1, 1], S_nport[:, 0, 0],
+                S_nport[:, 1, 0], S_nport[:, 0, 1])
+
+        denom = 1.0 - Sjj * g_arr
+        denom = np.where(np.abs(denom) < 1e-15, 1e-15 + 0j, denom)
+        return Sii + Sij * Sji * g_arr / denom
+
+    # N-port general reduction
+    other_ports = sorted([p for p in range(K) if p != port_idx])
+    M = len(other_ports)
+
+    if M == 0:
+        return S_nport[:, 0, 0]
+
+    # Build Γ_T diagonal: (nf, M, M)
+    Gamma_T = np.zeros((nf, M, M), dtype=complex)
+    for i, p in enumerate(other_ports):
+        g = gamma_dict.get(p, 0.0)
+        if isinstance(g, np.ndarray) and g.ndim == 1:
+            Gamma_T[:, i, i] = g
+        else:
+            Gamma_T[:, i, i] = complex(g)
+
+    # Extract submatrices
+    S_KK = S_nport[:, port_idx:port_idx+1, port_idx:port_idx+1]
+    S_KT = S_nport[:, port_idx:port_idx+1, other_ports]
+    S_TK = S_nport[:, other_ports, port_idx:port_idx+1]
+    S_TT = S_nport[:, other_ports, :][:, :, other_ports]
+
+    # Solve: X = inv(I - Γ_T @ S_TT) @ Γ_T @ S_TK
+    I_mat = np.eye(M, dtype=complex)[None, :, :]
+    X = np.zeros((nf, M, 1), dtype=complex)
+    for f in range(nf):
+        A = I_mat[0] - Gamma_T[f] @ S_TT[f]
+        B = Gamma_T[f] @ S_TK[f]
+        try:
+            X[f] = np.linalg.solve(A, B)
+        except np.linalg.LinAlgError:
+            X[f] = np.linalg.lstsq(A, B, rcond=None)[0]
+
+    correction = (S_KT @ X)[:, 0, 0]
+    return S_KK[:, 0, 0] + correction
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Main GridS2PforNport Class
+# ═══════════════════════════════════════════════════════════════════════
+
+class GridS2PforNport:
+    """Multi-port S2P grid search optimizer — JOINT optimization across ALL ports.
+
+    For N-port antennas (3+, 4+), optimizes matching networks on ALL ports
+    SIMULTANEOUSLY using alternating coordinate descent over real S2P
+    component libraries.
+
+    ╔══════════════════════════════════════════════════════════════════════╗
+    ║  CRITICAL: Ports interact through antenna cross-coupling (S_ij).  ║
+    ║  Independent per-port optimization produces INCORRECT results.     ║
+    ║  This engine optimizes ALL ports jointly in alternating rounds.    ║
+    ╚══════════════════════════════════════════════════════════════════════╝
+
+    Usage:
+        optimizer = GridS2PforNport(l_library, c_library, band_freqs)
+        result = optimizer.optimize(antenna_s_nport, port_configs, bands_mhz)
+    """
+
+    def __init__(self, l_library, c_library, target_freqs_hz):
+        """Pre-index library component S-matrices for all ports.
+
+        Args:
+            l_library: list of (nom, pn, data) from component_db
+            c_library: list of (nom, pn, data) from component_db
+            target_freqs_hz: (nf,) frequency array for the band(s)
+        """
+        self._freqs_hz = np.asarray(target_freqs_hz, dtype=np.float64)
+        nf = len(self._freqs_hz)
+
+        # Pre-index components with BOTH series and shunt S-matrices
+        self._l_components = []
+        self._c_components = []
+
+        for nom, pn, data in l_library:
+            s_series = _series_s_matrix(data)
+            s_shunt = _shunt_s_matrix(data)
+            if s_series.shape[0] == nf and s_shunt.shape[0] == nf:
+                self._l_components.append((float(nom), pn, s_series, s_shunt))
+
+        for nom, pn, data in c_library:
+            s_series = _series_s_matrix(data)
+            s_shunt = _shunt_s_matrix(data)
+            if s_series.shape[0] == nf and s_shunt.shape[0] == nf:
+                self._c_components.append((float(nom), pn, s_series, s_shunt))
+
+        # Build numpy arrays for vectorized access
+        def _stack(arr_list):
+            return np.stack(arr_list) if arr_list else np.empty((0, nf, 2, 2), dtype=complex)
+
+        self._l_series_arr = _stack([c[2] for c in self._l_components])
+        self._l_shunt_arr = _stack([c[3] for c in self._l_components])
+        self._c_series_arr = _stack([c[2] for c in self._c_components])
+        self._c_shunt_arr = _stack([c[3] for c in self._c_components])
+
+        self._l_noms = np.array([c[0] for c in self._l_components], dtype=np.float64)
+        self._l_pns = [c[1] for c in self._l_components]
+        self._c_noms = np.array([c[0] for c in self._c_components], dtype=np.float64)
+        self._c_pns = [c[1] for c in self._c_components]
+
+        self.nf = nf
+        logger.info(
+            f'GridS2PforNport: {len(self._l_components)}L + {len(self._c_components)}C, '
+            f'{nf} freq pts ({self._freqs_hz[0]/1e9:.3f}-{self._freqs_hz[-1]/1e9:.3f}GHz)')
+
+    # ── Component lookup helpers ─────────────────────────────────
+
+    def _get_s_matrix(self, comp_type, topo_type, idx):
+        """Get pre-computed S-matrix for a component.
+
+        Args:
+            comp_type: 'L' or 'C'
+            topo_type: 'S' (series) or 'P' (shunt)
+            idx: library index
+
+        Returns:
+            (nf, 2, 2) complex S-matrix
+        """
+        if comp_type == 'L':
+            return self._l_series_arr[idx] if topo_type == 'S' else self._l_shunt_arr[idx]
+        else:
+            return self._c_series_arr[idx] if topo_type == 'S' else self._c_shunt_arr[idx]
+
+    def _get_s_arr(self, comp_type, topo_type):
+        """Get full component array for a given type and topology orientation.
+
+        Args:
+            comp_type: 'L' or 'C'
+            topo_type: 'S' or 'P'
+
+        Returns:
+            (n_components, nf, 2, 2) array
+        """
+        if comp_type == 'L':
+            return self._l_series_arr if topo_type == 'S' else self._l_shunt_arr
+        else:
+            return self._c_series_arr if topo_type == 'S' else self._c_shunt_arr
+
+    def _get_noms(self, comp_type):
+        """Get nominal values array."""
+        return self._l_noms if comp_type == 'L' else self._c_noms
+
+    def _get_pns(self, comp_type):
+        """Get part numbers list."""
+        return self._l_pns if comp_type == 'L' else self._c_pns
+
+    # ── Per-port grid search ─────────────────────────────────────
+
+    def _grid_search_port(self, topo, types, G_load,
+                          freqs_hz=None, bands_mhz=None,
+                          reverse=False):
+        """Run grid search for ONE port's matching network.
+
+        Args:
+            topo: tuple of 'S'/'P'
+            types: tuple of 'L'/'C'
+            G_load: (nf,) complex — effective load gamma at this port
+            freqs_hz: (nf,) optional — for band-weighted scoring
+            bands_mhz: list of [start, end] — for band-weighted scoring
+            reverse: if True, cascade order is antenna→source (for ports
+                     parsed from Optenni XML with reverse='0').
+
+        Returns:
+            dict with best values, indices, part numbers, GT, or None if failed
+        """
+        n_elem = len(topo)
+        if n_elem == 0:
+            return None
+        # Build per-position arrays
+        pos_data = []
+        for tt, ct in zip(topo, types):
+            s_arr = self._get_s_arr(ct, tt)
+            if len(s_arr) == 0:
+                return None
+            pos_data.append((ct, tt, s_arr, self._get_noms(ct), self._get_pns(ct)))
+
+        # If reverse=True: input is antenna->source (Optenni XML convention)
+        # Our cascade goes source->antenna, so reverse
+        if reverse:
+            pos_data.reverse()
+
+        if n_elem == 2:
+            _, _, s0_arr, _, _ = pos_data[0]
+            _, _, s1_arr, _, _ = pos_data[1]
+            i0, i1, mean_gt = _grid_2d_vectorized(
+                s0_arr, s1_arr, G_load, freqs_hz, bands_mhz)
+            best_i = [i0, i1]
+        elif n_elem == 3:
+            _, _, s0_arr, _, _ = pos_data[0]
+            _, _, s1_arr, _, _ = pos_data[1]
+            _, _, s2_arr, _, _ = pos_data[2]
+
+            n0, n1, n2 = s0_arr.shape[0], s1_arr.shape[0], s2_arr.shape[0]
+            total = n0 * n1 * n2
+            sample_rate = 1 if total <= 8000 else max(2, int(round(total ** (1/3) / 15)))
+            i0, i1, i2, mean_gt = _grid_3d_coarse(
+                s0_arr, s1_arr, s2_arr, G_load, sample_rate, freqs_hz, bands_mhz)
+            best_i = [i0, i1, i2]
+        elif n_elem == 4:
+            # 4-element: vectorized 2-stage alternating
+            _, _, s0_arr, _, _ = pos_data[0]
+            _, _, s1_arr, _, _ = pos_data[1]
+            _, _, s2_arr, _, _ = pos_data[2]
+            _, _, s3_arr, _, _ = pos_data[3]
+            nf = self.nf
+
+            # Vectorized 2D search with a fixed tail/head network
+            def _search_2d_with_fixed(SA, SB, S_fixed, search_mode='tail'):
+                # SA: (nA, nf, 2, 2), SB: (nB, nf, 2, 2)
+                # If tail: total = SA @ SB @ S_fixed
+                # If head: total = S_fixed @ SA @ SB
+                denom = 1.0 / (1.0 - SA[:, None, :, 1, 1] * SB[None, :, :, 0, 0] + 1e-50)
+                S11 = SA[:,None,:,0,0] + SA[:,None,:,0,1]*SB[None,:,:,0,0]*SA[:,None,:,1,0]*denom
+                S21 = SA[:,None,:,1,0] * SB[None,:,:,1,0] * denom
+                S12 = SA[:,None,:,0,1] * SB[None,:,:,0,1] * denom
+                S22 = SB[None,:,:,1,1] + SB[None,:,:,0,1]*SA[:,None,:,1,1]*SB[None,:,:,1,0]*denom
+
+                if search_mode == 'tail':
+                    # Cascade SA@SB with S_fixed on the right
+                    d2 = 1.0 / (1.0 - S22 * S_fixed[None, None, :, 0, 0] + 1e-50)
+                    S21_tot = S21 * S_fixed[None, None, :, 1, 0] * d2
+                    S22_tot = S_fixed[None, None, :, 1, 1] + S12 * S22 * S_fixed[None, None, :, 1, 0] * d2
+                else:
+                    # Cascade S_fixed with SA@SB on the right
+                    d2 = 1.0 / (1.0 - S_fixed[None, None, :, 1, 1] * S11 + 1e-50)
+                    S21_tot = S_fixed[None, None, :, 1, 0] * S21 * d2
+                    S22_tot = S22 + S12 * S_fixed[None, None, :, 1, 1] * S21 * d2
+
+                gt = (np.abs(S21_tot)**2 * (1.0 - np.abs(G_load)**2)
+                      / (np.abs(1.0 - S22_tot * G_load)**2 + 1e-50))
+                if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+                    score_map = _band_weighted_score(gt, freqs_hz, bands_mhz)
+                else:
+                    score_map = np.mean(gt, axis=-1)
+                best_flat = np.argmax(score_map)
+                bi, bj = np.unravel_index(best_flat, score_map.shape)
+                return int(bi), int(bj), float(score_map[bi, bj])
+
+            def _cascade_2_simple(SA, SB):
+                S = np.zeros((nf, 2, 2), dtype=complex)
+                S[:, 0, 1] = 1.0; S[:, 1, 0] = 1.0
+                S = _cascade_2port(S, SA)
+                S = _cascade_2port(S, SB)
+                return S
+
+            # Stage 1: search (0,1) with (2,3) fixed at mid
+            mid2, mid3 = s2_arr.shape[0] // 2, s3_arr.shape[0] // 2
+            S_fixed = _cascade_2_simple(s2_arr[mid2], s3_arr[mid3])
+            bi, bj, s1 = _search_2d_with_fixed(s0_arr, s1_arr, S_fixed, 'tail')
+            best_i, best_score = [bi, bj, mid2, mid3], s1
+
+            # Stage 2: search (2,3) with (0,1) fixed
+            S_fixed2 = _cascade_2_simple(s0_arr[best_i[0]], s1_arr[best_i[1]])
+            bi2, bj2, s2 = _search_2d_with_fixed(s2_arr, s3_arr, S_fixed2, 'head')
+            if s2 > best_score:
+                best_i[2], best_i[3] = bi2, bj2
+                best_score = s2
+
+            # Stage 3: refine (0,1) with (2,3) fixed
+            S_fixed3 = _cascade_2_simple(s2_arr[best_i[2]], s3_arr[best_i[3]])
+            bi3, bj3, s3 = _search_2d_with_fixed(s0_arr, s1_arr, S_fixed3, 'tail')
+            if s3 > best_score:
+                best_i[0], best_i[1] = bi3, bj3
+                best_score = s3
+
+            mean_gt = best_score
+
+        else:
+            # 1-element: linear scan
+            ct, tt, s_arr, vals, pns = pos_data[0]
+            best_score = -1.0
+            best_idx = 0
+            for i in range(s_arr.shape[0]):
+                S = s_arr[i]  # (nf, 2, 2)
+                gt = _transducer_gain(S, G_load)
+                if bands_mhz is not None and freqs_hz is not None and len(bands_mhz) > 0:
+                    score = float(_band_weighted_score(gt, freqs_hz, bands_mhz))
+                else:
+                    score = float(np.mean(gt))
+                if score > best_score:
+                    best_score = score
+                    best_idx = i
+            best_i = [best_idx]
+            mean_gt = best_score
+
+        # Build component list
+        values = []
+        comp_types = []
+        part_numbers = []
+        s_matrix_list = []
+        for pos in range(n_elem):
+            ct, tt, _, vals, pns = pos_data[pos]
+            idx = best_i[pos]
+            values.append(float(vals[idx]))
+            comp_types.append(ct)
+            part_numbers.append(pns[idx])
+            s_matrix_list.append(self._get_s_matrix(ct, tt, idx))
+
+        return {
+            'topology': list(topo),
+            'comp_types': comp_types,
+            'values': values,
+            'part_numbers': part_numbers,
+            'mean_gt': mean_gt,
+            's_matrix_list': s_matrix_list,
+            'n_elem': n_elem,
+        }
+
+    # ── Ground port optimization ────────────────────────────────
+
+    def _eval_ground_impact(self, antenna_s_nport, port_configs,
+                             current_networks, ground_port, G_ground,
+                             other_gamma_dict):
+        """Evaluate ground port matching impact on load port GT.
+
+        For a candidate ground reflection coefficient G_ground, compute
+        the combined GT at all load ports.
+
+        Args:
+            antenna_s_nport: (nf, K, K) antenna S-parameters
+            port_configs: list of port configs
+            current_networks: {port: network_dict} current state
+            ground_port: port index of ground being optimized
+            G_ground: (nf,) reflection coefficient at ground port's antenna interface
+            other_gamma_dict: pre-computed gamma dict excluding ground_port
+
+        Returns:
+            float: combined load port GT (harmonic mean)
+        """
+        load_configs = [pc for pc in port_configs if pc['port_type'] == 'load']
+        if not load_configs:
+            return 0.0
+
+        per_port_gt = []
+        for lc in load_configs:
+            lp = lc['port']
+
+            # Build gamma dict: use other_gamma_dict + update with NEW G_ground
+            gamma_dict = dict(other_gamma_dict)
+            gamma_dict[ground_port] = G_ground
+
+            # Effective gamma at load port
+            G_eff = _effective_1port_fast(antenna_s_nport, lp, gamma_dict)
+
+            # GT at load port
+            S_match = current_networks[lp]['S_match']
+            gt = _transducer_gain(S_match, G_eff)
+            mean_gt = float(np.mean(gt))
+            per_port_gt.append(mean_gt)
+
+        if not per_port_gt:
+            return 0.0
+
+        # Harmonic mean — penalizes imbalance
+        inv_sum = sum(1.0 / max(g, 1e-10) for g in per_port_gt)
+        return len(per_port_gt) / inv_sum
+
+    def _grid_search_ground(self, topo, types, pos_data, antenna_s_nport,
+                             port_configs, current_networks, ap, ground_term,
+                             other_gamma_dict, nf):
+        """Grid search for ground port — maximize load port GT directly.
+
+        Unlike _grid_search_port (which maximizes GT through the network),
+        this evaluates each candidate component by its impact on load port
+        transducer gain. For 1-element: full linear scan. For 2+ element:
+        vectorized scan over component pairs.
+
+        Args:
+            topo: topology tuple
+            types: component types tuple
+            pos_data: [(ct, tt, s_arr, vals, pns), ...]
+            antenna_s_nport: (nf, K, K)
+            port_configs: list of port configs
+            current_networks: {port: network_dict}
+            ap: ground port index
+            ground_term: 'short'/'open'/'load'
+            other_gamma_dict: {port: (nf,) gamma} for non-ground ports
+            nf: number of freq points
+
+        Returns:
+            dict with best result including _score, or None
+        """
+        n_elem = len(topo)
+        load_configs = [pc for pc in port_configs if pc['port_type'] == 'load']
+        if not load_configs:
+            return None
+
+        term_map = {'short': -1.0, 'open': 1.0, 'load': 0.0}
+        G_target = complex(term_map.get(ground_term, -1.0))
+
+        if n_elem == 1:
+            # Linear scan: for each component, evaluate load port GT
+            ct, tt, s_arr, vals, pns = pos_data[0]
+            best_score = -1.0
+            best_idx = 0
+            for i in range(s_arr.shape[0]):
+                G_ground = _compute_port_reflection(s_arr[i], 'ground', ground_term)
+                score = self._eval_ground_impact(
+                    antenna_s_nport, port_configs, current_networks,
+                    ap, G_ground, other_gamma_dict)
+                if score > best_score:
+                    best_score = score
+                    best_idx = i
+
+            G_ground_best = _compute_port_reflection(
+                s_arr[best_idx], 'ground', ground_term)
+            try:
+                err_val = float(np.mean(np.abs(G_ground_best - G_target)))
+            except Exception:
+                err_val = 1.0
+
+            return {
+                'topology': list(topo),
+                'comp_types': [ct],
+                'values': [float(vals[best_idx])],
+                'part_numbers': [pns[best_idx]],
+                's_matrix_list': [s_arr[best_idx]],
+                'mean_gt': 0,
+                'n_elem': 1,
+                '_score': best_score,
+                'ground_error': err_val,
+            }
+
+        elif n_elem == 2:
+            # Vectorized 2D: compute load GT for all pairs via broadcasting
+            _, _, s0_arr, vals0, pns0 = pos_data[0]
+            _, _, s1_arr, vals1, pns1 = pos_data[1]
+
+            # For each pair, compute G_ground then load port GT
+            # Use sampling if too many pairs
+            n0, n1 = s0_arr.shape[0], s1_arr.shape[0]
+            if n0 * n1 > 2000:
+                # Subsample
+                rng = np.random.RandomState(42)
+                idx0 = np.sort(rng.choice(n0, min(n0, 50), replace=False))
+                idx1 = np.sort(rng.choice(n1, min(n1, 50), replace=False))
+            else:
+                idx0 = np.arange(n0)
+                idx1 = np.arange(n1)
+
+            best_score = -1.0
+            best_i0, best_i1 = 0, 0
+            for i0 in idx0:
+                for i1 in idx1:
+                    S_cas = np.zeros((nf, 2, 2), dtype=complex)
+                    S_cas[:, 0, 1] = 1.0; S_cas[:, 1, 0] = 1.0
+                    S_cas = _cascade_2port(S_cas, s0_arr[i0])
+                    S_cas = _cascade_2port(S_cas, s1_arr[i1])
+                    G_ground = _compute_port_reflection(S_cas, 'ground', ground_term)
+                    score = self._eval_ground_impact(
+                        antenna_s_nport, port_configs, current_networks,
+                        ap, G_ground, other_gamma_dict)
+                    if score > best_score:
+                        best_score = score
+                        best_i0, best_i1 = i0, i1
+
+            S_cas_best = np.zeros((nf, 2, 2), dtype=complex)
+            S_cas_best[:, 0, 1] = 1.0; S_cas_best[:, 1, 0] = 1.0
+            S_cas_best = _cascade_2port(S_cas_best, s0_arr[best_i0])
+            S_cas_best = _cascade_2port(S_cas_best, s1_arr[best_i1])
+            G_ground_best = _compute_port_reflection(S_cas_best, 'ground', ground_term)
+            err_val = float(np.mean(np.abs(G_ground_best - G_target)))
+
+            return {
+                'topology': list(topo),
+                'comp_types': [pos_data[0][0], pos_data[1][0]],
+                'values': [float(vals0[best_i0]), float(vals1[best_i1])],
+                'part_numbers': [pns0[best_i0], pns1[best_i1]],
+                's_matrix_list': [s0_arr[best_i0], s1_arr[best_i1]],
+                'mean_gt': 0,
+                'n_elem': 2,
+                '_score': best_score,
+                'ground_error': err_val,
+            }
+
+        else:
+            # n_elem == 3: coarse + refine
+            _, _, s0_arr, vals0, pns0 = pos_data[0]
+            _, _, s1_arr, vals1, pns1 = pos_data[1]
+            _, _, s2_arr, vals2, pns2 = pos_data[2]
+
+            n0, n1, n2 = s0_arr.shape[0], s1_arr.shape[0], s2_arr.shape[0]
+            total = n0 * n1 * n2
+            sample_rate = max(2, int(total ** (1/3) / 10)) if total > 4000 else 1
+
+            idx0 = np.arange(0, n0, sample_rate)
+            idx1 = np.arange(0, n1, sample_rate)
+            idx2 = np.arange(0, n2, sample_rate)
+
+            best_score = -1.0
+            best_i0, best_i1, best_i2 = 0, 0, 0
+
+            for i0 in idx0:
+                for i1 in idx1:
+                    for i2 in idx2:
+                        S_cas = np.zeros((nf, 2, 2), dtype=complex)
+                        S_cas[:, 0, 1] = 1.0; S_cas[:, 1, 0] = 1.0
+                        S_cas = _cascade_2port(S_cas, s0_arr[i0])
+                        S_cas = _cascade_2port(S_cas, s1_arr[i1])
+                        S_cas = _cascade_2port(S_cas, s2_arr[i2])
+                        G_ground = _compute_port_reflection(
+                            S_cas, 'ground', ground_term)
+                        score = self._eval_ground_impact(
+                            antenna_s_nport, port_configs, current_networks,
+                            ap, G_ground, other_gamma_dict)
+                        if score > best_score:
+                            best_score = score
+                            best_i0, best_i1, best_i2 = i0, i1, i2
+
+            # Refine around best coarse point
+            refine_radius = max(1, int(sample_rate))
+            refine = lambda i, n: range(max(0, i - refine_radius),
+                                        min(n, i + refine_radius + 1))
+            for ri0 in refine(best_i0, n0):
+                for ri1 in refine(best_i1, n1):
+                    for ri2 in refine(best_i2, n2):
+                        S_cas = np.zeros((nf, 2, 2), dtype=complex)
+                        S_cas[:, 0, 1] = 1.0; S_cas[:, 1, 0] = 1.0
+                        S_cas = _cascade_2port(S_cas, s0_arr[ri0])
+                        S_cas = _cascade_2port(S_cas, s1_arr[ri1])
+                        S_cas = _cascade_2port(S_cas, s2_arr[ri2])
+                        G_ground = _compute_port_reflection(
+                            S_cas, 'ground', ground_term)
+                        score = self._eval_ground_impact(
+                            antenna_s_nport, port_configs, current_networks,
+                            ap, G_ground, other_gamma_dict)
+                        if score > best_score:
+                            best_score = score
+                            best_i0, best_i1, best_i2 = ri0, ri1, ri2
+
+            S_cas_best = np.zeros((nf, 2, 2), dtype=complex)
+            S_cas_best[:, 0, 1] = 1.0; S_cas_best[:, 1, 0] = 1.0
+            S_cas_best = _cascade_2port(S_cas_best, s0_arr[best_i0])
+            S_cas_best = _cascade_2port(S_cas_best, s1_arr[best_i1])
+            S_cas_best = _cascade_2port(S_cas_best, s2_arr[best_i2])
+            G_ground_best = _compute_port_reflection(
+                S_cas_best, 'ground', ground_term)
+            err_val = float(np.mean(np.abs(G_ground_best - G_target)))
+
+            return {
+                'topology': list(topo),
+                'comp_types': [pos_data[0][0], pos_data[1][0], pos_data[2][0]],
+                'values': [float(vals0[best_i0]), float(vals1[best_i1]),
+                           float(vals2[best_i2])],
+                'part_numbers': [pns0[best_i0], pns1[best_i1], pns2[best_i2]],
+                's_matrix_list': [s0_arr[best_i0], s1_arr[best_i1], s2_arr[best_i2]],
+                'mean_gt': 0,
+                'n_elem': 3,
+                '_score': best_score,
+                'ground_error': err_val,
+            }
+
+    # ── Topology enumeration ─────────────────────────────────────
+
+    @staticmethod
+    def _generate_topologies(elem_min, elem_max):
+        """Generate all valid S/P topology patterns.
+        Supports 1-4 elements (4+ uses 2-stage alternating search).
+        """
+        for n in range(elem_min, elem_max + 1):
+            if n == 0:
+                yield ()
+                continue
+            for combo in iproduct(['S', 'P'], repeat=n):
+                yield combo
+
+    @staticmethod
+    def _type_assignments(topology):
+        """Generate all L/C type assignments (allows P+L)."""
+        for types in iproduct(['L', 'C'], repeat=len(topology)):
+            yield types
+
+    # ── Main optimization entry point ────────────────────────────
+
+    def optimize(self, antenna_s_nport, port_configs, target_hz, bands_mhz,
+                 elem_count=2, elem_min=None, elem_max=None,
+                 mode='GT', top_n=5, max_rounds=5, convergence_threshold=0.001):
+        """Run joint multi-port S2P optimization.
+
+        ╔══════════════════════════════════════════════════════════════════╗
+        ║  ALL ports are optimized JOINTLY through alternating rounds.   ║
+        ║  This correctly handles antenna cross-coupling (S_ij for i≠j)  ║
+        ║  which per-port independent optimization IGNORES.               ║
+        ╚══════════════════════════════════════════════════════════════════╝
+
+        Args:
+            antenna_s_nport: (nf, K, K) complex — full antenna S-parameters
+            port_configs: list of dicts, each describing one port:
+                port: int (0-based index into antenna_s_nport)
+                port_type: 'load' | 'ground'
+                elem_count: elements for this port (default from outer)
+                elem_min, elem_max: element count range
+                ground_term: 'short' | 'open' | 'load' (for ground ports)
+            target_hz: (nf,) frequency array
+            bands_mhz: list of [start_mhz, end_mhz] for logging
+            elem_count: default element count (can be overridden per-port)
+            elem_min, elem_max: default range
+            mode: 'GT' (maximize efficiency) or 'S11' (minimize reflection)
+            top_n: return top N results
+            max_rounds: max alternating descent rounds
+            convergence_threshold: GT change threshold for convergence
+
+        Returns:
+            dict with:
+                results: list sorted by combined_score
+                best: the best result
+                time_sec: total wall time
+                n_evaluated: number of (port × topo × type) combos evaluated
+                n_rounds: rounds taken to converge
+                mode: the mode used
+        """
+        t0 = time.time()
+        nf = len(target_hz)
+        antenna_s_nport = np.asarray(antenna_s_nport, dtype=complex)
+        K = antenna_s_nport.shape[-1]
+
+        logger.info(f'═══ GridS2PforNport START ═══ K={K}-port '
+                    f'bands={bands_mhz} elem={elem_count} mode={mode} '
+                    f'freqs={nf}pts max_rounds={max_rounds}')
+
+        # ── Validate port configs ──
+        load_configs = [pc for pc in port_configs if pc.get('port_type') == 'load']
+        ground_configs = [pc for pc in port_configs if pc.get('port_type') == 'ground']
+
+        if not load_configs:
+            logger.warning('No load ports configured')
+            return {'results': [], 'best': None, 'time_sec': 0,
+                    'n_evaluated': 0, 'n_rounds': 0, 'mode': mode}
+
+        # Assign element ranges per port
+        for pc in port_configs:
+            pc.setdefault('elem_min', pc.get('elem_count', elem_count))
+            pc.setdefault('elem_max', pc.get('elem_count', elem_count))
+            pc.setdefault('elem_count', pc.get('elem_min', elem_count))
+            pc.setdefault('ground_term', 'short')
+
+        logger.info(f'  Load ports: {[pc["port"] for pc in load_configs]}')
+        logger.info(f'  Ground ports: {[pc["port"] for pc in ground_configs]}')
+
+        # ── Prepare per-port topology list ──
+        # Pre-compute all (topo × types) combos per port
+        per_port_combos = {}
+        for pc in port_configs:
+            ap = pc['port']
+            emin = pc['elem_min']
+            emax = pc['elem_max']
+            combos = []
+            for topo in self._generate_topologies(emin, emax):
+                for types in self._type_assignments(topo):
+                    combos.append((topo, types))
+            per_port_combos[ap] = combos
+            logger.info(f'  Port {ap} ({pc["port_type"]}): {len(combos)} '
+                        f'(topo×type) combos ({emin}-{emax} elem)')
+
+        # ── Per-port bands (each port can have its own frequency bands) ──
+        per_port_bands = {}
+        for pc in port_configs:
+            ap = pc['port']
+            if 'bands' in pc and pc['bands']:
+                per_port_bands[ap] = pc['bands']
+            else:
+                per_port_bands[ap] = bands_mhz
+
+        # ── Alternating Coordinate Descent ──
+        # current_networks: {port: {S_match, topo, types, values, pns, ...}}
+        current_networks = {}
+
+        # Initialize all ports as thru (no matching)
+        for pc in port_configs:
+            ap = pc['port']
+            S_thru = np.zeros((nf, 2, 2), dtype=complex)
+            S_thru[:, 0, 1] = 1.0
+            S_thru[:, 1, 0] = 1.0
+            current_networks[ap] = {
+                'S_match': S_thru,
+                'topology': [],
+                'comp_types': [],
+                'values': [],
+                'part_numbers': [],
+                'mean_gt': 0.0,
+                'port_type': pc['port_type'],
+                'ground_term': pc.get('ground_term', 'short'),
+            }
+
+        # For logging round-by-round improvement
+        all_round_scores = []
+        n_evaluated = 0
+        best_global_score = -1.0
+        best_global_result = None
+
+        for round_idx in range(max_rounds):
+            round_changed = False
+            logger.info(f'  ── Round {round_idx + 1}/{max_rounds} ──')
+
+            # ── Optimize LOAD ports ──
+            for lc in load_configs:
+                ap = lc['port']
+                emin = lc['elem_min']
+                combos = per_port_combos[ap]
+
+                logger.info(f'    Port {ap} (load): scanning {len(combos)} combos...')
+
+                best_local_result = None
+                best_local_gt = -1.0
+
+                # Build gamma_dict for ALL other ports' current networks
+                gamma_dict = {}
+                for other_pc in port_configs:
+                    other_ap = other_pc['port']
+                    if other_ap == ap:
+                        continue
+                    other_net = current_networks[other_ap]
+                    gamma_dict[other_ap] = _compute_port_reflection(
+                        other_net['S_match'],
+                        other_net['port_type'],
+                        other_net.get('ground_term', 'short'))
+
+                # Compute effective 1-port gamma at this port
+                G_eff = _effective_1port_fast(antenna_s_nport, ap, gamma_dict)
+
+                # Try all (topo, types) combos for this port
+                for topo, types in combos:
+                    n_evaluated += 1
+                    result = self._grid_search_port(
+                        topo, types, G_eff,
+                        freqs_hz=self._freqs_hz, bands_mhz=per_port_bands.get(ap, bands_mhz),
+                        reverse=lc.get('reverse', '0') == '1')
+                    if result is None:
+                        continue
+
+                    if result['mean_gt'] > best_local_gt:
+                        best_local_gt = result['mean_gt']
+                        best_local_result = result
+
+                if best_local_result is not None and best_local_gt > 0:
+                    # Build S_match for this port
+                    S_match = _cascade_port_network(
+                        best_local_result['s_matrix_list'], nf)
+
+                    old_gt = current_networks[ap].get('mean_gt', 0.0)
+                    if abs(best_local_gt - old_gt) > convergence_threshold:
+                        round_changed = True
+
+                    current_networks[ap] = {
+                        'S_match': S_match,
+                        'topology': best_local_result['topology'],
+                        'comp_types': best_local_result['comp_types'],
+                        'values': best_local_result['values'],
+                        'part_numbers': best_local_result['part_numbers'],
+                        'mean_gt': best_local_result['mean_gt'],
+                        'port_type': 'load',
+                        'ground_term': lc.get('ground_term', 'short'),
+                    }
+                    logger.info(
+                        f'      → topo={"-".join(best_local_result["topology"]):8s} '
+                        f'types={"".join(best_local_result["comp_types"]):4s} '
+                        f'GT={best_local_gt:.6f} '
+                        f'vals={[f"{v:.2f}" for v in best_local_result["values"]]}')
+
+            # ── Optimize GROUND ports ──
+            # IMPORTANT: Ground port optimization directly evaluates impact on
+            # LOAD PORT GT, NOT ground port GT. The ground port's matching network
+            # changes the effective termination seen by load ports through
+            # cross-coupling (off-diagonal S_ij in antenna matrix).
+            for gc in ground_configs:
+                ap = gc['port']
+                combos = per_port_combos[ap]
+                gt = gc.get('ground_term', 'short')
+
+                best_local_result = None
+                best_local_score = -1.0
+
+                # Pre-build the "other ports" gamma dict (load ports at their current match)
+                other_gamma_dict = {}
+                for other_pc in port_configs:
+                    oap = other_pc['port']
+                    if oap == ap:
+                        continue
+                    onet = current_networks[oap]
+                    other_gamma_dict[oap] = _compute_port_reflection(
+                        onet['S_match'], onet['port_type'],
+                        onet.get('ground_term', 'short'))
+
+                for topo, types in combos:
+                    n_elem = len(topo)
+                    if n_elem == 0:
+                        # Thru — evaluate directly
+                        S_thru = np.zeros((nf, 2, 2), dtype=complex)
+                        S_thru[:, 0, 1] = 1.0; S_thru[:, 1, 0] = 1.0
+                        G_try = _compute_port_reflection(S_thru, 'ground', gt)
+                        score = self._eval_ground_impact(
+                            antenna_s_nport, port_configs, current_networks,
+                            ap, G_try, other_gamma_dict)
+                        if score > best_local_score:
+                            best_local_score = score
+                            best_local_result = {
+                                'topology': [], 'comp_types': [],
+                                'values': [], 'part_numbers': [],
+                                's_matrix_list': [S_thru], 'mean_gt': 0,
+                                'n_elem': 0,
+                            }
+                        continue
+
+                    if n_elem > 3:
+                        continue
+                    n_evaluated += 1
+
+                    # Build per-position arrays
+                    pos_data = []
+                    for tt, ct in zip(topo, types):
+                        s_arr = self._get_s_arr(ct, tt)
+                        if len(s_arr) == 0:
+                            pos_data = None; break
+                        pos_data.append((ct, tt, s_arr, self._get_noms(ct), self._get_pns(ct)))
+                    if pos_data is None:
+                        continue
+
+                    # Ground-optimized grid search: pick components that maximize
+                    # load port GT (NOT ground port GT).
+                    result = self._grid_search_ground(
+                        topo, types, pos_data, antenna_s_nport,
+                        port_configs, current_networks, ap, gt,
+                        other_gamma_dict, nf)
+
+                    if result is not None and result['_score'] > best_local_score:
+                        best_local_score = result['_score']
+                        best_local_result = result
+
+                if best_local_result is not None:
+                    # Build final S_match
+                    if best_local_result['n_elem'] > 0:
+                        S_match = _cascade_port_network(
+                            best_local_result['s_matrix_list'], nf)
+                        err = best_local_result.get('ground_error', 0)
+                        log_msg = (f'topo={"-".join(best_local_result["topology"]):8s} '
+                                   f'types={"".join(best_local_result["comp_types"]):4s} '
+                                   f'load_gt_score={best_local_score:.6f}')
+                    else:
+                        S_match = best_local_result['s_matrix_list'][0]
+                        err = 0.0
+                        log_msg = f'thru (no match) load_gt_score={best_local_score:.6f}'
+
+                    current_networks[ap] = {
+                        'S_match': S_match,
+                        'topology': best_local_result['topology'],
+                        'comp_types': best_local_result['comp_types'],
+                        'values': best_local_result['values'],
+                        'part_numbers': best_local_result['part_numbers'],
+                        'mean_gt': best_local_score,
+                        'port_type': 'ground',
+                        'ground_term': gt,
+                        'ground_error': err,
+                    }
+                    logger.info(f'      → port {ap} ground: {log_msg}')
+
+            # ── Evaluate combined score for this round ──
+            combined_score = self._evaluate_combined(
+                antenna_s_nport, current_networks, port_configs,
+                bands_mhz=bands_mhz, per_port_bands=per_port_bands)
+            all_round_scores.append(combined_score)
+
+            logger.info(
+                f'    Round {round_idx + 1} combined_score: '
+                f'{combined_score:.6f}')
+
+            # Track best
+            if combined_score > best_global_score:
+                best_global_score = combined_score
+                # Deep copy current networks for best result
+                best_global_result = self._build_result(
+                    antenna_s_nport, current_networks, port_configs, nf,
+                    bands_mhz=bands_mhz, per_port_bands=per_port_bands)
+
+            if not round_changed:
+                logger.info(f'  Converged after {round_idx + 1} rounds')
+                break
+
+        # ── Final evaluation ──
+        total_time = time.time() - t0
+
+        logger.info(
+            f'═══ GridS2PforNport DONE ═══ '
+            f'{n_evaluated} evaluations in {total_time:.3f}s, '
+            f'{len(all_round_scores)} rounds, '
+            f'best combined score: {best_global_score:.6f}')
+
+        if best_global_result is None:
+            return {
+                'results': [],
+                'best': None,
+                'time_sec': total_time,
+                'n_evaluated': n_evaluated,
+                'n_rounds': len(all_round_scores),
+                'mode': mode,
+            }
+
+        # Build per-port GT history for all rounds
+        final = best_global_result
+        final['n_rounds'] = len(all_round_scores)
+        final['round_scores'] = all_round_scores
+
+        return {
+            'results': [final],
+            'best': final,
+            'time_sec': total_time,
+            'n_evaluated': n_evaluated,
+            'n_rounds': len(all_round_scores),
+            'mode': mode,
+        }
+
+    # ── Evaluation helpers ───────────────────────────────────────
+
+    def _evaluate_combined(self, antenna_s_nport, networks, port_configs,
+                           bands_mhz=None, per_port_bands=None):
+        """Compute combined score across all load ports.
+
+        Uses band-weighted per-port GT (each band contributes equally),
+        then harmonic mean across ports to penalize imbalance.
+
+        Args:
+            antenna_s_nport: (nf, K, K) antenna S-parameters
+            networks: {port: network_dict} current networks
+            port_configs: list of port config dicts
+            bands_mhz: list of [start, end] — global bands
+            per_port_bands: {port: bands_list} — per-port bands (overrides global)
+
+        Returns:
+            float — combined score
+        """
+        nf = self.nf
+        per_port_gt = []
+
+        for pc in port_configs:
+            if pc['port_type'] != 'load':
+                continue
+            ap = pc['port']
+            net = networks[ap]
+            S_match = net['S_match']
+
+            # Use per-port bands if available
+            port_bands = bands_mhz
+            if per_port_bands and ap in per_port_bands:
+                port_bands = per_port_bands[ap]
+
+            # Build gamma dict for all OTHER ports
+            gamma_dict = {}
+            for other_pc in port_configs:
+                other_ap = other_pc['port']
+                if other_ap == ap:
+                    continue
+                other_net = networks[other_ap]
+                gamma_dict[other_ap] = _compute_port_reflection(
+                    other_net['S_match'],
+                    other_net['port_type'],
+                    other_net.get('ground_term', 'short'))
+
+            # Effective gamma at this port
+            G_eff = _effective_1port_fast(antenna_s_nport, ap, gamma_dict)
+
+            # Compute GT — band-weighted mean (per-port bands)
+            gt = _transducer_gain(S_match, G_eff)
+            if port_bands is not None and len(port_bands) > 0:
+                mean_gt = float(_band_weighted_score(gt, self._freqs_hz, port_bands))
+            else:
+                mean_gt = float(np.mean(gt))
+            per_port_gt.append(mean_gt)
+
+        if not per_port_gt:
+            return 0.0
+
+        # Harmonic mean — penalizes imbalance across ports
+        inv_sum = sum(1.0 / max(g, 1e-10) for g in per_port_gt)
+        return len(per_port_gt) / inv_sum
+
+    def _build_result(self, antenna_s_nport, networks, port_configs, nf,
+                      bands_mhz=None, per_port_bands=None):
+        """Build a result dict from current networks state.
+
+        Args:
+            antenna_s_nport: (nf, K, K)
+            networks: {port: network_dict}
+            port_configs: list of dicts
+            nf: number of frequency points
+            bands_mhz: list of [start, end] — global bands
+            per_port_bands: {port: bands_list} — per-port bands
+
+        Returns:
+            dict with full evaluation data
+        """
+        per_port = []
+        per_port_gt_values = []
+        all_eff_pct = []
+
+        for pc in port_configs:
+            ap = pc['port']
+            net = networks[ap]
+            port_type = pc['port_type']
+
+            # Use per-port bands if available
+            port_bands = bands_mhz
+            if per_port_bands and ap in per_port_bands:
+                port_bands = per_port_bands[ap]
+
+            # Build gamma dict for all OTHER ports
+            gamma_dict = {}
+            for other_pc in port_configs:
+                other_ap = other_pc['port']
+                if other_ap == ap:
+                    continue
+                other_net = networks[other_ap]
+                gamma_dict[other_ap] = _compute_port_reflection(
+                    other_net['S_match'],
+                    other_net['port_type'],
+                    other_net.get('ground_term', 'short'))
+
+            # Effective gamma at this port
+            G_eff = _effective_1port_fast(antenna_s_nport, ap, gamma_dict)
+
+            gt = _transducer_gain(net['S_match'], G_eff)
+            if port_bands is not None and len(port_bands) > 0:
+                mean_gt = float(_band_weighted_score(gt, self._freqs_hz, port_bands))
+            else:
+                mean_gt = float(np.mean(gt))
+            gt_db = 10 * np.log10(max(mean_gt, 1e-10))
+            eff_pct = mean_gt * 100
+
+            # S11 at this port (input reflection)
+            S11_match = net['S_match'][:, 0, 0]
+            S21_match = net['S_match'][:, 1, 0]
+            S22_match = net['S_match'][:, 1, 1]
+            denom = 1.0 - S22_match * G_eff
+            denom = np.where(np.abs(denom) < 1e-15, 1e-15 + 0j, denom)
+            G_in = S11_match + S21_match * S21_match * G_eff / denom
+            s11_db = float(np.mean(20 * np.log10(np.abs(G_in) + 1e-12)))
+
+            per_port_entry = {
+                'port': ap,
+                'port_type': port_type,
+                'topology': net.get('topology', []),
+                'comp_types': net.get('comp_types', []),
+                'values': net.get('values', []),
+                'part_numbers': net.get('part_numbers', []),
+                'mean_gt': mean_gt,
+                'gt_db': gt_db,
+                'eff_pct': eff_pct,
+                's11_db': s11_db,
+                'gamma_eff': G_eff.tolist() if isinstance(G_eff, np.ndarray) else float(G_eff),
+            }
+
+            if port_type == 'ground':
+                per_port_entry['ground_term'] = pc.get('ground_term', 'short')
+                per_port_entry['ground_error'] = net.get('ground_error', 0.0)
+
+            per_port.append(per_port_entry)
+            if port_type == 'load':
+                per_port_gt_values.append(mean_gt)
+                all_eff_pct.append(eff_pct)
+
+        # Combined metric: harmonic mean across LOAD ports only
+        # Ground ports are excluded — their GT measures termination dissipation,
+        # not system efficiency.
+        inv_sum = sum(1.0 / max(g, 1e-10) for g in per_port_gt_values if g > 0)
+        n_load = len(per_port_gt_values)
+        combined_score = n_load / inv_sum if inv_sum > 0 and n_load > 0 else 0.0
+
+        combined_gt_db = 10 * np.log10(max(combined_score, 1e-10))
+        combined_eff_pct = float(np.mean(all_eff_pct)) if all_eff_pct else 0.0
+
+        return {
+            'per_port': per_port,
+            'combined_score': combined_score,
+            'combined_gt_db': combined_gt_db,
+            'combined_eff_pct': combined_eff_pct,
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Standalone optimize() function — same API as other engines
+# ═══════════════════════════════════════════════════════════════════════
+
+def optimize(antenna_s_nport, port_configs, target_hz, bands_mhz,
+             l_library=None, c_library=None,
+             elem_count=2, elem_min=None, elem_max=None,
+             mode='GT', max_rounds=5, **kwargs):
+    """Standalone multi-port joint optimization entry point.
+
+    Args:
+        antenna_s_nport: (nf, K, K) complex antenna S-parameters
+        port_configs: list of port config dicts
+        target_hz: (nf,) frequency array
+        bands_mhz: list of [start, end]
+        l_library, c_library: pre-loaded component libraries
+        elem_count, elem_min, elem_max: element count
+        mode: 'GT' or 'S11'
+        max_rounds: alternating descent rounds
+
+    Returns:
+        dict with results, best, time_sec, n_evaluated
+    """
+    from engines.component_db import load_library_from_db
+
+    if l_library is None or c_library is None:
+        l_library, c_library = load_library_from_db(target_hz)
+
+    optimizer = GridS2PforNport(l_library, c_library, target_hz)
+    return optimizer.optimize(
+        antenna_s_nport, port_configs, target_hz, bands_mhz,
+        elem_count=elem_count,
+        elem_min=elem_min,
+        elem_max=elem_max,
+        mode=mode,
+        max_rounds=max_rounds,
+        top_n=kwargs.get('top_n', 5),
+    )

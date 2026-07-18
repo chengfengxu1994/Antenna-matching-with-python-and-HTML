@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "case": "Product constrained thorough replay of Optenni saved topology",
+  "input": {
+    "relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "port_specs": [
+      {
+        "port_index": 0,
+        "bands_mhz": [
+          [
+            2500,
+            2690
+          ]
+        ],
+        "max_components": 2,
+        "allowed_topology_codes": [
+          "SCPL"
+        ]
+      },
+      {
+        "port_index": 1,
+        "bands_mhz": [
+          [
+            1920,
+            2170
+          ]
+        ],
+        "max_components": 2,
+        "allowed_topology_codes": [
+          "PCSL"
+        ]
+      },
+      {
+        "port_index": 2,
+        "bands_mhz": [
+          [
+            1215,
+            1300
+          ]
+        ],
+        "max_components": 2,
+        "allowed_topology_codes": [
+          "PCSL"
+        ]
+      }
+    ]
+  },
+  "requested_catalog_size": {
+    "inductors": 41,
+    "capacitors": 104
+  },
+  "request": {
+    "timeout_seconds": 120.0,
+    "beam_width": 50,
+    "num_band_points": 3
+  },
+  "wall_seconds": 68.83081529999981,
+  "solutions_count": 50,
+  "exact_saved_winner_rank": 17,
+  "saved_score_db": -2.199186850191422,
+  "best_minus_saved_score_db": 0.06513499030957015,
+  "best": {
+    "solution_index": 0,
+    "score_db": -2.134051859881852,
+    "signature": [
+      [
+        "series",
+        0,
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "shunt",
+        0,
+        "04HP2N0"
+      ],
+      [
+        "shunt",
+        1,
+        "GQM1875C2E1R0BB12"
+      ],
+      [
+        "series",
+        1,
+        "04HP5N6"
+      ],
+      [
+        "shunt",
+        2,
+        "GQM1885C2A3R0BB01"
+      ],
+      [
+        "series",
+        2,
+        "04HP5N6"
+      ]
+    ],
+    "topology_code": "SCPLPCSLPCSL",
+    "average_total_efficiency": 0.6876701647048822,
+    "minimum_total_efficiency": 0.606783171459345,
+    "maximum_power_balance_error": 0.0
+  },
+  "saved_winner": {
+    "solution_index": 16,
+    "score_db": -2.199186850191422,
+    "signature": [
+      [
+        "series",
+        0,
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "shunt",
+        0,
+        "04HP2N0"
+      ],
+      [
+        "shunt",
+        1,
+        "GQM1885C2A1R0BB01"
+      ],
+      [
+        "series",
+        1,
+        "04HP5N6"
+      ],
+      [
+        "shunt",
+        2,
+        "GQM1885C2A3R0BB01"
+      ],
+      [
+        "series",
+        2,
+        "04HP5N6"
+      ]
+    ],
+    "topology_code": "SCPLPCSLPCSL",
+    "average_total_efficiency": 0.6888560730193688,
+    "minimum_total_efficiency": 0.5964931421412923,
+    "maximum_power_balance_error": 0.0
+  },
+  "search_diagnostics": {
+    "numeric_core": "rfmatch_core",
+    "search_profile": "thorough",
+    "per_port_keep": 8,
+    "physical_evaluations": 3308,
+    "ideal_evaluations": 2126,
+    "component_models_loaded": 54,
+    "component_catalog_size": {
+      "inductors": 41,
+      "capacitors": 104
+    },
+    "coupled_ideal_topology_search": true,
+    "joint_refine_port_blocks": true,
+    "joint_refine_beam_width": 8,
+    "joint_refine_variants_per_value": 2,
+    "search_truncated": false,
+    "termination_reason": null
+  }
+}

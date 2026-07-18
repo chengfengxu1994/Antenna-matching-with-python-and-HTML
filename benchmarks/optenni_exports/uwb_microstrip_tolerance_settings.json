@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "machine_extracted_optenni_opr_settings",
+  "source_project": "Optenni Lab Tutorials/12 - UWB antennas/UWB_tutorial.opr",
+  "optenni_version": "4.3",
+  "project_sha256": "2b0ed92f8634acd79fd210c90e9a5ffea245fd474a069be05c4a6db5aa3b2692",
+  "input": {
+    "ports": 1,
+    "frequency_points": 141,
+    "reference_impedance_ohm": 50.0,
+    "source_filename": "UWB_FCC simple 20x20.s1p",
+    "embedded_data_sha256": "b7ee2fa689b03f7565e2f10957e086fdabc3d3d7d3ab2ca49252304d05b4dc0b"
+  },
+  "manufacturing_tolerance_settings": {
+    "source_element": "MatchDialogSave",
+    "inductor_value_tolerance_pct": 2.0,
+    "capacitor_value_tolerance_pct": 2.0,
+    "microstrip_width_tolerance_pct": 20.0,
+    "uses_transmission_line_synthesis": true,
+    "includes_substrate": true
+  },
+  "rfmatch_mapping": {
+    "microstrip_width_tolerance_pct": "transmission_line.microstrip.width_tolerance_pct",
+    "semantic_contract": "The tolerance perturbs physical trace width before impedance, dispersion, phase and loss are recalculated."
+  },
+  "limitations": "This OPR proves Optenni project settings and embedded input identity. It does not contain an authoritative exported per-frequency tolerance envelope, so numerical curve parity remains unclaimed."
+}

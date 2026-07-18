@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[project]
+name = "rfmatch-core"
+version = "0.3.0"
+description = "Independent RF matching optimization kernel"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+rfmatch-benchmark = "rfmatch_core.benchmarks:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

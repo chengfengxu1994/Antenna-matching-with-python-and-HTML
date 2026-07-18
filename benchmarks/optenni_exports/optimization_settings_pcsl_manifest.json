@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "exported_at": "2026-07-15T02:39:49+08:00",
+  "source_application": "Optenni Lab 4.3",
+  "source_project_tab": "Optenni Lab Optimization Settings",
+  "source_dut_label": "measured_antenna.s1p",
+  "selected_candidate": "PCSL",
+  "target_bands_mhz": [[1700, 2500]],
+  "ui_summary": {
+    "minimum_total_efficiency_db": -1.0,
+    "average_total_efficiency_db": -0.7,
+    "displayed_series_inductor_nh": 5.92,
+    "displayed_shunt_capacitor_pf": 0.484,
+    "component_values_are_ui_rounded": true
+  },
+  "numeric_band_summary": {
+    "points": 81,
+    "best_s11_db": -12.5566,
+    "worst_s11_db": -7.42694,
+    "minimum_total_efficiency_db": -0.989126,
+    "average_total_efficiency_db_from_db_average": -0.7165826049382715
+  },
+  "tolerance_analysis": {
+    "circuit_evaluations": 100,
+    "inductor_tolerance_fraction": 0.02,
+    "capacitor_tolerance_fraction": 0.02,
+    "inferred_sampling_distribution": "independent uniform within configured bounds",
+    "inferred_nominal_inductance_nh": 5.915099856061325,
+    "inferred_nominal_capacitance_pf": 0.48398948153925053,
+    "variant_curve_fit_rms_db_median": 1.5865904677901502e-05,
+    "variant_curve_fit_rms_db_maximum": 1.7920772673056303e-05,
+    "component_scale_correlation": -0.20698161445741,
+    "band_points": 81,
+    "criteria": {
+      "minimum_total_efficiency_db": -1.0,
+      "minimum_average_total_efficiency_db": -0.7
+    },
+    "displayed_yield_fraction": 0.0,
+    "reproduced_passed_samples": 0,
+    "minimum_efficiency_only_passed_samples": 54,
+    "minimum_total_efficiency_percentiles_db": {
+      "0": -1.04302,
+      "5": -1.031390462753796,
+      "50": -0.996409495909199,
+      "95": -0.9773994995400777,
+      "100": -0.972365
+    },
+    "average_total_efficiency_percentiles_db": {
+      "0": -0.7307241449474678,
+      "5": -0.7275325428267891,
+      "50": -0.7120705695946361,
+      "95": -0.6998913377990014,
+      "100": -0.6974421107233262
+    }
+  },
+  "synthesis_recovery": {
+    "canonical_topologies": 6,
+    "deterministic_evaluations": 4444,
+    "seed": 1,
+    "loss_model": {
+      "inductor_q": 30.0,
+      "inductor_q_reference_hz": 1000000000.0,
+      "capacitor_esr_ohm": 0.4
+    },
+    "best_topology": "PCSL",
+    "best_shunt_capacitor_pf": 0.4834792078471836,
+    "best_series_inductor_nh": 5.954699075111247,
+    "capacitance_relative_error_vs_exported_network": 0.0010543074003262758,
+    "inductance_relative_error_vs_exported_network": 0.006694598572050141,
+    "best_cost_db": -0.960779606980841,
+    "exported_network_cost_db_under_same_objective": -0.9754923833353254,
+    "maximum_power_balance_error": 0.0
+  },
+  "files": {
+    "original_dut": {
+      "path": "optimization_settings_original.s1p",
+      "sha256": "317BDF0F9CA5FE3FAC111162C5F2C8E6D87E2D13793174126E162612149BFECD"
+    },
+    "matching_network": {
+      "path": "optimization_settings_pcsl_circuit.s2p",
+      "sha256": "0354095C277453816031DCBAA49CD0B68AA1545204AB94CB4CA3A3EF259EE6A0"
+    },
+    "plotted_response": {
+      "path": "optimization_settings_pcsl_plot.txt",
+      "sha256": "F85E042E74DCD1074BB7B9551CAC9397C47C7860D17181C68FEBA6E84F622F14",
+      "format": "Optenni 4.3 tab-delimited text export with dB efficiency"
+    },
+    "tolerance_plot": {
+      "path": "optimization_settings_pcsl_tolerance_100.txt",
+      "sha256": "34D595E21FFCF08CD01A65D2C5D4DFFEE00576E5716E61C18040607EF5FBEF85",
+      "format": "Optenni 4.3 native plot export; nominal plus 100 duplicate-header tolerance columns for S11 and total efficiency"
+    },
+    "original_export_attempts": [
+      {
+        "path": "optimization_settings_pcsl.s1p",
+        "sha256": "475C3FC5FCF3C5CB568FE29C25D285F1183CE1BB0D89C44BB439987F0D4934DB"
+      },
+      {
+        "path": "optimization_settings_input.s1p",
+        "sha256": "87D6E9DA52926C6B45D4668DDE4C893A746F6BFF3B38AD005BDD1A8229C4C5AD"
+      }
+    ]
+  },
+  "notes": [
+    "File > Save Impedance Data exports the original DUT even while a matching candidate is selected.",
+    "The two original_export_attempts are numerically identical to original_dut and must not be used as matched responses.",
+    "The matched complex network is exported from Circuit view > Save circuit S parameters.",
+    "Optenni yield jointly enforces both minimum efficiency and arithmetic-in-dB average efficiency (geometric mean in linear units); the minimum-only yield for this export would be 54%, but the joint yield is 0%.",
+    "The 100 exported curves reconstruct to about 1.6e-5 dB RMS when fitting independent L/C scales. Both scale distributions are statistically consistent with uniform sampling over the configured +/-2% bounds."
+  ]
+}

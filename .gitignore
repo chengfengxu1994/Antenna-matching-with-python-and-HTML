@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Node
+node_modules/
+apps/web/node_modules/
+
+# IDE
+.idea/
+.vscode/
+.reasonix/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Large runtime data
+data/Murata/
+data/snp/
+
+# Logs
+artifacts/
+*.log
+
+# Build
+apps/web/dist/

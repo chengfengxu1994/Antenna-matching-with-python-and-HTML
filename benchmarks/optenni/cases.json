@@ -1,0 +1,168 @@
+{
+  "schema_version": 2,
+  "tutorial_root_env": "OPTENNI_TUTORIAL_ROOT",
+  "cases": [
+    {
+      "id": "quick-start",
+      "priority": "P0",
+      "status": "implemented",
+      "input": "1 - START HERE/measured_antenna.s1p",
+      "ports": 1,
+      "bands_hz": [[2500000000, 2690000000]],
+      "evidence": {
+        "level": "native_curve_export",
+        "cross_software_numeric": true,
+        "manifests": ["benchmarks/optenni_exports/quick_start_0402cs_gjm15_pcsl_manifest.json"],
+        "artifacts": [
+          "artifacts/benchmarks/optenni-baseline.json",
+          "artifacts/benchmarks/optenni-product-quick-start.json"
+        ],
+        "remaining_gap": "Add a native Optenni tolerance export and compare its statistical yield curves."
+      },
+      "capabilities": [
+        "single_port",
+        "continuous_lc",
+        "topology_synthesis",
+        "measured_component_search",
+        "native_curve_replay"
+      ]
+    },
+    {
+      "id": "optimization-settings",
+      "priority": "P0",
+      "status": "implemented",
+      "input": "3 - Optimization settings/measured_antenna.s1p",
+      "ports": 1,
+      "bands_hz": [[1700000000, 2500000000]],
+      "evidence": {
+        "level": "native_curve_export",
+        "cross_software_numeric": true,
+        "manifests": ["benchmarks/optenni_exports/optimization_settings_pcsl_manifest.json"],
+        "artifacts": ["artifacts/benchmarks/optenni-product-optimization-settings.json"],
+        "remaining_gap": "Add more component families and objective presets to the exported matrix."
+      },
+      "capabilities": ["broadband", "objective_balance", "topology_ranking"]
+    },
+    {
+      "id": "radiation-efficiency",
+      "priority": "P0",
+      "status": "implemented",
+      "input": "9 - Radiation efficiency/Radiation_Efficiency_Tutorial.s1p",
+      "efficiency": "9 - Radiation efficiency/radiation_efficiency.txt",
+      "ports": 1,
+      "bands_hz": [[880000000, 960000000], [1710000000, 2155000000], [2300000000, 2400000000]],
+      "evidence": {
+        "level": "published_rounded_reference",
+        "cross_software_numeric": true,
+        "manifests": ["benchmarks/optenni_exports/radiation_efficiency_tutorial_manifest.json"],
+        "artifacts": ["artifacts/benchmarks/optenni-product-radiation-efficiency.json"],
+        "remaining_gap": "Obtain raw per-frequency Optenni candidate and tolerance exports."
+      },
+      "capabilities": ["multiband", "radiation_efficiency", "total_efficiency"]
+    },
+    {
+      "id": "multiantenna-different-bands",
+      "priority": "P1",
+      "status": "implemented",
+      "input": "4 - Multiantenna system/4.1 Multiantenna system at different bands/3_antennas.s3p",
+      "ports": 3,
+      "bands_by_port_hz": {
+        "1": [[2500000000, 2690000000]],
+        "2": [[1920000000, 2170000000]],
+        "3": [[1215000000, 1300000000]]
+      },
+      "component_count_by_port": [0, 2],
+      "component_series": {"inductor": "Coilcraft 0402HP", "capacitor": "Murata GQM18"},
+      "evidence": {
+        "level": "saved_project_plus_ui_summary",
+        "cross_software_numeric": true,
+        "manifests": ["benchmarks/optenni_exports/multiantenna_project_opr_manifest.json"],
+        "artifacts": [
+          "artifacts/benchmarks/optenni-multiport-live-golden.json",
+          "artifacts/benchmarks/optenni-product-saved-winner-automatic.json"
+        ],
+        "remaining_gap": "The OPR has BOM/topology evidence but no authoritative per-frequency result curves."
+      },
+      "implementation_notes": "Ideal-LC and measured-S2P deterministic baselines plus directed Sij isolation-target optimization are implemented.",
+      "capabilities": ["multiport", "coupling", "isolation", "joint_matching"]
+    },
+    {
+      "id": "multiple-impedance-configurations",
+      "priority": "P1",
+      "status": "implemented",
+      "inputs": [
+        "7 - Multiple impedance configurations/free_space.s1p",
+        "7 - Multiple impedance configurations/cover.s1p",
+        "7 - Multiple impedance configurations/cover_w_spacer.s1p"
+      ],
+      "ports": 1,
+      "bands_hz": [[2400000000, 2483000000], [2500000000, 2690000000]],
+      "component_count": [0, 2],
+      "component_series": {"inductor": "Coilcraft 0402CS", "capacitor": "Murata GJM15"},
+      "evidence": {
+        "level": "tutorial_reference_circuit",
+        "cross_software_numeric": true,
+        "artifacts": [
+          "artifacts/benchmarks/optenni-product-multi-scenario.json",
+          "artifacts/benchmarks/optenni-multi-scenario-measured-baseline.json"
+        ],
+        "remaining_gap": "Obtain raw Optenni curves for all three impedance configurations."
+      },
+      "implementation_notes": "Shared ideal and measured-S2P core baselines, topology-diverse physical refinement, power-balanced product API and browser-verified workflow are implemented.",
+      "capabilities": ["multiple_configurations", "worst_case", "shared_components"]
+    },
+    {
+      "id": "tunable-variable-capacitor",
+      "priority": "P2",
+      "status": "implemented",
+      "input": "10 - Tunable antennas/10.5 Impedance tuning using a variable capacitor/Variable_capacitor_Tutorial_antenna.s1p",
+      "component_model": "10 - Tunable antennas/10.5 Impedance tuning using a variable capacitor/Variable_capacitor_tutorial.mdif",
+      "ports": 1,
+      "frequency_configurations": {
+        "Set 1": [[704000000, 746000000], [1920000000, 2170000000]],
+        "Set 2": [[791000000, 862000000], [1920000000, 2170000000]],
+        "Set 3": [[880000000, 960000000], [1920000000, 2170000000]]
+      },
+      "fixed_network_dut_outward": [
+        {"connection": "series", "part": "GJM1555C1H2R8WB01", "value_pf": 2.8},
+        {"connection": "series", "part": "04CS15N", "value_nh": 15.0}
+      ],
+      "evidence": {
+        "level": "tutorial_reference_circuit",
+        "cross_software_numeric": true,
+        "artifacts": [
+          "artifacts/benchmarks/optenni-variable-capacitor-synthesis-baseline.json"
+        ],
+        "remaining_gap": "Export Optenni per-state nominal and tolerance curves."
+      },
+      "implementation_notes": "Measured MDIF parsing, joint automatic fixed-topology/part/state synthesis, component-loss accounting, power-balance validation, API and browser UI are implemented. The deterministic synthesis baseline recalls series 2.8 pF + 15 nH and 8/2/1 pF states at -1.6406 dB.",
+      "capabilities": ["tunable", "multi_state", "variable_capacitor"]
+    },
+    {
+      "id": "tunable-multi-throw-switch",
+      "priority": "P2",
+      "status": "implemented",
+      "input": "10 - Tunable antennas/10.6 Impedance tuning using a switch/Switch_Tuner_Tutorial.s1p",
+      "component_models": [
+        "10 - Tunable antennas/10.6 Impedance tuning using a switch/SP3T_ideal.mdif",
+        "10 - Tunable antennas/10.6 Impedance tuning using a switch/tutorial_SP2T.mdif"
+      ],
+      "ports": 1,
+      "frequency_configurations": {
+        "Set 1": [[704000000, 746000000], [1920000000, 2170000000]],
+        "Set 2": [[791000000, 862000000], [1920000000, 2170000000]],
+        "Set 3": [[880000000, 960000000], [1920000000, 2170000000]]
+      },
+      "evidence": {
+        "level": "rfmatch_recompute_only",
+        "cross_software_numeric": false,
+        "artifacts": [
+          "artifacts/benchmarks/optenni-switch-full-network-measured-baseline.json"
+        ],
+        "remaining_gap": "Export all Optenni switch-state curves; the validator already exists."
+      },
+      "implementation_notes": "Categorical N-port MDIF parsing, full-coupling SP3T/SP2T tutorial topology replay, automatic input-network topology/part/state synthesis, measured refinement, loss accounting, background progress/cancellation, API and browser UI are implemented. Cross-software exported state curves remain the evidence gap.",
+      "capabilities": ["tunable", "multi_state", "multiport_mdif", "switch", "coupled_branches"]
+    }
+  ]
+}

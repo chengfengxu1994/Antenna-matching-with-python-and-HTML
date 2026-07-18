@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "case": "Optenni Lab Radiation Efficiency Tutorial",
+  "evidence_kind": "published_tutorial_rounded_reference",
+  "limitations": "The tutorial PDF publishes rounded circuit values and rounded band summaries, not a raw per-frequency candidate export or saved OPR project.",
+  "sources": {
+    "pdf": {
+      "relative_path": "9 - Radiation efficiency/Radiation Efficiency Tutorial.pdf",
+      "sha256": "4ed862e149ec841848b8b72fd2aebbd67d9d4aeeabff411e8198dca161000233",
+      "pages": 15,
+      "visually_verified_pages": [5, 6, 7, 8, 9, 10, 11, 12, 13]
+    },
+    "dut": {
+      "relative_path": "9 - Radiation efficiency/Radiation_Efficiency_Tutorial.s1p",
+      "sha256": "ba6078737518af9694e3bec4e6371c99a43c961e02bcba175d9b633691a77853"
+    },
+    "radiation_efficiency": {
+      "relative_path": "9 - Radiation efficiency/radiation_efficiency.txt",
+      "sha256": "783815d5bee10d09d0236dd50c00dd9b69451dc2dc468a11972402d87555c355",
+      "rows": 51,
+      "frequency_start_mhz": 700.0,
+      "frequency_stop_mhz": 2700.0,
+      "value_format": "linear"
+    }
+  },
+  "bands_mhz": [
+    [880.0, 960.0],
+    [1710.0, 2155.0],
+    [2300.0, 2400.0]
+  ],
+  "optimization": {
+    "within_band_average_weight": 0.5,
+    "generic_inductor_q": 50.0,
+    "inductor_q_reference_ghz": 1.0,
+    "generic_capacitor_esr_ohm": 0.3,
+    "component_tolerance_pct": 5.0,
+    "inductor_range_nh": [1.0, 30.0],
+    "capacitor_range_pf": [0.5, 30.0]
+  },
+  "published_circuits": {
+    "without_radiation_efficiency": {
+      "three_components": {
+        "topology_code_input_to_dut": "PCSLPC",
+        "components_input_to_dut": [
+          {"connection": "shunt", "kind": "C", "value": 1.49, "unit": "pF"},
+          {"connection": "series", "kind": "L", "value": 4.86, "unit": "nH"},
+          {"connection": "shunt", "kind": "C", "value": 2.11, "unit": "pF"}
+        ],
+        "rounded_worst_total_efficiency_db_by_band": [-0.9, -2.1, -2.2]
+      },
+      "five_components": {
+        "components_input_to_dut": [
+          {"connection": "series", "kind": "C", "value": 2.78, "unit": "pF"},
+          {"connection": "series", "kind": "L", "value": 5.33, "unit": "nH"},
+          {"connection": "shunt", "kind": "L", "value": 10.2, "unit": "nH"},
+          {"connection": "shunt", "kind": "C", "value": 2.06, "unit": "pF"},
+          {"connection": "series", "kind": "C", "value": 30.0, "unit": "pF"}
+        ],
+        "rounded_worst_total_efficiency_db_by_band": [-0.4, -2.0, -2.1]
+      }
+    },
+    "with_radiation_efficiency": {
+      "three_components": {
+        "topology_code_input_to_dut": "PCSLPC",
+        "components_input_to_dut": [
+          {"connection": "shunt", "kind": "C", "value": 1.4, "unit": "pF"},
+          {"connection": "series", "kind": "L", "value": 5.15, "unit": "nH"},
+          {"connection": "shunt", "kind": "C", "value": 2.04, "unit": "pF"}
+        ],
+        "rounded_nominal_min_total_efficiency_db_by_band": [-0.8, -2.0, -2.0],
+        "rounded_nominal_average_total_efficiency_db_by_band": [-0.4, -1.2, -1.6],
+        "rounded_tolerance_min_total_efficiency_db_by_band": [-0.9, -2.3, -2.4]
+      },
+      "five_components": {
+        "components_input_to_dut": [
+          {"connection": "series", "kind": "C", "value": 2.58, "unit": "pF"},
+          {"connection": "series", "kind": "L", "value": 5.81, "unit": "nH"},
+          {"connection": "shunt", "kind": "L", "value": 11.7, "unit": "nH"},
+          {"connection": "shunt", "kind": "C", "value": 2.03, "unit": "pF"},
+          {"connection": "series", "kind": "C", "value": 30.0, "unit": "pF"}
+        ],
+        "rounded_nominal_min_total_efficiency_db_by_band": [-0.4, -2.1, -2.1],
+        "rounded_nominal_average_total_efficiency_db_by_band": [-0.4, -1.2, -1.6],
+        "rounded_tolerance_min_total_efficiency_db_by_band": [-0.5, -2.4, -2.4]
+      }
+    }
+  },
+  "tutorial_claim": {
+    "worst_case_improvement_db_when_efficiency_is_included_during_optimization": 0.3,
+    "comparison_scope": "Apply the measured radiation-efficiency curve to both the efficiency-aware circuit and the circuit optimized without it."
+  }
+}

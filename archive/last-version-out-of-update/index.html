@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天线匹配软件 - Murata LC + 理想LCR + GA + Smith Chart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        body { padding: 20px; background-color: #f8f9fa; }
+        .card { margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .clickable-row { cursor: pointer; }
+        .clickable-row:hover { background-color: #e9ecef; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <h1 class="text-center mb-4">📡 天线匹配软件 (Murata LC + 理想LCR + 多频段 + GA)</h1>
+    <div class="row">
+        <!-- 左侧控制面板 -->
+        <div class="col-md-4">
+            <!-- 元件库 -->
+            <div class="card">
+                <div class="card-header">📁 元件库设置</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>电感(L)文件夹</label>
+                        <input type="text" class="form-control" id="lFolder" value="E:\Murata\L\lqp02hq-02-s-v43">
+                    </div>
+                    <div class="mb-3">
+                        <label>电容(C)文件夹</label>
+                        <input type="text" class="form-control" id="cFolder" value="E:\Murata\C\gjm-s-v75\Temperature_compensating\0402_01005">
+                    </div>
+                    <button id="loadLibBtn" class="btn btn-primary w-100">加载元件库</button>
+                    <div id="libStatus" class="mt-2 text-muted small"></div>
+                </div>
+            </div>
+            <!-- 天线文件 -->
+            <div class="card">
+                <div class="card-header">📡 待匹配天线 (S1P/S2P)</div>
+                <div class="card-body">
+                    <input type="file" id="antennaFile" accept=".s1p,.s2p,.s3p" class="form-control">
+                    <button id="loadAntennaBtn" class="btn btn-info w-100 mt-2">加载并预览</button>
+                    <div id="antennaStatus" class="mt-2 text-muted small"></div>
+                    <div id="antennaPreview" style="height: 220px; margin-top: 10px;"></div>
+                </div>
+            </div>
+            <!-- 匹配参数 -->
+            <div class="card">
+                <div class="card-header">⚙️ 匹配参数</div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col"><label>L 值范围 (nH)</label>
+                            <div class="input-group">
+                                <input id="lMin" type="number" class="form-control" value="0.1" step="0.1">
+                                <span class="input-group-text">~</span>
+                                <input id="lMax" type="number" class="form-control" value="20" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col"><label>C 值范围 (pF)</label>
+                            <div class="input-group">
+                                <input id="cMin" type="number" class="form-control" value="0.1" step="0.1">
+                                <span class="input-group-text">~</span>
+                                <input id="cMax" type="number" class="form-control" value="20" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <label class="form-label">匹配频段 (MHz)</label>
+                    <div id="bandsContainer" class="mb-3">
+                        <div class="band-row input-group mb-2">
+                            <input type="number" class="form-control fStart" value="2400">
+                            <span class="input-group-text">~</span>
+                            <input type="number" class="form-control fStop" value="2500">
+                            <button class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    </div>
+                    <button onclick="addBand()" class="btn btn-outline-primary btn-sm mb-3">+ 添加频段</button>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="useIdeal">
+                        <label class="form-check-label" for="useIdeal">使用理想LCR元件（忽略s2p模型）</label>
+                    </div>
+                    <div id="idealParams" class="row mb-3" style="display:none;">
+                        <div class="col"><label>L步进 (nH)</label><input id="idealLStep" type="number" class="form-control" value="0.05" step="0.01" min="0.01"></div>
+                        <div class="col"><label>C步进 (pF)</label><input id="idealCStep" type="number" class="form-control" value="0.05" step="0.01" min="0.01"></div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="useGA" checked>
+                        <label class="form-check-label" for="useGA">启用遗传算法加速（推荐）</label>
+                    </div>
+                    <div id="gaParams" class="row mb-3">
+                        <div class="col"><label>种群大小</label><input id="gaPop" type="number" class="form-control" value="120"></div>
+                        <div class="col"><label>迭代代数</label><input id="gaGen" type="number" class="form-control" value="80"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label>评估点数</label>
+                        <input type="range" class="form-range" id="numPoints" min="5" max="15" value="7">
+                        <span id="numPointsValue" class="badge bg-secondary">7</span>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col"><label>最少元件</label>
+                            <select id="minElem" class="form-select">
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                            </select>
+                        </div>
+                        <div class="col"><label>最多元件</label>
+                            <select id="maxElem" class="form-select">
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>每类元件最大数量</label>
+                        <input type="number" id="limitPerType" class="form-control" value="40" min="10">
+                    </div>
+                    <button id="optimizeBtn" class="btn btn-success w-100" disabled>🚀 开始匹配优化</button>
+                </div>
+            </div>
+        </div>
+        <!-- 右侧结果区域 -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">🏆 匹配结果（按平均效率排序）</div>
+                <div class="card-body result-table" style="max-height:500px;overflow-y:auto">
+                    <table class="table table-sm table-hover" id="resultTable">
+                        <thead><tr><th>平均效率</th><th>拓扑</th><th>元件</th><th>频点效率</th></tr></thead>
+                        <tbody id="resultBody"><tr><td colspan="4" class="text-center">暂无结果</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">📈 S11 曲线对比（全频段）</div>
+                <div class="card-body"><div id="s11Chart" style="height:400px;"></div></div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">📍 Smith Chart（匹配前后对比）</div>
+                <div class="card-body"><div id="smithChart" style="height:450px;"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ==================== 全局变量 ====================
+let currentResults = [];
+let antennaFreqs = [];
+let antennaS11 = [];
+let s11Chart = echarts.init(document.getElementById('s11Chart'));
+let smithChart = null;
+let previewChart = null;
+
+// ==================== 辅助函数 ====================
+function addBand() {
+    const container = document.getElementById('bandsContainer');
+    const row = document.createElement('div');
+    row.className = 'band-row input-group mb-2';
+    row.innerHTML = `
+        <input type="number" class="form-control fStart" value="5150">
+        <span class="input-group-text">~</span>
+        <input type="number" class="form-control fStop" value="5850">
+        <button class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(row);
+}
+
+function checkOptimizeReady() {
+    const idealMode = document.getElementById('useIdeal').checked;
+    const libOK = idealMode || document.getElementById('libStatus').innerText.includes('已加载');
+    const antOK = document.getElementById('antennaStatus').innerText.includes('✅');
+    document.getElementById('optimizeBtn').disabled = !(libOK && antOK);
+}
+
+document.getElementById('numPoints').oninput = function() {
+    document.getElementById('numPointsValue').innerText = this.value;
+};
+document.getElementById('useGA').onchange = function() {
+    document.getElementById('gaParams').style.display = this.checked ? 'flex' : 'none';
+};
+document.getElementById('useIdeal').onchange = function() {
+    const idealChecked = this.checked;
+    document.getElementById('idealParams').style.display = idealChecked ? 'flex' : 'none';
+    // 理想模式下禁用元件库相关UI（可选）
+    document.getElementById('limitPerType').disabled = idealChecked;
+    checkOptimizeReady();
+};
+
+// ==================== 加载元件库 ====================
+document.getElementById('loadLibBtn').onclick = async () => {
+    const resp = await fetch('/api/load_library', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            l_folder: document.getElementById('lFolder').value,
+            c_folder: document.getElementById('cFolder').value
+        })
+    });
+    const data = await resp.json();
+    if (data.count !== undefined) {
+        document.getElementById('libStatus').innerHTML = `✅ 已加载 ${data.count} 个元件`;
+        checkOptimizeReady();
+    }
+};
+
+// ==================== 加载天线 ====================
+document.getElementById('loadAntennaBtn').onclick = async () => {
+    const file = document.getElementById('antennaFile').files[0];
+    if (!file) return alert('请选择天线文件');
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await fetch('/api/load_antenna', {method: 'POST', body: formData});
+    const data = await resp.json();
+    antennaFreqs = data.frequencies;
+    antennaS11 = data.s11_db;
+    document.getElementById('antennaStatus').innerHTML = `✅ 已加载（${antennaFreqs[0].toFixed(2)}~${antennaFreqs.at(-1).toFixed(2)} GHz）`;
+    if (previewChart) previewChart.dispose();
+    previewChart = echarts.init(document.getElementById('antennaPreview'));
+    previewChart.setOption({
+        title: { text: '天线原始 S11', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { name: '频率 (GHz)' },
+        yAxis: { name: 'S11 (dB)' },
+        series: [{
+            type: 'line',
+            data: antennaFreqs.map((f,i) => [f, antennaS11[i]]),
+            lineStyle: { color: 'gray', width: 2 }
+        }],
+        grid: { top: 35, bottom: 20, left: 50, right: 10 }
+    });
+    checkOptimizeReady();
+};
+
+// ==================== 优化按钮 ====================
+document.getElementById('optimizeBtn').onclick = async () => {
+    const bands = [];
+    document.querySelectorAll('.band-row').forEach(row => {
+        const start = parseFloat(row.querySelector('.fStart').value);
+        const stop = parseFloat(row.querySelector('.fStop').value);
+        if (start && stop) bands.push([start, stop]);
+    });
+    const useIdeal = document.getElementById('useIdeal').checked;
+    const payload = {
+        bands: bands,
+        num_points: parseInt(document.getElementById('numPoints').value),
+        min_elements: parseInt(document.getElementById('minElem').value),
+        max_elements: parseInt(document.getElementById('maxElem').value),
+        limit_per_type: parseInt(document.getElementById('limitPerType').value),
+        l_min_nh: parseFloat(document.getElementById('lMin').value),
+        l_max_nh: parseFloat(document.getElementById('lMax').value),
+        c_min_pf: parseFloat(document.getElementById('cMin').value),
+        c_max_pf: parseFloat(document.getElementById('cMax').value),
+        use_ga: document.getElementById('useGA').checked,
+        ga_population: parseInt(document.getElementById('gaPop').value),
+        ga_generations: parseInt(document.getElementById('gaGen').value),
+        use_ideal: useIdeal
+    };
+    if (useIdeal) {
+        payload.ideal_l_step = parseFloat(document.getElementById('idealLStep').value);
+        payload.ideal_c_step = parseFloat(document.getElementById('idealCStep').value);
+    }
+    const resp = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    currentResults = data.results || [];
+    renderResultTable(currentResults);
+};
+
+function renderResultTable(results) {
+    const tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+    if (results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">无有效结果</td></tr>';
+        return;
+    }
+    results.forEach((r, i) => {
+        const row = tbody.insertRow();
+        row.classList.add('clickable-row');
+        row.onclick = () => showComparison(i);
+        const eff = (r.avg_efficiency * 100).toFixed(2);
+        row.innerHTML = `
+            <td><strong>${eff}%</strong></td>
+            <td>${r.topology.join('')}</td>
+            <td>${Array.isArray(r.components) ? r.components.join(', ') : r.components}</td>
+            <td><small>${r.efficiency_points.map(e => (e*100).toFixed(1)).join(', ')}%</small></td>
+        `;
+    });
+}
+
+// ==================== 图表展示 ====================
+function showComparison(idx) {
+    const r = currentResults[idx];
+    if (!r) return;
+
+    s11Chart.setOption({
+        title: {
+            text: `匹配方案: ${r.topology.join('')} | 平均效率 ${(r.avg_efficiency*100).toFixed(2)}%`,
+            left: 'center',
+            top: 0
+        },
+        grid: {
+            left: '8%',
+            right: '5%',
+            top: '18%',
+            bottom: '10%',
+            containLabel: true
+        },
+        tooltip: { trigger: 'axis' },
+        legend: {
+            data: ['原始天线', '匹配后'],
+            top: 25
+        },
+        xAxis: { name: '频率 (GHz)' },
+        yAxis: { name: 'S11 (dB)' },
+        series: [
+            {
+                name: '原始天线',
+                type: 'line',
+                data: antennaFreqs.map((f,i) => [f, antennaS11[i]]),
+                lineStyle: { color: 'gray', type: 'dashed', width: 2 }
+            },
+            {
+                name: '匹配后',
+                type: 'line',
+                data: r.full_frequencies_ghz.map((f,i) => [f, r.full_s11_match_db[i]]),
+                lineStyle: { color: 'red', width: 3 }
+            }
+        ]
+    });
+
+    if (smithChart) smithChart.dispose();
+    smithChart = echarts.init(document.getElementById('smithChart'));
+
+    const circleData = Array.from({length: 361}, (_, i) => {
+        const ang = i * Math.PI / 180;
+        return [Math.cos(ang), Math.sin(ang)];
+    });
+
+    let originalGamma = [];
+    if (r.original_gamma_real && r.original_gamma_imag) {
+        originalGamma = r.original_gamma_real.map((re, i) => [re, r.original_gamma_imag[i]]);
+    } else {
+        console.warn('后端未返回原始复数反射系数，Smith图匹配前轨迹可能不准确。');
+        originalGamma = antennaFreqs.map((f, i) => {
+            const mag = Math.pow(10, antennaS11[i] / 20);
+            return [mag, 0];
+        });
+    }
+
+    const finalGamma = r.smith_gamma_real.map((re, i) => [re, r.smith_gamma_imag[i]]);
+
+    smithChart.setOption({
+        title: {
+            text: 'Smith Chart - 匹配前后对比',
+            left: 'center',
+            textStyle: { fontSize: 16 }
+        },
+        grid: { show: false },
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                return `${params.seriesName}<br/>Re(Γ): ${params.data[0].toFixed(3)}<br/>Im(Γ): ${params.data[1].toFixed(3)}`;
+            }
+        },
+        xAxis: { name: 'Re(Γ)', min: -1.15, max: 1.15 },
+        yAxis: { name: 'Im(Γ)', min: -1.15, max: 1.15 },
+        legend: {
+            data: ['匹配前 (原始天线)', '匹配后'],
+            bottom: 10
+        },
+        series: [
+            {
+                name: 'Smith Chart 圆',
+                type: 'line',
+                data: circleData,
+                lineStyle: { color: '#aaaaaa', width: 2 },
+                symbol: 'none',
+                silent: true,
+                z: 1
+            },
+            {
+                name: '匹配前 (原始天线)',
+                type: 'line',
+                data: originalGamma,
+                lineStyle: { color: '#1890ff', width: 2.5, type: 'dashed' },
+                symbol: 'circle',
+                symbolSize: 3,
+                z: 10
+            },
+            {
+                name: '匹配后',
+                type: 'line',
+                data: finalGamma,
+                lineStyle: { color: '#f5222d', width: 4.5 },
+                symbol: 'circle',
+                symbolSize: 5,
+                emphasis: { lineStyle: { width: 6 } },
+                z: 20
+            }
+        ]
+    });
+}
+</script>
+</body>
+</html>

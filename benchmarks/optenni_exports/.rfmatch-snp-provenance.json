@@ -1,0 +1,18 @@
+{
+  "entries": {
+    "test.s1p": {
+      "details": {
+        "network_sha256": "5bff3b6b5bad47893c8e28d7d91356aced3ce2d123462b140536d3b9c4a60d12",
+        "pid": 5096,
+        "project_path": "E:\\Simulation\\test\\test.cst",
+        "revision_of_sha256": "889660b8def58393bb3c3f02a4c4d8e6ed8b7a9be889d2ee561604c7b4307966"
+      },
+      "filename": "test.s1p",
+      "ingestion_method": "cst_python_bridge",
+      "observed_at": "2026-07-18T05:31:06.085753+00:00",
+      "sha256": "d543b97b7858e6d90e704e9a0fb66b95c0455d755adbb856e2a4c5b7524d9bfd",
+      "source": "CST"
+    }
+  },
+  "schema_version": 1
+}

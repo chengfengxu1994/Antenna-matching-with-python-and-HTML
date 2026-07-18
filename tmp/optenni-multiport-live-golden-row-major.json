@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "case": "Optenni Lab 4.3 multiantenna tutorial saved winner",
+  "source": {
+    "capture_date": "2026-07-15",
+    "application": "Optenni Lab 4.3",
+    "project_relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\multiantenna_project.opr",
+    "project_sha256": "d2c29220fbbf152dc52897ef6b1900fed179ba8b791c55cb225343eb5e3ad4b1",
+    "dut_relative_path": "4 - Multiantenna system\\4.1 Multiantenna system at different bands\\3_antennas.s3p",
+    "dut_sha256": "4af62325474067d752dac32138c447b1da5e714a4140bafed484f0649131f6bc",
+    "reference_note": "BOM, topology and optimization bands were parsed directly from the saved OPR XML; rounded min/average efficiency and 1.24 GHz power balance were read from the running project.",
+    "opr_evidence": {
+      "optenni_version": "4.3",
+      "has_results": true,
+      "candidate_count": 101,
+      "matched_candidate_count": 100,
+      "saved_winner_index": 1,
+      "embedded_input_rows": 1001,
+      "embedded_input_sha256": "25d6e8fdcb8f1bbfd38c8dd536498e449e8b98838e9fde99d405cfd1dbb5a36c"
+    }
+  },
+  "software": {
+    "rfmatch_core_version": "0.2.0"
+  },
+  "objective": {
+    "alpha_in_band": 0.05,
+    "alpha_total": 0.1,
+    "radiation_efficiency": 1.0
+  },
+  "bom": [
+    {
+      "port": 0,
+      "connection": "series",
+      "kind": "C",
+      "part_number": "GQM1885C2A1R0BB01",
+      "value_si": 1e-12,
+      "model_sha256": "4b48a93c65c403c84a01c5b6e47a55264b84207cf7b0a6e5e81e190031bfe79d"
+    },
+    {
+      "port": 0,
+      "connection": "shunt",
+      "kind": "L",
+      "part_number": "04HP2N0",
+      "value_si": 2e-09,
+      "model_sha256": "24bbe080f192def9711839db45e5f77f18fb127aebc5bd190da66180a5a75639"
+    },
+    {
+      "port": 1,
+      "connection": "shunt",
+      "kind": "C",
+      "part_number": "GQM1885C2A1R0BB01",
+      "value_si": 1e-12,
+      "model_sha256": "4b48a93c65c403c84a01c5b6e47a55264b84207cf7b0a6e5e81e190031bfe79d"
+    },
+    {
+      "port": 1,
+      "connection": "series",
+      "kind": "L",
+      "part_number": "04HP5N6",
+      "value_si": 5.6e-09,
+      "model_sha256": "09800f0353b815621e20a157d4e6761c2e920414937126ff9e0a0908b64deb36"
+    },
+    {
+      "port": 2,
+      "connection": "shunt",
+      "kind": "C",
+      "part_number": "GQM1885C2A3R0BB01",
+      "value_si": 3e-12,
+      "model_sha256": "f9efdd85d17bf693757fd0b3b74e813d2441788a538b9be7ec872960ebcc66f3"
+    },
+    {
+      "port": 2,
+      "connection": "series",
+      "kind": "L",
+      "part_number": "04HP5N6",
+      "value_si": 5.6e-09,
+      "model_sha256": "09800f0353b815621e20a157d4e6761c2e920414937126ff9e0a0908b64deb36"
+    }
+  ],
+  "topology_by_port": {
+    "0": "SCPL",
+    "1": "PCSL",
+    "2": "PCSL"
+  },
+  "efficiency_comparison": {
+    "0": {
+      "band_hz": [
+        2500000000.0,
+        2690000000.0
+      ],
+      "optenni_ui_db": {
+        "minimum": -1.7,
+        "average": -1.1
+      },
+      "rfmatch_core_db": {
+        "minimum": -1.7484257856729546,
+        "average": -1.1452018697219326
+      },
+      "difference_from_rounded_ui_db": {
+        "minimum": -0.048425785672954635,
+        "average": -0.04520186972193252
+      },
+      "frequency_points": 96
+    },
+    "1": {
+      "band_hz": [
+        1920000000.0,
+        2170000000.0
+      ],
+      "optenni_ui_db": {
+        "minimum": -2.2,
+        "average": -1.4
+      },
+      "rfmatch_core_db": {
+        "minimum": -2.243442398179391,
+        "average": -1.3643656777200173
+      },
+      "difference_from_rounded_ui_db": {
+        "minimum": -0.043442398179390995,
+        "average": 0.035634322279982644
+      },
+      "frequency_points": 126
+    },
+    "2": {
+      "band_hz": [
+        1215000000.0,
+        1300000000.0
+      ],
+      "optenni_ui_db": {
+        "minimum": -2.1,
+        "average": -1.6
+      },
+      "rfmatch_core_db": {
+        "minimum": -2.1095911490241557,
+        "average": -1.5823643443307918
+      },
+      "difference_from_rounded_ui_db": {
+        "minimum": -0.009591149024155587,
+        "average": 0.017635655669208328
+      },
+      "frequency_points": 43
+    }
+  },
+  "power_balance_comparison": {
+    "frequency_hz": 1240000000.0,
+    "driven_port": 2,
+    "optenni_ui_linear": {
+      "reflected": 0.154,
+      "component_loss": 0.013,
+      "coupling": 0.14,
+      "radiated": 0.693
+    },
+    "rfmatch_core_linear": {
+      "reflected": 0.15388758574651926,
+      "component_loss": 0.017619371175350534,
+      "coupling": 0.13500579339785893,
+      "radiated": 0.6934872496802713
+    },
+    "difference_from_rounded_ui_linear": {
+      "reflected": -0.00011241425348074152,
+      "component_loss": 0.004619371175350535,
+      "coupling": -0.004994206602141088,
+      "radiated": 0.0004872496802713622
+    },
+    "rfmatch_core_sum": 1.0
+  },
+  "maximum_power_balance_error": 0.0,
+  "score_db": -2.1795724713014906
+}
