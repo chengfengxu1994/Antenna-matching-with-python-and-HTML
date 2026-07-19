@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "source": {
+    "name": "Example laboratory characterization — replace before use",
+    "document": "EXAMPLE-ONLY",
+    "evidence_level": "engineering_assumption"
+  },
+  "components": [
+    {
+      "part_number": "DEMO-L-5N6",
+      "tempco_ppm_per_c": 100.0,
+      "systematic_bias_pct": 0.5
+    }
+  ]
+}
