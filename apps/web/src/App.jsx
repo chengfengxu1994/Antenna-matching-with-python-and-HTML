@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRef } from 'react';
 import { api } from './services/api';
 import { isSameElectricalDut } from './utils/dataSource';
@@ -16,6 +16,14 @@ function loadSavedDataDirs() {
     return { ...DEFAULT_DATA_DIRS, ...JSON.parse(localStorage.getItem('rfmatch.dataDirs') || '{}') };
   } catch {
     return DEFAULT_DATA_DIRS;
+  }
+}
+
+function loadSavedTheme() {
+  try {
+    return localStorage.getItem('rfmatch.theme') === 'light' ? 'light' : 'dark';
+  } catch {
+    return 'dark';
   }
 }
 
@@ -44,10 +52,15 @@ export default function App() {
   const [manualWorkspace, setManualWorkspace] = useState(null);
   const [notice, setNotice] = useState(null);
   const [dataRailOpen, setDataRailOpen] = useState(true);
+  const [theme, setTheme] = useState(loadSavedTheme);
   const initSequenceRef = useRef(0);
 
   useEffect(() => { initBackend(); }, []);
   useEffect(() => { localStorage.setItem('rfmatch.dataDirs', JSON.stringify(dataDirs)); }, [dataDirs]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem('rfmatch.theme', theme); } catch {}
+  }, [theme]);
 
   async function initBackend() {
     const sequence = ++initSequenceRef.current;
@@ -190,6 +203,14 @@ export default function App() {
           <button className="toolbar-btn" onClick={() => setShowProjects(true)}>
             项目
           </button>
+          <button
+            className="toolbar-btn icon"
+            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+            title={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+            aria-label="切换主题"
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
           <button className="toolbar-btn primary" onClick={() => setShowSettings(!showSettings)}>
             元件库
           </button>
@@ -301,6 +322,33 @@ export default function App() {
           <span>{notice.message}</span><b>×</b>
         </button>
       )}
+      <footer className="status-bar">
+        <div className="status-group">
+          <span className="status-item">
+            {workspaceMode === 'single' ? '单文件调谐' : workspaceMode === 'manual' ? '手动调谐' : '多场景联合'}
+          </span>
+          <span className="status-sep" />
+          <span className={`status-item truncate ${loadedSNP ? 'mono' : ''}`} title={loadedSNP?.filename || ''}>
+            {loadedSNP ? loadedSNP.filename : '未载入 DUT'}
+          </span>
+        </div>
+        <div className="status-group">
+          {loadedSNP && (
+            <span className="status-item mono">
+              {loadedSNP.num_ports} 端口{loadedSNP.freq_count ? ` · ${loadedSNP.freq_count} 频点` : ''}
+            </span>
+          )}
+          {loadedSNP?.freq_min_hz != null && loadedSNP?.freq_max_hz != null && (
+            <span className="status-item mono">
+              {(loadedSNP.freq_min_hz / 1e6).toFixed(0)}–{(loadedSNP.freq_max_hz / 1e6).toFixed(0)} MHz
+            </span>
+          )}
+          <span className="status-sep" />
+          <span className={`status-item ${backendOnline ? 'online' : ''}`}>
+            <i />{backendOnline ? '引擎在线' : '引擎离线'}
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

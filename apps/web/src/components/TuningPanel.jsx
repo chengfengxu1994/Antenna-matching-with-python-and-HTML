@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import TopologySchematic from './TopologySchematic';
 import EngineeringSmithChart from './EngineeringSmithChart';
 
-const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+const COLORS = ['#f26d5f', '#4aa3f0', '#3ecf9a', '#e8b04b', '#a47ef0', '#3cc6d0'];
 
 /* ── Objective presets (matching backend) ── */
 const OBJECTIVE_PRESETS = [
@@ -912,23 +912,23 @@ function PowerBalanceBar({ powerBalance, chartData }) {
         <div key={d.port_index} style={{ marginBottom: 8 }}>
           <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2 }}>{d.port}</div>
           <div style={{ height: 22, display: 'flex', borderRadius: 4, overflow: 'hidden', fontSize: 9 }}>
-            <div style={{ width: `${d.reflected}%`, background: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', minWidth: d.reflected > 5 ? 0 : undefined }}
+            <div style={{ width: `${d.reflected}%`, background: '#f26d5f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10151d', minWidth: d.reflected > 5 ? 0 : undefined }}
               title={`Reflected: ${d.reflected.toFixed(1)}%`}>
               {d.reflected > 8 ? `${d.reflected.toFixed(0)}%` : ''}
             </div>
-            <div style={{ width: `${d.coupled}%`, background: '#f39c12', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+            <div style={{ width: `${d.coupled}%`, background: '#e8b04b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10151d' }}
               title={`Coupled: ${d.coupled.toFixed(1)}%`}>
               {d.coupled > 8 ? `${d.coupled.toFixed(0)}%` : ''}
             </div>
-            <div style={{ width: `${d.component_loss}%`, background: '#9b59b6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+            <div style={{ width: `${d.component_loss}%`, background: '#a47ef0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10151d' }}
               title={`Comp Loss: ${d.component_loss.toFixed(1)}%`}>
               {d.component_loss > 8 ? `${d.component_loss.toFixed(0)}%` : ''}
             </div>
-            <div style={{ width: `${d.antenna_loss}%`, background: '#95a5a6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+            <div style={{ width: `${d.antenna_loss}%`, background: '#5f6b7a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
               title={`Antenna Loss: ${d.antenna_loss.toFixed(1)}%`}>
               {d.antenna_loss > 8 ? `${d.antenna_loss.toFixed(0)}%` : ''}
             </div>
-            <div style={{ width: `${d.radiated}%`, background: '#2ecc71', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+            <div style={{ width: `${d.radiated}%`, background: '#3ecf9a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10151d' }}
               title={`Radiated: ${d.radiated.toFixed(1)}%`}>
               {d.radiated > 8 ? `${d.radiated.toFixed(0)}%` : ''}
             </div>
@@ -984,7 +984,7 @@ function EfficiencyChart({ sweepData, sweepsByPort, bandsMhz = [] }) {
       <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>总效率随频率变化</div>
       <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxHeight: h }}>
         <TargetBandAreas bandsMhz={bandsMhz} xScale={xScale} minF={minF} maxF={maxF} top={pad.top} height={ih} />
-        <path d={line} fill="none" stroke="#2ecc71" strokeWidth="2" />
+        <path d={line} fill="none" stroke="var(--accent-green)" strokeWidth="2" />
         {frequencies.filter((_, i) => i % Math.max(1, Math.floor(frequencies.length / 10)) === 0).map((f, i) => (
           <text key={i} x={xScale(f)} y={h - 2} textAnchor="middle" fontSize={8} fill="var(--text-secondary)">
             {(f / 1e9).toFixed(1)}
@@ -1032,11 +1032,11 @@ function S11Chart({ sweepData, sweepsByPort, bandsMhz = [] }) {
       <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>回波损耗随频率变化</div>
       <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxHeight: h }}>
         <TargetBandAreas bandsMhz={bandsMhz} xScale={xScale} minF={minF} maxF={maxF} top={pad.top} height={ih} />
-        {rawLine && <path d={rawLine} fill="none" stroke="#ccc" strokeWidth="1" strokeDasharray="4,3" />}
-        <path d={matchLine} fill="none" stroke="#e74c3c" strokeWidth="2" />
+        {rawLine && <path d={rawLine} fill="none" stroke="var(--text-faint)" strokeWidth="1" strokeDasharray="4,3" />}
+        <path d={matchLine} fill="none" stroke="var(--accent-red)" strokeWidth="2" />
         {/* -10 dB reference line */}
-        <line x1={pad.left} y1={yScale(-10)} x2={w - pad.right} y2={yScale(-10)} stroke="#f39c12" strokeWidth="0.5" strokeDasharray="3,3" />
-        <text x={w - pad.right - 2} y={yScale(-10) - 2} textAnchor="end" fontSize={7} fill="#f39c12">-10dB</text>
+        <line x1={pad.left} y1={yScale(-10)} x2={w - pad.right} y2={yScale(-10)} stroke="var(--accent-yellow)" strokeWidth="0.5" strokeDasharray="3,3" />
+        <text x={w - pad.right - 2} y={yScale(-10) - 2} textAnchor="end" fontSize={7} fill="var(--accent-yellow)">-10dB</text>
         {frequencies.filter((_, i) => i % Math.max(1, Math.floor(frequencies.length / 10)) === 0).map((f, i) => (
           <text key={i} x={xScale(f)} y={h - 2} textAnchor="middle" fontSize={8} fill="var(--text-secondary)">
             {(f / 1e9).toFixed(1)}
@@ -1049,8 +1049,8 @@ function S11Chart({ sweepData, sweepsByPort, bandsMhz = [] }) {
         ))}
       </svg>
       <div style={{ fontSize: 9, color: 'var(--text-secondary)', textAlign: 'center' }}>
-        频率 (GHz) <span style={{ marginLeft: 8 }}>— 匹配后 <span style={{ color: '#e74c3c' }}>●</span></span>
-        {raw_db && <span style={{ marginLeft: 8 }}>— Raw <span style={{ color: '#ccc' }}>┈</span></span>}
+        频率 (GHz) <span style={{ marginLeft: 8 }}>— 匹配后 <span style={{ color: 'var(--accent-red)' }}>●</span></span>
+        {raw_db && <span style={{ marginLeft: 8 }}>— Raw <span style={{ color: 'var(--text-faint)' }}>┈</span></span>}
       </div>
     </div>
   );
@@ -1082,8 +1082,8 @@ function MultiPortS11Chart({ sweepsByPort, bandsMhz = [] }) {
       <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxHeight: h }}>
         <TargetBandAreas bandsMhz={bandsMhz} xScale={xScale} minF={minF} maxF={maxF} top={pad.top} height={ih} />
         {/* -10 dB reference */}
-        <line x1={pad.left} y1={yScale(-10)} x2={w - pad.right} y2={yScale(-10)} stroke="#f39c12" strokeWidth="0.5" strokeDasharray="3,3" />
-        <text x={w - pad.right - 2} y={yScale(-10) - 2} textAnchor="end" fontSize={7} fill="#f39c12">-10dB</text>
+        <line x1={pad.left} y1={yScale(-10)} x2={w - pad.right} y2={yScale(-10)} stroke="var(--accent-yellow)" strokeWidth="0.5" strokeDasharray="3,3" />
+        <text x={w - pad.right - 2} y={yScale(-10) - 2} textAnchor="end" fontSize={7} fill="var(--accent-yellow)">-10dB</text>
         {entries.map(([piStr, d], idx) => {
           const color = COLORS[Number(piStr) % COLORS.length];
           const matchLine = d.s11_db?.map((v, i) => `${i === 0 ? 'M' : 'L'}${xScale(d.frequencies[i])},${yScale(-Math.abs(v))}`).join(' ') || '';
@@ -2839,7 +2839,7 @@ export default function TuningPanel({
             )}
 
             {results.warning && (
-              <div className="error-card" style={{ background: 'rgba(255,193,7,0.08)', color: '#856404' }}>
+              <div className="error-card" style={{ background: 'var(--wash-yellow)', color: 'var(--accent-yellow)', borderColor: 'rgba(217,164,60,0.35)' }}>
                 {results.warning}
               </div>
             )}

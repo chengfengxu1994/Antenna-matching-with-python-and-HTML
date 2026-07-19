@@ -17,11 +17,11 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
   const portSpacing = dutH / (numPorts + 1);
 
   const stateColors = {
-    'load': '#198754',
-    'short': '#dc3545',
-    'open': '#ffc107',
-    'component': '#0d6efd',
-    'matching': '#0d6efd',
+    'load': '#35c48d',
+    'short': '#e05d6b',
+    'open': '#d9a43c',
+    'component': '#3d9df2',
+    'matching': '#3d9df2',
   };
 
   const stateLabels = {
@@ -40,17 +40,17 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
           x={dutX} y={dutY}
           width={dutW} height={dutH}
           rx={12} ry={12}
-          fill="#f0f4ff" stroke="#0d6efd" strokeWidth={2}
+          fill="var(--bg-active)" stroke="var(--accent)" strokeWidth={2}
         />
         <text
           x={dutX + dutW / 2} y={dutY + 20}
-          textAnchor="middle" fontSize={13} fontWeight="bold" fill="#0d6efd"
+          textAnchor="middle" fontSize={13} fontWeight="bold" fill="var(--accent)"
         >
           DUT
         </text>
         <text
           x={dutX + dutW / 2} y={dutY + 35}
-          textAnchor="middle" fontSize={10} fill="#6c757d"
+          textAnchor="middle" fontSize={10} fill="var(--text-secondary)"
         >
           {numPorts}-port
         </text>
@@ -67,7 +67,7 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
           const labelX = pinX - 20;
           const extX = pinX - 80;
 
-          const color = useMatching ? stateColors['matching'] : stateColors[state] || '#6c757d';
+          const color = useMatching ? stateColors['matching'] : stateColors[state] || '#8b94a6';
           const label = useMatching ? 'Match' : (stateLabels[state] || state);
 
           return (
@@ -91,9 +91,9 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
               {useMatching && (
                 <g>
                   <rect x={extX - 10} y={portY - 14} width={36} height={28}
-                    rx={4} fill="rgba(13,110,253,0.1)" stroke="#0d6efd" strokeWidth={1} strokeDasharray="3,2" />
+                    rx={4} fill="rgba(61,157,242,0.12)" stroke="var(--accent)" strokeWidth={1} strokeDasharray="3,2" />
                   <text x={extX + 8} y={portY + 3}
-                    textAnchor="middle" fontSize={8} fill="#0d6efd">
+                    textAnchor="middle" fontSize={8} fill="var(--accent)">
                     L/C
                   </text>
                 </g>
@@ -101,7 +101,7 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
               {/* Frequency annotation */}
               {cfg.target_frequency_hz && (
                 <text x={extX + 30} y={portY + 24}
-                  textAnchor="middle" fontSize={8} fill="#adb5bd">
+                  textAnchor="middle" fontSize={8} fill="var(--text-faint)">
                   {(cfg.target_frequency_hz / 1e6).toFixed(0)}MHz
                 </text>
               )}
@@ -113,12 +113,12 @@ export default function TopologyDiagram({ numPorts, portConfigs, solution, width
         {solution && (
           <g>
             <text x={dutX + dutW / 2} y={dutY + dutH + 20}
-              textAnchor="middle" fontSize={11} fill="#198754" fontWeight="bold">
+              textAnchor="middle" fontSize={11} fill="var(--accent-green)" fontWeight="bold">
               Best: |S11|={solution.s11_magnitude?.toFixed(3) || 'N/A'}
             </text>
             {solution.topology && (
               <text x={dutX + dutW / 2} y={dutY + dutH + 35}
-                textAnchor="middle" fontSize={10} fill="#6c757d">
+                textAnchor="middle" fontSize={10} fill="var(--text-secondary)">
                 {solution.topology}
               </text>
             )}

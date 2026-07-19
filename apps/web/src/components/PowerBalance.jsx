@@ -91,7 +91,7 @@ export default function PowerBalance({ resultsPerPort, powerBalance }) {
               </div>
               <div style={{
                 height: 22, borderRadius: 4, overflow: 'hidden',
-                display: 'flex', background: '#ecf0f1',
+                display: 'flex', background: 'var(--bg-input)',
               }}>
                 {segments.map(s => (
                   <div key={s.key} style={{

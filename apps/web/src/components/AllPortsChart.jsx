@@ -1,6 +1,6 @@
 import React from 'react';
 
-const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+const COLORS = ['#f26d5f', '#4aa3f0', '#3ecf9a', '#e8b04b', '#a47ef0', '#3cc6d0'];
 
 /**
  * Compact S11 overview chart for joint-optimize results.

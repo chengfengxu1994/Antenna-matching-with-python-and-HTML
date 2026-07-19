@@ -1459,38 +1459,38 @@ function S11MiniChart({ data, targetFreq, bandsMhz = [], targetReturnLossDb = 10
       onPointerMove={event => { if (event.buttons === 1) setTargetFromPointer(event); }}>
       {visibleBands.map(band => <g key={`${band.start}-${band.stop}`}>
         <rect x={xScale(band.start)} y={pad} width={Math.max(1, xScale(band.stop) - xScale(band.start))}
-          height={H - 2 * pad} fill="#1268c4" opacity={0.055} />
+          height={H - 2 * pad} fill="var(--accent)" opacity={0.055} />
         <text x={(xScale(band.start) + xScale(band.stop)) / 2} y={pad + 10}
-          textAnchor="middle" fontSize={8} fill="#4776a4">频段 {band.index + 1}</text>
+          textAnchor="middle" fontSize={8} fill="var(--accent)">频段 {band.index + 1}</text>
       </g>)}
       {/* Grid */}
-      <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="#dee2e6" />
-      <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="#dee2e6" />
+      <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="var(--border-strong)" />
+      <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="var(--border-strong)" />
       {xTicks.map(value => <g key={value}>
-        <line x1={xScale(value)} y1={H - pad} x2={xScale(value)} y2={H - pad + 4} stroke="#aeb8c5" />
-        <text x={xScale(value)} y={H - pad + 15} textAnchor="middle" fontSize={9} fill="#7b8796">{(value / 1e6).toFixed(0)}</text>
+        <line x1={xScale(value)} y1={H - pad} x2={xScale(value)} y2={H - pad + 4} stroke="var(--text-faint)" />
+        <text x={xScale(value)} y={H - pad + 15} textAnchor="middle" fontSize={9} fill="var(--text-secondary)">{(value / 1e6).toFixed(0)}</text>
       </g>)}
       {yTicks.map(value => <g key={value}>
-        <line x1={pad} y1={yScale(value)} x2={W - pad} y2={yScale(value)} stroke="#edf0f3" />
-        <text x={pad - 6} y={yScale(value) + 3} textAnchor="end" fontSize={9} fill="#7b8796">{value}</text>
+        <line x1={pad} y1={yScale(value)} x2={W - pad} y2={yScale(value)} stroke="var(--border)" />
+        <text x={pad - 6} y={yScale(value) + 3} textAnchor="end" fontSize={9} fill="var(--text-secondary)">{value}</text>
       </g>)}
       {/* Return-loss goal */}
       {yMin <= -targetReturnLossDb && <g>
-        <line x1={pad} y1={yScale(-targetReturnLossDb)} x2={W - pad} y2={yScale(-targetReturnLossDb)} stroke="#198754" strokeDasharray="4" strokeOpacity={0.55} />
-        <text x={W - pad - 2} y={yScale(-targetReturnLossDb) - 4} textAnchor="end" fontSize={8} fill="#198754">目标 −{targetReturnLossDb} dB</text>
+        <line x1={pad} y1={yScale(-targetReturnLossDb)} x2={W - pad} y2={yScale(-targetReturnLossDb)} stroke="var(--accent-green)" strokeDasharray="4" strokeOpacity={0.55} />
+        <text x={W - pad - 2} y={yScale(-targetReturnLossDb) - 4} textAnchor="end" fontSize={8} fill="var(--accent-green)">目标 −{targetReturnLossDb} dB</text>
       </g>}
       {/* Target freq */}
-      <line x1={targetX} y1={pad} x2={targetX} y2={H - pad} stroke="#0d6efd" strokeDasharray="4" />
-      <text x={targetX} y={pad - 5} textAnchor="middle" fontSize={10} fill="#0d6efd">{(targetFreq / 1e6).toFixed(0)} MHz</text>
-      {rawPoints && <polyline points={rawPoints} fill="none" stroke="#8a96a6" strokeWidth={1.5} strokeDasharray="5 4" />}
+      <line x1={targetX} y1={pad} x2={targetX} y2={H - pad} stroke="var(--accent)" strokeDasharray="4" />
+      <text x={targetX} y={pad - 5} textAnchor="middle" fontSize={10} fill="var(--accent)">{(targetFreq / 1e6).toFixed(0)} MHz</text>
+      {rawPoints && <polyline points={rawPoints} fill="none" stroke="var(--text-faint)" strokeWidth={1.5} strokeDasharray="5 4" />}
       {overlaySeries.map(curve => <polyline key={curve.id}
         points={curve.frequencies.map((frequency, index) => `${xScale(frequency)},${yScale(curve.values[index])}`).join(' ')}
         fill="none" stroke={curve.color} strokeWidth={1.8} strokeOpacity={0.9} />)}
-      <polyline points={points} fill="none" stroke="#dc3545" strokeWidth={2} />
-      <circle cx={targetX} cy={targetY} r={4} fill="#fff" stroke="#0d6efd" strokeWidth={2} />
+      <polyline points={points} fill="none" stroke="var(--accent-red)" strokeWidth={2} />
+      <circle cx={targetX} cy={targetY} r={4} fill="var(--bg-inset)" stroke="var(--accent)" strokeWidth={2} />
       {/* Axis labels */}
-      <text x={W / 2} y={H - 5} textAnchor="middle" fontSize={10} fill="#6c757d">频率 (MHz)</text>
-      <text x={5} y={H / 2} textAnchor="middle" fontSize={10} fill="#6c757d" transform={`rotate(-90, 5, ${H / 2})`}>S11 (dB)</text>
+      <text x={W / 2} y={H - 5} textAnchor="middle" fontSize={10} fill="var(--text-secondary)">频率 (MHz)</text>
+      <text x={5} y={H / 2} textAnchor="middle" fontSize={10} fill="var(--text-secondary)" transform={`rotate(-90, 5, ${H / 2})`}>S11 (dB)</text>
     </svg>
   );
 }
@@ -1545,59 +1545,59 @@ function SmithMiniChart({
     <svg className="manual-interactive-chart" width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
       role="img" aria-label="可点击选频的标准阻抗 Smith 圆图" onPointerDown={selectNearestFrequency}>
       <defs><clipPath id="manual-smith-unit-circle"><circle cx={cx} cy={cy} r={R} /></clipPath></defs>
-      <circle cx={cx} cy={cy} r={R} fill="#fbfcfe" stroke="#6f7f92" strokeWidth={1.4} />
-      <g clipPath="url(#manual-smith-unit-circle)" fill="none" stroke="#dce3eb" strokeWidth={0.8}>
+      <circle cx={cx} cy={cy} r={R} fill="var(--bg-inset)" stroke="var(--border-strong)" strokeWidth={1.4} />
+      <g clipPath="url(#manual-smith-unit-circle)" fill="none" stroke="var(--border)" strokeWidth={0.8}>
         <line x1={cx - R} y1={cy} x2={cx + R} y2={cy} />
         {resistances.map(value => <circle key={`r-${value}`}
           cx={cx + R * value / (1 + value)} cy={cy} r={R / (1 + value)} />)}
         {reactances.flatMap(value => [value, -value]).map(value => <circle key={`x-${value}`}
           cx={cx + R} cy={cy - R / value} r={R / Math.abs(value)} />)}
       </g>
-      <g fill="#8a96a5" fontSize={8} textAnchor="middle">
+      <g fill="var(--text-secondary)" fontSize={8} textAnchor="middle">
         {resistances.map(value => <text key={`rl-${value}`}
           x={cx + R * (value - 1) / (value + 1)} y={cy + 12}>{value}</text>)}
         <text x={cx + R} y={cy + 12}>∞</text>
       </g>
-      <circle cx={cx} cy={cy} r={R * goalGammaRadius} fill="none" stroke="#198754"
+      <circle cx={cx} cy={cy} r={R * goalGammaRadius} fill="none" stroke="var(--accent-green)"
         strokeWidth={1.1} strokeDasharray="4 3" opacity={0.68} />
-      <text x={cx} y={cy - R * goalGammaRadius - 5} textAnchor="middle" fontSize={8} fill="#198754">
+      <text x={cx} y={cy - R * goalGammaRadius - 5} textAnchor="middle" fontSize={8} fill="var(--accent-green)">
         {targetReturnLossDb} dB 目标圈
       </text>
       {/* Gamma trace */}
       <g clipPath="url(#manual-smith-unit-circle)">
-        {rawPoints && <polyline points={rawPoints} fill="none" stroke="#8a96a6" strokeWidth={1.3} strokeDasharray="5 4" />}
+        {rawPoints && <polyline points={rawPoints} fill="none" stroke="var(--text-faint)" strokeWidth={1.3} strokeDasharray="5 4" />}
         {overlaySeries.map(curve => <polyline key={curve.id}
           points={curve.gamma.map(point => `${cx + point.re * R},${cy - point.im * R}`).join(' ')}
           fill="none" stroke={curve.color} strokeWidth={1.8} strokeOpacity={0.9} />)}
-        <polyline points={points} fill="none" stroke="#dc3545" strokeWidth={2.2} />
+        <polyline points={points} fill="none" stroke="var(--accent-red)" strokeWidth={2.2} />
       </g>
       {targetGamma && <><circle cx={cx + targetGamma.re * R} cy={cy - targetGamma.im * R}
-        r={6} fill="#fff" stroke="#0d6efd" strokeWidth={2} />
-        <circle cx={cx + targetGamma.re * R} cy={cy - targetGamma.im * R} r={2} fill="#0d6efd" /></>}
+        r={6} fill="var(--bg-inset)" stroke="var(--accent)" strokeWidth={2} />
+        <circle cx={cx + targetGamma.re * R} cy={cy - targetGamma.im * R} r={2} fill="var(--accent)" /></>}
       {/* Start/end dots */}
       {gamma.length > 0 && (
         <>
-          <circle cx={cx + gamma[0].re * R} cy={cy - gamma[0].im * R} r={4} fill="#0d6efd" />
-          <circle cx={cx + gamma[gamma.length - 1].re * R} cy={cy - gamma[gamma.length - 1].im * R} r={4} fill="#198754" />
+          <circle cx={cx + gamma[0].re * R} cy={cy - gamma[0].im * R} r={4} fill="var(--accent)" />
+          <circle cx={cx + gamma[gamma.length - 1].re * R} cy={cy - gamma[gamma.length - 1].im * R} r={4} fill="var(--accent-green)" />
         </>
       )}
       <g transform="translate(410 42)">
-        <text x="0" y="0" fill="#273d54" fontSize="12" fontWeight="700">目标点工程读数</text>
-        <text x="0" y="22" fill="#758497" fontSize="9">频率</text>
-        <text x="118" y="22" textAnchor="end" fill="#2f4d6b" fontSize="10" fontWeight="700">{(Number(data.frequencies?.[targetIndex]) / 1e6).toFixed(3)} MHz</text>
-        <text x="0" y="44" fill="#758497" fontSize="9">反射系数 Γ</text>
-        <text x="118" y="44" textAnchor="end" fill="#2f4d6b" fontSize="10">{targetMagnitude.toFixed(4)} ∠ {impedance?.gammaAngleDeg.toFixed(1) ?? '—'}°</text>
-        <text x="0" y="66" fill="#758497" fontSize="9">回波损耗</text>
-        <text x="118" y="66" textAnchor="end" fill={targetReturnLoss >= targetReturnLossDb ? '#198754' : '#b64350'} fontSize="10" fontWeight="700">{targetReturnLoss.toFixed(2)} dB</text>
-        <text x="0" y="88" fill="#758497" fontSize="9">VSWR</text>
-        <text x="118" y="88" textAnchor="end" fill="#2f4d6b" fontSize="10">{Number.isFinite(targetVswr) ? targetVswr.toFixed(3) : '∞'}</text>
-        <text x="0" y="110" fill="#758497" fontSize="9">输入阻抗</text>
-        <text x="118" y="110" textAnchor="end" fill="#2f4d6b" fontSize="10" fontWeight="700">
+        <text x="0" y="0" fill="var(--text)" fontSize="12" fontWeight="700">目标点工程读数</text>
+        <text x="0" y="22" fill="var(--text-secondary)" fontSize="9">频率</text>
+        <text x="118" y="22" textAnchor="end" fill="var(--text)" fontSize="10" fontWeight="700">{(Number(data.frequencies?.[targetIndex]) / 1e6).toFixed(3)} MHz</text>
+        <text x="0" y="44" fill="var(--text-secondary)" fontSize="9">反射系数 Γ</text>
+        <text x="118" y="44" textAnchor="end" fill="var(--text)" fontSize="10">{targetMagnitude.toFixed(4)} ∠ {impedance?.gammaAngleDeg.toFixed(1) ?? '—'}°</text>
+        <text x="0" y="66" fill="var(--text-secondary)" fontSize="9">回波损耗</text>
+        <text x="118" y="66" textAnchor="end" fill={targetReturnLoss >= targetReturnLossDb ? 'var(--accent-green)' : 'var(--accent-red)'} fontSize="10" fontWeight="700">{targetReturnLoss.toFixed(2)} dB</text>
+        <text x="0" y="88" fill="var(--text-secondary)" fontSize="9">VSWR</text>
+        <text x="118" y="88" textAnchor="end" fill="var(--text)" fontSize="10">{Number.isFinite(targetVswr) ? targetVswr.toFixed(3) : '∞'}</text>
+        <text x="0" y="110" fill="var(--text-secondary)" fontSize="9">输入阻抗</text>
+        <text x="118" y="110" textAnchor="end" fill="var(--text)" fontSize="10" fontWeight="700">
           {impedance ? `${impedance.resistanceOhm.toFixed(2)} ${impedance.reactanceOhm >= 0 ? '+' : '−'} j${Math.abs(impedance.reactanceOhm).toFixed(2)} Ω` : '开路极限'}
         </text>
-        <line x1="0" y1="128" x2="118" y2="128" stroke="#e0e6ed" />
-        <text x="0" y="147" fill="#8a96a5" fontSize="8">点击轨迹附近可选择最近频点</text>
-        <text x="0" y="162" fill="#8a96a5" fontSize="8">参考阻抗 Z0 = {Number(referenceImpedanceOhm).toFixed(1)} Ω</text>
+        <line x1="0" y1="128" x2="118" y2="128" stroke="var(--border)" />
+        <text x="0" y="147" fill="var(--text-secondary)" fontSize="8">点击轨迹附近可选择最近频点</text>
+        <text x="0" y="162" fill="var(--text-secondary)" fontSize="8">参考阻抗 Z0 = {Number(referenceImpedanceOhm).toFixed(1)} Ω</text>
       </g>
     </svg>
   );

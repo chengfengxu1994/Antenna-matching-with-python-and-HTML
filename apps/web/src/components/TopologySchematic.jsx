@@ -121,7 +121,7 @@ export default function TopologySchematic({
   return (
     <div className="schematic-wrap">
       <svg className="schematic-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Matching topology">
-        <rect x={dutX} y={dutY} width={dutW} height={dutH} rx="9" fill="#9beacb" stroke="#111" strokeWidth="1.5" />
+        <rect x={dutX} y={dutY} width={dutW} height={dutH} rx="9" fill="var(--wash-green)" stroke="var(--accent-green)" strokeWidth="1.5" />
         {entries.map(([piStr, pm], row) => {
           const pi = Number(piStr);
           const leftSide = pi % 2 === 0;
@@ -142,10 +142,10 @@ export default function TopologySchematic({
               </text>
               <polygon
                 points={leftSide ? `${portX},${y - 20} ${portX},${y + 20} ${portX + 38},${y}` : `${portX},${y - 20} ${portX},${y + 20} ${portX - 38},${y}`}
-                fill="#f2f000"
-                stroke="#111"
+                fill="var(--accent-yellow)"
+                stroke="var(--border-strong)"
               />
-              <line x1={lineStart} y1={y} x2={dutPinX} y2={y} stroke="#111" strokeWidth="1.5" />
+              <line x1={lineStart} y1={y} x2={dutPinX} y2={y} stroke="var(--text-secondary)" strokeWidth="1.5" />
               <text x={dutPinX + (leftSide ? 12 : -12)} y={y + 8} textAnchor={leftSide ? 'start' : 'end'} fontSize="18" fill="#045">
                 [{pi + 1}]
               </text>

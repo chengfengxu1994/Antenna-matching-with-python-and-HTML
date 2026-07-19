@@ -4,7 +4,7 @@ import { shouldLoadDataRevision } from '../utils/dataSource';
 import { multiScenarioProgress, validateMultiScenarioInput } from '../utils/multiScenario';
 import TopologySchematic from './TopologySchematic';
 
-const COLORS = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6f42c1', '#0dcaf0'];
+const COLORS = ['#4aa3f0', '#f26d5f', '#3ecf9a', '#e8894b', '#a47ef0', '#3cc6d0'];
 const QUALITY_PROFILES = {
   quick: {timeout:15, beam:8, points:3},
   balanced: {timeout:45, beam:10, points:5},
@@ -37,14 +37,14 @@ function ScenarioChart({ scenarios, field, title, percent = false }) {
       <h3>{title}</h3>
       <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
         {ticks.map(v => <g key={v}>
-          <line x1={left} x2={width-right} y1={sy(v)} y2={sy(v)} stroke="#dee2e6" />
-          <text x={left-7} y={sy(v)+4} textAnchor="end" fontSize="10" fill="#6c757d">{v.toFixed(0)}{percent ? '%' : ''}</text>
+          <line x1={left} x2={width-right} y1={sy(v)} y2={sy(v)} stroke="var(--border)" />
+          <text x={left-7} y={sy(v)+4} textAnchor="end" fontSize="10" fill="var(--text-secondary)">{v.toFixed(0)}{percent ? '%' : ''}</text>
         </g>)}
         {scenarios.map((scenario, index) => {
           const points = (scenario.points || []).map(p => `${sx(p.frequency_hz/1e6)},${sy(percent ? p[field]*100 : p[field])}`).join(' ');
           return <polyline key={scenario.filename} points={points} fill="none" stroke={COLORS[index % COLORS.length]} strokeWidth="2" />;
         })}
-        <text x={(left + width-right)/2} y={height-7} textAnchor="middle" fontSize="11" fill="#6c757d">频率 (MHz)</text>
+        <text x={(left + width-right)/2} y={height-7} textAnchor="middle" fontSize="11" fill="var(--text-secondary)">频率 (MHz)</text>
       </svg>
       <div style={{display:'flex', gap:12, flexWrap:'wrap', fontSize:11}}>
         {scenarios.map((s, i) => <span key={s.filename} style={{color:COLORS[i % COLORS.length]}}>● {s.filename}</span>)}
