@@ -54,7 +54,13 @@ function ScenarioChart({ scenarios, field, title, percent = false }) {
 }
 
 function ResultView({ result }) {
-  if (!result) return <div className="empty-state"><h3>尚无联合结果</h3><p>至少选择两个实测场景，然后优化或手动评估同一套匹配网络。</p></div>;
+  if (!result) return (
+    <div className="empty-state multi-empty">
+      <span className="eyebrow">MULTI-SCENARIO</span>
+      <h3>尚无联合结果</h3>
+      <p>在右侧勾选至少两个实测场景，然后运行「联合优化」，或切换到「手动调谐」评估同一套匹配网络。</p>
+    </div>
+  );
   return <>
     <div className="workspace-card">
       <h3>{result.topology}</h3>

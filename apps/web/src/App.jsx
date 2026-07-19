@@ -27,6 +27,20 @@ function loadSavedTheme() {
   }
 }
 
+const THEME_ICONS = {
+  sun: (
+    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+      <circle cx="8" cy="8" r="3.2" />
+      <path d="M8 1.2v1.8M8 13v1.8M1.2 8H3M13 8h1.8M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M12.8 3.2l-1.3 1.3M4.5 11.5l-1.3 1.3" />
+    </svg>
+  ),
+  moon: (
+    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a4.8 4.8 0 0 0 7 7Z" />
+    </svg>
+  ),
+};
+
 export default function App() {
   /* Global state */
   const [backendOnline, setBackendOnline] = useState(false);
@@ -61,6 +75,11 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem('rfmatch.theme', theme); } catch {}
   }, [theme]);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timer = setTimeout(() => setNotice(null), 8000);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
   async function initBackend() {
     const sequence = ++initSequenceRef.current;
@@ -209,7 +228,7 @@ export default function App() {
             title={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
             aria-label="切换主题"
           >
-            {theme === 'dark' ? '☀' : '☾'}
+            {theme === 'dark' ? THEME_ICONS.sun : THEME_ICONS.moon}
           </button>
           <button className="toolbar-btn primary" onClick={() => setShowSettings(!showSettings)}>
             元件库
@@ -227,7 +246,7 @@ export default function App() {
             <strong>{loadedSNP.filename}</strong>
             <span>{loadedSNP.num_ports} 端口</span>
             {loadedSNP.freq_count && <span>{loadedSNP.freq_count} 频点</span>}
-            {loadedSNP.freq_min_hz && <span>{(loadedSNP.freq_min_hz / 1e6).toFixed(0)}–{(loadedSNP.freq_max_hz / 1e6).toFixed(0)} MHz</span>}
+            {loadedSNP.freq_min_hz != null && loadedSNP.freq_max_hz != null && <span>{(loadedSNP.freq_min_hz / 1e6).toFixed(0)}–{(loadedSNP.freq_max_hz / 1e6).toFixed(0)} MHz</span>}
           </div>
         ) : <div className="dut-summary muted">尚未载入 DUT 数据</div>}
       </div>
