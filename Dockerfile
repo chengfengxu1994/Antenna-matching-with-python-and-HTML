@@ -24,7 +24,7 @@ WORKDIR /app/apps/api
 RUN pip install --no-cache-dir --index-url "$PIP_INDEX_URL" \
     "numpy>=1.24.0" \
     "fastapi>=0.100.0" \
-    "uvicorn>=0.23.0" \
+    "uvicorn>=0.36.0" \
     "pydantic>=2.0.0" \
     "python-multipart>=0.0.6" \
     "reportlab>=3.6.0"
