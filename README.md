@@ -21,6 +21,23 @@ python start.py --dev
 
 启动后浏览器打开：**http://127.0.0.1:8000**。首次运行若前端构建产物不存在，会自动执行 `npm ci` 和 `npm run build`。
 
+### Docker（固定 Python 3.12.13）
+
+```bash
+docker compose build
+docker compose up
+```
+
+若默认 PyPI 下载不稳定，可在构建时指定镜像：
+
+```bash
+docker compose build --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+端口冲突时可设置 `RFMATCH_PORT`；需要让同一局域网的手机访问时，再显式设置
+`RFMATCH_BIND_ADDRESS=0.0.0.0`。默认仅监听本机，上传的 SNP、项目和运行产物保存在
+独立 Docker 卷中。
+
 开发环境安装：
 
 ```bash
@@ -131,11 +148,12 @@ RF matching/
 - `RFMATCH_SNP_DIR`
 - `RFMATCH_MURATA_DIR`
 - `RFMATCH_DB_PATH`
+- `RFMATCH_ARTIFACTS_DIR`（默认 `artifacts/`）
 - `RFMATCH_PROJECTS_DIR`（默认 `artifacts/projects/`）
 
 ## 依赖
 
-- Python 3.10+（numpy、fastapi、uvicorn、pydantic）
+- Python 3.12（推荐并作为 Docker 验证版本；源码最低支持 3.10）
 - Node.js 18+（开发模式或首次构建前端时需要）
 
 ## 测试

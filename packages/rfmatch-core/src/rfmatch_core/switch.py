@@ -346,7 +346,11 @@ def evaluate_loaded_switch_physical_power(
         yei = y_full[:, external, internal]
         yie = y_full[:, internal, external]
         yii = y_full[:, internal, :][:, :, internal]
-        correction = np.einsum("fi,fi->f", yei, np.linalg.solve(yii, yie))
+        # NumPy 2 treats a stacked ``(..., M)`` right-hand side as a matrix,
+        # while NumPy 1.x treated it as stacked vectors.  Keep the vector axis
+        # explicit so the physical switch solver behaves identically on both.
+        solved_yie = np.linalg.solve(yii, yie[..., None])[..., 0]
+        correction = np.einsum("fi,fi->f", yei, solved_yie)
         input_admittance = yee - correction
     else:
         input_admittance = y_full[:, external, external]
@@ -357,7 +361,7 @@ def evaluate_loaded_switch_physical_power(
     boundary[:, external, external] += 1.0 / loaded.z0
     rhs = np.zeros((len(frequencies), node_count), dtype=complex)
     rhs[:, external] = 2.0 / np.sqrt(loaded.z0)
-    voltages = np.linalg.solve(boundary, rhs)
+    voltages = np.linalg.solve(boundary, rhs[..., None])[..., 0]
     throw_voltages = voltages[:, throws]
     throw_currents = np.einsum("fij,fj->fi", switch_y, throw_voltages)
     root_z0 = np.sqrt(loaded.z0)

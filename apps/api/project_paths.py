@@ -7,9 +7,6 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
-ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
-WEB_DIST_DIR = PROJECT_ROOT / "apps" / "web" / "dist"
 
 
 def configured_path(environment_name: str, fallback: Path) -> Path:
@@ -17,6 +14,9 @@ def configured_path(environment_name: str, fallback: Path) -> Path:
     return Path(value).expanduser().resolve() if value else fallback.resolve()
 
 
+DATA_DIR = PROJECT_ROOT / "data"
+ARTIFACTS_DIR = configured_path("RFMATCH_ARTIFACTS_DIR", PROJECT_ROOT / "artifacts")
+WEB_DIST_DIR = PROJECT_ROOT / "apps" / "web" / "dist"
 PROJECTS_DIR = configured_path("RFMATCH_PROJECTS_DIR", ARTIFACTS_DIR / "projects")
 
 

@@ -6,14 +6,17 @@ services:
     container_name: rfmatch
     restart: unless-stopped
     ports:
-      - "${RFMATCH_BIND_ADDRESS:-127.0.0.1}:8000:8000"
+      - "${RFMATCH_BIND_ADDRESS:-127.0.0.1}:${RFMATCH_PORT:-8000}:8000"
     environment:
+      RFMATCH_ARTIFACTS_DIR: /var/lib/rfmatch/artifacts
       RFMATCH_PROJECTS_DIR: /var/lib/rfmatch/projects
       RFMATCH_SNP_DIR: /var/lib/rfmatch/snp
     volumes:
+      - rfmatch-artifacts:/var/lib/rfmatch/artifacts
       - rfmatch-projects:/var/lib/rfmatch/projects
       - rfmatch-snp:/var/lib/rfmatch/snp
 
 volumes:
+  rfmatch-artifacts:
   rfmatch-projects:
   rfmatch-snp:
