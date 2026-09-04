@@ -359,6 +359,69 @@ class ApiFoundationTests(unittest.TestCase):
         finally:
             state.snp_dir = original
 
+    def test_touchstone_import_is_discoverable_from_disk_with_file_metadata_and_provenance(self):
+        original = (state.snp_dir, state.loaded_snp, state.loaded_snp_filename)
+        content = "# GHZ S RI R 50\n1.0 0.1 0\n1.1 0.2 0\n"
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                state.snp_dir = directory
+                imported = asyncio.run(server.import_snp(SNPImportRequest(
+                    filename="phone-upload.s1p", content=content, source="Touchstone",
+                )))
+
+                imported_path = Path(directory, imported["filename"])
+                self.assertTrue(imported_path.is_file())
+                self.assertEqual(imported["source"], "Touchstone")
+
+                # list_snp_files is intentionally a disk-backed operation: clearing
+                # the in-memory DUT state must not hide a previously uploaded file.
+                state.loaded_snp = None
+                state.loaded_snp_filename = None
+                listed = asyncio.run(server.list_snp_files())
+
+                self.assertEqual([item["filename"] for item in listed["files"]],
+                                 ["phone-upload.s1p"])
+                entry = listed["files"][0]
+                self.assertEqual(entry["size_bytes"], len(content.encode("utf-8")))
+                self.assertEqual(entry["mtime_ns"], imported_path.stat().st_mtime_ns)
+                self.assertEqual(entry["provenance"]["ingestion_method"], "file_import")
+                self.assertEqual(entry["provenance"]["source"], "Touchstone")
+                self.assertEqual(entry["provenance"]["sha256"], imported["sha256"])
+        finally:
+            state.snp_dir, state.loaded_snp, state.loaded_snp_filename = original
+
+    def test_list_snp_files_orders_uploaded_touchstones_by_latest_mtime(self):
+        original = state.snp_dir
+        content = "# GHZ S RI R 50\n1.0 0.1 0\n1.1 0.2 0\n"
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                state.snp_dir = directory
+                old = asyncio.run(server.import_snp(SNPImportRequest(
+                    filename="computer-old.s1p", content=content, source="Touchstone",
+                )))
+                new = asyncio.run(server.import_snp(SNPImportRequest(
+                    filename="computer-new.s1p", content=content, source="Touchstone",
+                )))
+
+                # Use explicit nanosecond timestamps so ordering does not depend on
+                # scheduler timing or the host filesystem's timestamp granularity.
+                old_path = Path(directory, old["filename"])
+                new_path = Path(directory, new["filename"])
+                old_ns = 1_700_000_000_000_000_000
+                new_ns = old_ns + 10_000_000_000
+                os.utime(old_path, ns=(old_ns, old_ns))
+                os.utime(new_path, ns=(new_ns, new_ns))
+
+                listed = asyncio.run(server.list_snp_files())
+                self.assertEqual(
+                    [item["filename"] for item in listed["files"]],
+                    ["computer-new.s1p", "computer-old.s1p"],
+                )
+                self.assertEqual(listed["files"][0]["mtime_ns"], new_ns)
+                self.assertEqual(listed["files"][1]["mtime_ns"], old_ns)
+        finally:
+            state.snp_dir = original
+
     def test_touchstone_network_fingerprint_ignores_text_but_detects_numeric_changes(self):
         first = parse_touchstone(
             "! export at 10:00\n# GHZ S RI R 50\n1.0 0.1 0\n1.1 0.2 0\n",

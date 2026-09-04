@@ -1427,6 +1427,7 @@ export default function TuningPanel({
   const [optimizing, setOptimizing] = useState(false);
   const [results, setResults] = useState(null);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [openSetupSections, setOpenSetupSections] = useState(() => new Set(['ports']));
   const [error, setError] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(0);
   const [comparisonIndices, setComparisonIndices] = useState([0, 1, 2]);
@@ -1463,6 +1464,21 @@ export default function TuningPanel({
   const timerRef = React.useRef(null);
   const manualRequestSequence = React.useRef(0);
   const manualDebounceRef = React.useRef(null);
+
+  const setSetupSectionOpen = (section, open) => {
+    setOpenSetupSections(current => {
+      if (current.has(section) === open) return current;
+      const next = new Set(current);
+      if (open) next.add(section);
+      else next.delete(section);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (tuningMode === 'fixed_lc' || tuningMode === 'grid_s2p') return;
+    setSetupSectionOpen('mode', true);
+  }, [tuningMode]);
 
   useEffect(() => {
     setInspectorCollapsed(Boolean(results));
@@ -1938,49 +1954,71 @@ export default function TuningPanel({
         </div>
         <ModeSelector mode={tuningMode} setMode={setTuningMode} />
 
-        <PortConfigPanel
-          portConfigs={portConfigs}
-          setPortConfigs={setPortConfigs}
-          numPorts={loadedSNP?.num_ports || 0}
-          showTopologyConstraints={tuningMode === 'fixed_lc'}
-        />
+        <details className="config-section" open={openSetupSections.has('ports')}
+          onToggle={event => setSetupSectionOpen('ports', event.currentTarget.open)}>
+          <summary><span><b>02</b> 端口与频段</span><small>{numEnabled} 个端口已启用</small></summary>
+          <div className="config-section-body">
+            <PortConfigPanel
+              portConfigs={portConfigs}
+              setPortConfigs={setPortConfigs}
+              numPorts={loadedSNP?.num_ports || 0}
+              showTopologyConstraints={tuningMode === 'fixed_lc'}
+            />
+          </div>
+        </details>
 
-        <ObjectiveSelector objective={objective} setObjective={setObjective} />
+        <details className="config-section" open={openSetupSections.has('objective')}
+          onToggle={event => setSetupSectionOpen('objective', event.currentTarget.open)}>
+          <summary><span><b>03</b> 优化目标</span><small>{OBJECTIVE_PRESETS.find(item => item.name === objective)?.label || objective}</small></summary>
+          <div className="config-section-body"><ObjectiveSelector objective={objective} setObjective={setObjective} /></div>
+        </details>
 
-        <IsolationTargetEditor
-          targets={isolationTargets}
-          setTargets={setIsolationTargets}
-          enabledPorts={portConfigs.filter(port => port.enabled)}
-        />
+        <details className="config-section" open={openSetupSections.has('isolation')}
+          onToggle={event => setSetupSectionOpen('isolation', event.currentTarget.open)}>
+          <summary><span>定向隔离约束</span><small>{isolationTargets.length ? `${isolationTargets.length} 项` : '未设置'}</small></summary>
+          <div className="config-section-body">
+            <IsolationTargetEditor
+              targets={isolationTargets}
+              setTargets={setIsolationTargets}
+              enabledPorts={portConfigs.filter(port => port.enabled)}
+            />
+          </div>
+        </details>
 
-        {tuningMode === 'tunable_c' && (
-          <TunableConfigEditor
-            mdifPath={tunerMdifPath} setMdifPath={setTunerMdifPath}
-            configurations={frequencyConfigurations} setConfigurations={setFrequencyConfigurations}
-            fixedComponents={tunableFixedComponents} setFixedComponents={setTunableFixedComponents}
-            autoSynthesize={tunableAutoSynthesize} setAutoSynthesize={setTunableAutoSynthesize}
-          />
-        )}
-
-        {tuningMode === 'switch' && (
-          <TunableConfigEditor
-            hardwareKind="switch"
-            mdifPath={tunerMdifPath} setMdifPath={setTunerMdifPath}
-            configurations={frequencyConfigurations} setConfigurations={setFrequencyConfigurations}
-            fixedComponents={[]} setFixedComponents={() => {}}
-            autoSynthesize={true} setAutoSynthesize={() => {}}
-            stateOptions={switchStateOptions} setStateOptions={setSwitchStateOptions}
-            measuredRefine={switchMeasuredRefine} setMeasuredRefine={setSwitchMeasuredRefine}
-            maxInputComponents={switchMaxInputComponents} setMaxInputComponents={setSwitchMaxInputComponents}
-          />
-        )}
-
-        {tuningMode === 'transmission_line' && (
-          <TransmissionLineConfigEditor
-            config={transmissionLineConfig}
-            setConfig={setTransmissionLineConfig}
-            availableFiles={snpFiles}
-          />
+        {tuningMode !== 'fixed_lc' && tuningMode !== 'grid_s2p' && (
+          <details key={tuningMode} className="config-section mode-specific-section" open={openSetupSections.has('mode')}
+            onToggle={event => setSetupSectionOpen('mode', event.currentTarget.open)}>
+            <summary><span>模式专用设置</span><small>{TUNING_MODES.find(item => item.name === tuningMode)?.label}</small></summary>
+            <div className="config-section-body">
+              {tuningMode === 'tunable_c' && (
+                <TunableConfigEditor
+                  mdifPath={tunerMdifPath} setMdifPath={setTunerMdifPath}
+                  configurations={frequencyConfigurations} setConfigurations={setFrequencyConfigurations}
+                  fixedComponents={tunableFixedComponents} setFixedComponents={setTunableFixedComponents}
+                  autoSynthesize={tunableAutoSynthesize} setAutoSynthesize={setTunableAutoSynthesize}
+                />
+              )}
+              {tuningMode === 'switch' && (
+                <TunableConfigEditor
+                  hardwareKind="switch"
+                  mdifPath={tunerMdifPath} setMdifPath={setTunerMdifPath}
+                  configurations={frequencyConfigurations} setConfigurations={setFrequencyConfigurations}
+                  fixedComponents={[]} setFixedComponents={() => {}}
+                  autoSynthesize={true} setAutoSynthesize={() => {}}
+                  stateOptions={switchStateOptions} setStateOptions={setSwitchStateOptions}
+                  measuredRefine={switchMeasuredRefine} setMeasuredRefine={setSwitchMeasuredRefine}
+                  maxInputComponents={switchMaxInputComponents} setMaxInputComponents={setSwitchMaxInputComponents}
+                />
+              )}
+              {tuningMode === 'transmission_line' && (
+                <TransmissionLineConfigEditor
+                  config={transmissionLineConfig}
+                  setConfig={setTransmissionLineConfig}
+                  availableFiles={snpFiles}
+                />
+              )}
+            </div>
+          </details>
         )}
 
         {/* Run area */}
@@ -2057,15 +2095,10 @@ export default function TuningPanel({
         </div>
 
         {/* Advanced */}
-        <div style={{ marginTop: 8 }}>
-          <button className="advanced-toggle" onClick={() => {
-            const el = document.getElementById('tune-advanced');
-            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-          }}>
-            <span>高级搜索设置</span>
-            <span>[+]</span>
-          </button>
-          <div id="tune-advanced" style={{ display: 'none', padding: 8 }}>
+        <details className="config-section tuning-advanced" open={openSetupSections.has('advanced')}
+          onToggle={event => setSetupSectionOpen('advanced', event.currentTarget.open)}>
+          <summary><span>高级搜索设置</span><small>{qualityPreset?.label || '自定义'} · {timeout}s</small></summary>
+          <div className="config-section-body tuning-advanced-body">
             <div className="form-group">
               <label>Within-band average weight</label>
               <input type="number" min="0" max="1" step="0.05"
@@ -2148,7 +2181,7 @@ export default function TuningPanel({
               </select>
             </div>
           </div>
-        </div>
+        </details>
 
         {error && <div className="error-card" style={{ marginTop: 8 }}>{error}</div>}
       </aside>

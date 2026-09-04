@@ -159,7 +159,7 @@ body {
   background: var(--header-bg);
   border-bottom: 1px solid var(--header-border);
 }
-.brand-block { display: flex; align-items: center; gap: 9px; width: 264px; }
+.brand-block { display: flex; align-items: center; gap: 9px; min-width: 264px; }
 .brand-mark {
   width: 26px; height: 26px; padding: 5px;
   border-radius: 6px;
@@ -173,27 +173,6 @@ body {
   color: #7d8ea6; font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase;
 }
 
-/* workspace switcher — segmented control */
-.workspace-switcher {
-  display: flex; align-items: center; gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--header-border);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.25);
-}
-.workspace-switcher button {
-  position: relative;
-  padding: 4px 14px;
-  border: 0; border-radius: 4px;
-  background: transparent;
-  color: #8b99ad;
-  font-size: 11.5px; font-weight: 550;
-  cursor: pointer;
-  transition: color 0.12s, background 0.12s;
-}
-.workspace-switcher button:hover { color: #e6edf5; }
-.workspace-switcher button.active { color: #fff; background: var(--accent-strong); font-weight: 650; }
-
 .header-actions { display: flex; align-items: center; gap: 6px; font-size: 11px; }
 .connection-state {
   display: inline-flex; align-items: center; gap: 6px;
@@ -203,23 +182,69 @@ body {
 .connection-state i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-red); box-shadow: 0 0 0 3px rgba(224, 93, 107, 0.15); }
 .connection-state.online i { background: var(--accent-green); box-shadow: 0 0 0 3px rgba(53, 196, 141, 0.15); }
 
-.toolbar-btn {
-  min-height: 28px;
-  padding: 5px 11px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel-2);
-  color: var(--text);
-  font-size: 11px; font-weight: 550;
-  cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
+.window-document {
+  max-width: 340px; overflow: hidden;
+  color: #aeb9c9;
+  font: 9.5px var(--font-mono);
+  text-overflow: ellipsis; white-space: nowrap;
 }
-.toolbar-btn:hover { border-color: var(--accent); background: var(--bg-hover); }
-.toolbar-btn.primary { color: #fff; border-color: var(--accent-strong); background: var(--accent-strong); }
-.toolbar-btn.primary:hover { background: var(--accent-strong-hover); border-color: var(--accent-strong-hover); }
-.toolbar-btn.icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; padding: 0; font-size: 13px; line-height: 1; }
 
-/* ── 5. Context bar (breadcrumb strip) ────────────────────────────── */
+/* ── 5. Desktop application menu ────────────────────────────────── */
+.application-menu-bar {
+  position: relative; z-index: 30;
+  height: 34px; flex: 0 0 34px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+.application-menus { display: flex; align-self: stretch; gap: 1px; }
+.application-menu { position: relative; display: flex; align-items: center; }
+.application-menu > button {
+  min-width: 54px; height: 26px; padding: 3px 10px;
+  border: 1px solid transparent; border-radius: 3px;
+  color: var(--text); background: transparent;
+  font: 10.5px var(--font-sans); cursor: default;
+}
+.application-menu > button:hover, .application-menu > button.active { border-color: var(--border); background: var(--bg-hover); }
+.application-menu-popup {
+  position: absolute; top: calc(100% - 1px); left: 0; z-index: 50;
+  width: 260px; padding: 4px;
+  border: 1px solid var(--border-strong); border-radius: 3px;
+  background: var(--bg-panel-2); box-shadow: var(--shadow-pop);
+}
+.application-menu-popup.workspace-menu { width: 280px; }
+.application-menu-item {
+  display: grid; width: 100%; min-height: 30px;
+  grid-template-columns: 22px 1fr; align-items: center;
+  padding: 5px 8px 5px 4px;
+  border: 0; border-radius: 2px;
+  color: var(--text); background: transparent;
+  font-family: var(--font-sans); text-align: left; cursor: default;
+}
+.application-menu-item:hover:not(:disabled), .application-menu-item:focus-visible:not(:disabled) { color: #fff; outline: 0; background: var(--accent-strong); }
+.application-menu-item:disabled { color: var(--text-faint); }
+.application-menu-check { align-self: start; padding-top: 1px; color: var(--accent); font-size: 12px; font-weight: 800; }
+.application-menu-item:hover .application-menu-check, .application-menu-item:focus-visible .application-menu-check { color: inherit; }
+.application-menu-copy { min-width: 0; }
+.application-menu-copy strong { display: block; overflow: hidden; font-size: 10.5px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.application-menu-copy small { display: block; margin-top: 1px; color: var(--text-faint); font-size: 8.5px; }
+.application-menu-item:hover small, .application-menu-item:focus-visible small { color: rgba(255, 255, 255, 0.75); }
+.application-menu-separator { height: 1px; margin: 4px 7px 4px 26px; background: var(--border); }
+.application-menu-context { display: flex; min-width: 0; align-items: center; gap: 10px; padding-right: 4px; }
+.application-menu-context span {
+  padding: 2px 8px;
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--accent); background: var(--bg-active);
+  font-size: 9px; font-weight: 700;
+}
+.application-menu-context strong {
+  max-width: 420px; overflow: hidden;
+  color: var(--text-secondary); font: 9.5px var(--font-mono);
+  text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Legacy context bar selectors retained for archived layouts. */
 .context-bar {
   height: 34px; flex: 0 0 34px;
   display: flex; align-items: center; justify-content: space-between;
@@ -351,6 +376,7 @@ body {
 }
 .file-item.selected .file-type { color: var(--accent); background: var(--bg-active); }
 .file-item .file-meta { margin: 3px 0 0 34px; color: var(--text-faint); font-size: 8.5px; font-family: var(--font-mono); }
+.file-item .file-persistence { margin: 3px 0 0 34px; color: var(--accent-green); font-size: 8px; font-weight: 700; }
 
 .resource-empty {
   display: flex; min-height: 96px;
@@ -365,6 +391,18 @@ body {
 
 .library-settings { margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--border); }
 .library-settings summary { margin-bottom: 9px; color: var(--text-secondary); font-size: 10px; font-weight: 650; cursor: pointer; }
+.resource-path-settings { margin: 10px 0 8px; border-bottom: 1px solid var(--border); }
+.resource-path-settings summary { padding: 5px 0 8px; color: var(--text-secondary); font-size: 9.5px; font-weight: 650; cursor: pointer; }
+.resource-path-settings[open] summary { color: var(--text); }
+.solver-integration { margin-top: 7px; border-top: 1px solid var(--border); }
+.solver-integration > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 1px 0;
+  color: var(--text-secondary); font-size: 8.5px; font-weight: 700;
+  cursor: pointer; list-style-position: inside;
+}
+.solver-integration > summary small { color: var(--text-faint); font-size: 7.5px; font-weight: 600; }
+.solver-integration[open] > summary { color: var(--text); }
 .resource-status {
   margin: 0 12px 10px; padding: 6px 9px;
   color: var(--accent-green);
@@ -398,7 +436,7 @@ body {
   order: 3;
   width: var(--sidebar-w); min-width: var(--sidebar-w);
   flex-shrink: 0;
-  padding: 0 12px 84px;
+  padding: 0 12px 12px;
   border-left: 1px solid var(--border);
   background: var(--bg-panel-2);
   overflow-y: auto;
@@ -439,6 +477,28 @@ body {
 }
 .setup-readiness span.active { color: var(--accent); border-color: var(--accent); background: var(--bg-active); }
 .setup-readiness span.done { color: var(--accent-green); border-color: rgba(53, 196, 141, 0.4); background: var(--wash-green); }
+
+.config-section {
+  flex: 0 0 auto;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-panel); overflow: hidden;
+}
+.config-section > summary {
+  display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 10px;
+  color: var(--text); cursor: pointer; list-style: none;
+}
+.config-section > summary::-webkit-details-marker { display: none; }
+.config-section > summary::after { content: '›'; order: 3; color: var(--text-faint); font-size: 15px; transform: rotate(90deg); transition: transform 0.12s; }
+.config-section[open] > summary::after { transform: rotate(-90deg); }
+.config-section > summary span { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; }
+.config-section > summary b { color: var(--text-faint); font: 700 8.5px var(--font-mono); }
+.config-section > summary small { margin-left: auto; overflow: hidden; color: var(--text-faint); font-size: 8.5px; text-overflow: ellipsis; white-space: nowrap; }
+.config-section[open] > summary { border-bottom: 1px solid var(--border); background: var(--bg-panel-2); }
+.config-section-body { padding: 8px; }
+.config-section-body > .card { padding: 2px; border: 0; background: transparent; box-shadow: none; }
+.config-section-body > .card > h3 { display: none; }
+.tuning-advanced-body { padding: 10px; }
 
 /* ── 9. Panels & cards ────────────────────────────────────────────── */
 .card, .panel-card, .workspace-card {
@@ -584,11 +644,14 @@ body {
 
 /* ── 11. Run area ─────────────────────────────────────────────────── */
 .run-area {
-  position: sticky; bottom: -76px; z-index: 4;
-  margin: 4px -12px 0; padding: 11px 12px;
+  position: sticky; bottom: 0; z-index: 4; order: 10;
+  margin: auto -12px 0; padding: 11px 12px;
   border-top: 1px solid var(--border-strong);
   background: var(--bg-panel-2);
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.18);
 }
+.control-sidebar > .tuning-advanced { order: 9; }
+.control-sidebar > .error-card { order: 11; }
 .run-btn {
   width: 100%; min-height: 42px;
   padding: 9px 12px;
@@ -1230,7 +1293,7 @@ tr.best-row td { background: var(--wash-green); }
 .em-import-card.drag-active { border-color: var(--accent); background: var(--bg-active); box-shadow: 0 0 0 3px rgba(61, 157, 242, 0.15); }
 .em-import-card > div:first-child { display: flex; align-items: center; gap: 7px; }
 .em-import-card strong { color: var(--text); font-size: 11px; }
-.em-source-badge { display: grid; width: 22px; height: 22px; place-items: center; border-radius: var(--radius-sm); color: #fff; background: var(--accent-strong); font: 750 8px var(--font-mono); }
+.em-source-badge { display: grid; min-width: 30px; height: 22px; padding: 0 4px; place-items: center; border-radius: var(--radius-sm); color: #fff; background: var(--accent-strong); font: 750 7.5px var(--font-mono); }
 .em-import-card p { margin: 7px 0 9px; color: var(--text-secondary); font-size: 9px; line-height: 1.5; }
 .em-import-button {
   width: 100%; min-height: 30px; padding: 5px 8px;
@@ -1594,7 +1657,8 @@ tr.best-row td { background: var(--wash-green); }
 }
 @media (max-width: 1100px) {
   .brand-block { width: auto; }
-  .brand-block span, .connection-state { display: none; }
+  .brand-block span, .connection-state, .window-document { display: none; }
+  .application-menu-context strong { max-width: 240px; }
 }
 @media (max-width: 1050px) {
   .manual-tuner-page { flex-direction: column; }
@@ -1615,6 +1679,7 @@ tr.best-row td { background: var(--wash-green); }
   body { overflow: auto; }
   .layout-shell { min-height: 100vh; height: auto; overflow: visible; }
   .app-header { align-items: flex-start; gap: 8px; height: auto; min-height: 46px; padding: 8px 12px; flex-wrap: wrap; }
+  .application-menu-context strong { display: none; }
   .app-main-shell, .main-body { flex-direction: column; min-height: 0; overflow: visible; }
   .data-sidebar, .control-sidebar, .workspace-panel, .tuning-host { width: 100%; min-width: 0; max-width: none; }
   .data-sidebar { opacity: 1; border-right: 0; border-bottom: 1px solid var(--border); max-height: 260px; }

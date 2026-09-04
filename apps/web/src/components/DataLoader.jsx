@@ -9,6 +9,7 @@ import {
 } from '../utils/dataSource';
 
 const TOUCHSTONE_ACCEPT = Array.from({ length: 64 }, (_, index) => `.s${index + 1}p`).join(',');
+const MAX_TOUCHSTONE_FILE_SIZE = 64 * 1024 * 1024;
 
 export default function DataLoader({
   dataDirs, setDataDirs, snpFiles, invalidSnpFiles = [], onLoadSNP,
@@ -17,7 +18,7 @@ export default function DataLoader({
   const importInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState(null);
-  const [importSource, setImportSource] = useState('CST');
+  const [importSource, setImportSource] = useState('Touchstone');
   const [dragActive, setDragActive] = useState(false);
   const [watchState, setWatchState] = useState({ active: false, starting: false, pending: [] });
   const [autoLoadLatest, setAutoLoadLatest] = useState(true);
@@ -161,14 +162,21 @@ export default function DataLoader({
   async function importTouchstoneFiles(files) {
     const selected = Array.from(files || []);
     if (!selected.length) return;
+    const invalidName = selected.find(file => !/\.s\d+p$/i.test(file.name));
+    if (invalidName) {
+      setImportMessage({ type: 'error', text: `${invalidName.name} 不是有效的 *.sNp 文件名` });
+      return;
+    }
+    const oversized = selected.find(file => file.size > MAX_TOUCHSTONE_FILE_SIZE);
+    if (oversized) {
+      setImportMessage({ type: 'error', text: `${oversized.name} 超过 64 MB 上传限制` });
+      return;
+    }
     setImporting(true);
     setImportMessage(null);
     try {
       const importedFiles = [];
       for (const file of selected) {
-        if (!/\.s\d+p$/i.test(file.name)) {
-          throw new Error(`${file.name} 不是有效的 *.sNp 文件名`);
-        }
         const content = await file.text();
         importedFiles.push(await api.importSNP(file.name, content, importSource));
       }
@@ -178,8 +186,8 @@ export default function DataLoader({
       setImportMessage({
         type: 'success',
         text: importedFiles.length === 1
-          ? `${imported.filename} · ${imported.num_ports} 端口 · ${imported.freq_count} 频点 · ${importSource}`
-          : `已校验并导入 ${importedFiles.length} 个文件，当前载入 ${imported.filename}`,
+          ? `${imported.filename} · ${imported.num_ports} 端口 · ${imported.freq_count} 频点 · 已保存，下次启动仍可用`
+          : `已校验并保存 ${importedFiles.length} 个文件，当前载入 ${imported.filename}；下次启动仍可用`,
       });
     } catch (error) {
       setImportMessage({ type: 'error', text: error.message });
@@ -221,16 +229,16 @@ export default function DataLoader({
           if (!event.currentTarget.contains(event.relatedTarget)) setDragActive(false);
         }}
         onDrop={handleDrop}>
-        <div><span className="em-source-badge">EM</span><strong>CST / HFSS 结果</strong></div>
-        <p>从求解器导出 Touchstone（*.sNp）。支持拖入单文件或一组参数扫描结果，并保留来源信息。</p>
+        <div><span className="em-source-badge">DUT</span><strong>从此设备添加 SNP</strong></div>
+        <p>可从电脑拖入 Touchstone（*.sNp），也可在手机或电脑上点击选择。文件会保存到项目资源，关闭页面后仍保留。</p>
         <div className="em-import-source">
-          <label htmlFor="em-source">结果来源</label>
+          <label htmlFor="em-source">文件来源</label>
           <select id="em-source" value={importSource} disabled={watchState.active}
             onChange={event => setImportSource(event.target.value)}>
+            <option value="Touchstone">手机 / 电脑文件</option>
             <option value="CST">CST Studio Suite</option>
             <option value="HFSS">Ansys HFSS</option>
             <option value="VNA">VNA 实测</option>
-            <option value="Touchstone">其他 Touchstone</option>
           </select>
         </div>
         <input ref={importInputRef} type="file" hidden multiple
@@ -238,32 +246,34 @@ export default function DataLoader({
           onChange={handleTouchstoneImport} />
         <button type="button" className="em-import-button" disabled={importing}
           onClick={() => importInputRef.current?.click()}>
-          {importing ? '正在校验并导入…' : '选择或拖入 Touchstone'}
+          {importing ? '正在校验并保存…' : '从手机或电脑选择文件'}
         </button>
-        <small className="em-import-hint">自动校验端口数、频率单调性、矩阵完整性与参考阻抗</small>
-        <div className={`em-watch-panel ${watchState.active ? 'active' : ''}`}>
-          <div className="em-watch-heading">
-            <span><i />{watchState.active ? `正在监视 ${activeSourceLabel} 导出目录` : `${activeSourceLabel} 结果自动同步`}</span>
-            <button type="button" onClick={toggleWatch} disabled={watchState.starting || importing}>
-              {watchState.starting ? '启动中…' : watchState.active ? '停止' : '开始监视'}
-            </button>
+        <small className="em-import-hint">支持批量选择与桌面拖放 · 最大 64 MB/文件 · 自动校验端口数、频率与参考阻抗</small>
+        <details className="solver-integration">
+          <summary><span>求解器自动化</span><small>{watchState.active ? '正在监视' : cstConnection.status?.projects?.length ? 'CST 已连接' : '可选'}</small></summary>
+          <div className={`em-watch-panel ${watchState.active ? 'active' : ''}`}>
+            <div className="em-watch-heading">
+              <span><i />{watchState.active ? `正在监视 ${activeSourceLabel} 导出目录` : `${activeSourceLabel} 结果自动同步`}</span>
+              <button type="button" onClick={toggleWatch} disabled={watchState.starting || importing}>
+                {watchState.starting ? '启动中…' : watchState.active ? '停止' : '开始监视'}
+              </button>
+            </div>
+            {watchState.active && <>
+              <label className="em-auto-load"><input type="checkbox" checked={autoLoadLatest}
+                onChange={event => setAutoLoadLatest(event.target.checked)} /> 自动载入最新稳定结果</label>
+              <small>{watchState.pending?.length
+                ? `${watchState.pending.length} 个文件仍在写入，等待稳定…`
+                : `已建立基线（${watchState.baseline_count} 个文件），等待 ${activeSourceLabel} 新结果`}</small>
+            </>}
+            {watchState.error && <small className="error">{watchState.error}</small>}
           </div>
-          {watchState.active && <>
-            <label className="em-auto-load"><input type="checkbox" checked={autoLoadLatest}
-              onChange={event => setAutoLoadLatest(event.target.checked)} /> 自动载入最新稳定结果</label>
-            <small>{watchState.pending?.length
-              ? `${watchState.pending.length} 个文件仍在写入，等待稳定…`
-              : `已建立基线（${watchState.baseline_count} 个文件），等待 ${activeSourceLabel} 新结果`}</small>
-          </>}
-          {watchState.error && <small className="error">{watchState.error}</small>}
-        </div>
-        <div className={`cst-direct-panel ${cstConnection.status?.projects?.length ? 'connected' : ''}`}>
-          <div className="cst-direct-heading">
-            <span><i />CST 官方 Python 接口</span>
-            <button type="button" onClick={() => inspectCst()} disabled={cstConnection.loading}>
-              {cstConnection.loading ? '检测中…' : cstConnection.status ? '重新检测' : '检测直连'}
-            </button>
-          </div>
+          <div className={`cst-direct-panel ${cstConnection.status?.projects?.length ? 'connected' : ''}`}>
+            <div className="cst-direct-heading">
+              <span><i />CST 官方 Python 接口</span>
+              <button type="button" onClick={() => inspectCst()} disabled={cstConnection.loading}>
+                {cstConnection.loading ? '检测中…' : cstConnection.status ? '重新检测' : '检测直连'}
+              </button>
+            </div>
           {cstConnection.status && <small>
             {cstConnection.status.error
               ? 'CST 运行时已识别，但 Python 接口连接失败'
@@ -291,14 +301,18 @@ export default function DataLoader({
             </button>
           </>}
           {(cstConnection.error || cstConnection.status?.error) && <small className="error">{cstConnection.error || cstConnection.status.error}</small>}
-        </div>
+          </div>
+        </details>
         {importMessage && <div className={`em-import-message ${importMessage.type}`}>{importMessage.text}</div>}
       </div>
 
-      <div className="source-path">
-        <label>SNP 数据目录</label>
-        <input value={dataDirs.snp} onChange={e => setDataDirs({...dataDirs, snp: e.target.value})} placeholder="data\\snp" />
-      </div>
+      <details className="resource-path-settings">
+        <summary>数据目录</summary>
+        <div className="source-path">
+          <label>SNP 数据目录</label>
+          <input value={dataDirs.snp} onChange={e => setDataDirs({...dataDirs, snp: e.target.value})} placeholder="data/snp" />
+        </div>
+      </details>
 
       {loadedSNP && (
         <div className="loaded-file-card">
@@ -324,12 +338,15 @@ export default function DataLoader({
             <div className="file-meta">
               {f.freq_count} 点 · {(f.freq_min_hz / 1e6).toFixed(0)}–{(f.freq_max_hz / 1e6).toFixed(0)} MHz
             </div>
+            {f.provenance?.ingestion_method === 'file_import' && (
+              <div className="file-persistence">设备上传 · 已长期保存</div>
+            )}
           </button>
         ))}
         {snpFiles.length === 0 && (
           <div className="resource-empty">
             <strong>目录中没有 SNP 文件</strong>
-            <span>修改上方路径后点击刷新</span>
+            <span>可从上方导入，或在“数据目录”中修改路径</span>
           </div>
         )}
       </div>

@@ -22,7 +22,7 @@ class DataDirConfig(BaseModel):
 
 
 class SNPImportRequest(BaseModel):
-    """Validated local EM/VNA Touchstone import."""
+    """Validated Touchstone selected from a browser, solver, or VNA."""
 
     filename: str = Field(min_length=1, max_length=255)
     content: str = Field(min_length=1, max_length=64 * 1024 * 1024)

@@ -603,18 +603,36 @@ async def list_snp_files():
                 rel_path = os.path.relpath(os.path.join(root, f), state.snp_dir)
                 filepath = os.path.join(root, f)
                 try:
-                    with open(filepath, 'r', encoding='utf-8', errors='replace') as fh:
-                        data = parse_touchstone(fh.read(), filename=rel_path)
-                    files.append({
+                    content_bytes = Path(filepath).read_bytes()
+                    content = content_bytes.decode('utf-8', errors='replace')
+                    data = parse_touchstone(content, filename=rel_path)
+                    stat_result = os.stat(filepath)
+                    digest = hashlib.sha256(content_bytes).hexdigest()
+                    provenance = None
+                    provenance_error = None
+                    try:
+                        provenance = snp_provenance_store.lookup(
+                            state.snp_dir, rel_path, sha256=digest,
+                        )
+                    except (OSError, TypeError, ValueError) as exc:
+                        provenance_error = str(exc)
+                    item = {
                         "filename": rel_path,
                         "num_ports": data.num_ports,
                         "freq_count": len(data.frequencies),
                         "freq_min_hz": min(data.frequencies) if data.frequencies else 0,
                         "freq_max_hz": max(data.frequencies) if data.frequencies else 0,
+                        "size_bytes": stat_result.st_size,
+                        "mtime_ns": stat_result.st_mtime_ns,
+                        "provenance": provenance,
                         **_touchstone_reference_metadata(data),
-                    })
+                    }
+                    if provenance_error:
+                        item["provenance_error"] = provenance_error
+                    files.append(item)
                 except (OSError, ValueError) as exc:
                     invalid_files.append({"filename": rel_path, "error": str(exc)})
+    files.sort(key=lambda item: (-item["mtime_ns"], item["filename"].lower()))
     return {"files": files, "invalid_files": invalid_files}
 
 
@@ -763,9 +781,12 @@ async def cst_export_touchstone(pid: int, project_path: str):
 
 @app.post("/api/snp/import")
 async def import_snp(request: SNPImportRequest):
-    """Import and validate a CST/HFSS/VNA Touchstone export into the SNP workspace."""
+    """Import and persist a browser-selected Touchstone file into the SNP workspace."""
     if not state.snp_dir:
         raise HTTPException(400, "SNP directory not configured")
+    content_bytes = request.content.encode("utf-8")
+    if len(content_bytes) > 64 * 1024 * 1024:
+        raise HTTPException(413, "Touchstone file exceeds the 64 MB upload limit")
     filename = os.path.basename(request.filename.strip())
     if filename != request.filename.strip() or not re.fullmatch(r"[^\\/:*?\"<>|]+\.s\d+p", filename, re.IGNORECASE):
         raise HTTPException(400, "Select a Touchstone file named *.sNp (for example antenna.s2p)")
@@ -796,7 +817,7 @@ async def import_snp(request: SNPImportRequest):
         raise HTTPException(400, f"Unable to store imported Touchstone file: {exc}") from exc
 
     relative_name = os.path.relpath(destination, root)
-    digest = hashlib.sha256(request.content.encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(content_bytes).hexdigest()
     provenance = None
     provenance_error = None
     try:

@@ -8,8 +8,10 @@ import ComponentSeriesSelector from './components/ComponentSeriesSelector';
 import MultiScenarioPanel from './components/MultiScenarioPanel';
 import ProjectManager from './components/ProjectManager';
 import ManualTunerPage from './components/ManualTunerPage';
+import ApplicationMenu from './components/ApplicationMenu';
 
-const DEFAULT_DATA_DIRS = { snp: 'data\\snp', murata: 'data\\Murata', optenni: '', environment: '' };
+const DEFAULT_DATA_DIRS = { snp: 'data/snp', murata: 'data/Murata', optenni: '', environment: '' };
+const LAST_SNP_KEY = 'rfmatch.lastSnpFilename';
 
 function loadSavedDataDirs() {
   try {
@@ -27,19 +29,13 @@ function loadSavedTheme() {
   }
 }
 
-const THEME_ICONS = {
-  sun: (
-    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-      <circle cx="8" cy="8" r="3.2" />
-      <path d="M8 1.2v1.8M8 13v1.8M1.2 8H3M13 8h1.8M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M12.8 3.2l-1.3 1.3M4.5 11.5l-1.3 1.3" />
-    </svg>
-  ),
-  moon: (
-    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a4.8 4.8 0 0 0 7 7Z" />
-    </svg>
-  ),
-};
+function loadSavedLastSnp() {
+  try {
+    return localStorage.getItem(LAST_SNP_KEY) || '';
+  } catch {
+    return '';
+  }
+}
 
 export default function App() {
   /* Global state */
@@ -96,7 +92,16 @@ export default function App() {
       if (sequence !== initSequenceRef.current) return;
       setDataSourceStatus(sourceStatus);
       setComponentCatalogReady(sourceStatus?.status === 'ok');
-      await refreshSnpFiles(sequence);
+      const snpResponse = await refreshSnpFiles(sequence);
+      if (sequence !== initSequenceRef.current) return;
+      if (!loadedSNP) {
+        const savedFilename = loadSavedLastSnp();
+        if (savedFilename && snpResponse.files?.some(file => file.filename === savedFilename)) {
+          await handleLoadSNP(savedFilename, { restored: true });
+        } else if (savedFilename) {
+          try { localStorage.removeItem(LAST_SNP_KEY); } catch {}
+        }
+      }
       if (sequence !== initSequenceRef.current) return;
       setDataSourceRevision(current => current + 1);
       try {
@@ -134,11 +139,12 @@ export default function App() {
     return response;
   }
 
-  async function handleLoadSNP(filename) {
+  async function handleLoadSNP(filename, { restored = false } = {}) {
     try {
       const res = await api.loadSNP(filename);
       const sameElectricalDut = isSameElectricalDut(loadedSNP, res);
       setLoadedSNP(res);
+      try { localStorage.setItem(LAST_SNP_KEY, res.filename); } catch {}
       if (!sameElectricalDut) {
         setProjectSnapshot(null);
         setManualWorkspace(null);
@@ -155,7 +161,9 @@ export default function App() {
       }
       setNotice({
         type: 'success',
-        message: sameElectricalDut
+        message: restored
+          ? `已恢复上次使用的 DUT：${filename}`
+          : sameElectricalDut
           ? `${filename} 网络数值未变化，已刷新来源信息并保留当前配置。`
           : `${filename} 已载入，可以开始配置匹配目标。`,
       });
@@ -204,52 +212,27 @@ export default function App() {
             <span>射频匹配与天线调谐工作台</span>
           </div>
         </div>
-        <nav className="workspace-switcher" aria-label="工作区">
-          <button className={workspaceMode === 'single' ? 'active' : ''} onClick={() => setWorkspaceMode('single')}>
-            单文件调谐
-          </button>
-          <button className={workspaceMode === 'multi' ? 'active' : ''} onClick={() => setWorkspaceMode('multi')}>
-            多场景联合
-          </button>
-          <button className={workspaceMode === 'manual' ? 'active' : ''} onClick={() => setWorkspaceMode('manual')}>
-            手动调谐
-          </button>
-        </nav>
         <div className="header-actions">
           <span className={`connection-state ${backendOnline ? 'online' : 'offline'}`}>
             <i />{backendOnline ? '计算引擎在线' : '计算引擎离线'}
           </span>
-          <button className="toolbar-btn" onClick={() => setShowProjects(true)}>
-            项目
-          </button>
-          <button
-            className="toolbar-btn icon"
-            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
-            title={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
-            aria-label="切换主题"
-          >
-            {theme === 'dark' ? THEME_ICONS.sun : THEME_ICONS.moon}
-          </button>
-          <button className="toolbar-btn primary" onClick={() => setShowSettings(!showSettings)}>
-            元件库
-          </button>
+          {loadedSNP && <span className="window-document" title={loadedSNP.filename}>{loadedSNP.filename}</span>}
         </div>
       </header>
 
-      <div className="context-bar">
-        <div className="context-left">
-          <button className={`pane-toggle ${dataRailOpen ? 'active' : ''}`} onClick={() => setDataRailOpen(value => !value)} title={dataRailOpen ? '收起项目资源' : '展开项目资源'}>☰</button>
-          <div className="breadcrumb"><span>工作台</span><b>/</b><strong>{workspaceMode === 'single' ? '单文件调谐' : workspaceMode === 'manual' ? '手动调谐' : '多场景联合'}</strong></div>
-        </div>
-        {loadedSNP ? (
-          <div className="dut-summary">
-            <strong>{loadedSNP.filename}</strong>
-            <span>{loadedSNP.num_ports} 端口</span>
-            {loadedSNP.freq_count && <span>{loadedSNP.freq_count} 频点</span>}
-            {loadedSNP.freq_min_hz != null && loadedSNP.freq_max_hz != null && <span>{(loadedSNP.freq_min_hz / 1e6).toFixed(0)}–{(loadedSNP.freq_max_hz / 1e6).toFixed(0)} MHz</span>}
-          </div>
-        ) : <div className="dut-summary muted">尚未载入 DUT 数据</div>}
-      </div>
+      <ApplicationMenu
+        backendOnline={backendOnline}
+        dataRailOpen={dataRailOpen}
+        loadedSNP={loadedSNP}
+        onOpenCatalog={() => setShowSettings(true)}
+        onOpenProjects={() => setShowProjects(true)}
+        onRefreshFiles={refreshSnpFiles}
+        onToggleDataRail={() => setDataRailOpen(value => !value)}
+        onToggleTheme={() => setTheme(value => value === 'dark' ? 'light' : 'dark')}
+        onWorkspaceChange={setWorkspaceMode}
+        theme={theme}
+        workspaceMode={workspaceMode}
+      />
 
       {showProjects && (
         <ProjectManager

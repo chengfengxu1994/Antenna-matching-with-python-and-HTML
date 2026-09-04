@@ -306,7 +306,11 @@ export default function MultiScenarioPanel({
         <button className={`goal-btn ${mode==='manual'?'active':''}`} onClick={() => setMode('manual')}>手动调谐</button>
       </div></div>
 
-      <div className="card"><h3>1. 测量场景（{scenarios.length}）</h3>
+      <div className="card"><h3>1. 测量场景（已选 {scenarios.length} / 至少 2）</h3>
+        {scenarios.length < 2 && <div role="status" style={{margin:'6px 0 8px', padding:'7px 9px', borderRadius:5, fontSize:11,
+          background:'rgba(232,137,75,.1)', color:'var(--accent-orange, #e8894b)'}}>
+          请至少选择 2 个测量场景，才能运行联合优化或刷新共享网络。
+        </div>}
         <div className="checkbox-list" style={{maxHeight:150}}>{(snpFiles || []).map(file => <label className="checkbox-item" key={file.filename}>
           <input type="checkbox" checked={scenarios.some(s => s.snp_filename === file.filename)} onChange={() => toggleScenario(file.filename)} />
           <span>{file.filename} <small>({file.num_ports}P)</small></span>
