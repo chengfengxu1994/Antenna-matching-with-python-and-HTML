@@ -48,11 +48,7 @@ def open_when_ready(url: str, health_url: str) -> None:
 def backend_command(host: str, port: int, reload: bool = False) -> list[str]:
     args = [
         sys.executable,
-        "-m",
-        "uvicorn",
-        "api.server:app",
-        "--app-dir",
-        str(BACKEND),
+        str(BACKEND / "run_server.py"),
         "--host",
         host,
         "--port",
